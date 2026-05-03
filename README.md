@@ -1,16 +1,39 @@
-# React + Vite
+# AI Interview Arena (Bravely)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An immersive AI interviewer application featuring real-time peer-to-peer mock interviews, group discussions, and live coding environments to help you land your dream job with confidence.
 
-Currently, two official plugins are available:
+## 🚀 Features
+- **Solo Interviews**: Practice 1-on-1 with AI interviewers.
+- **Peer Arena (P2P)**: WebRTC-powered live video interviews with peers.
+- **Live Coding**: Interactive code execution environments for technical rounds.
+- **Group Discussions**: Join scalable WebRTC rooms for group interview prep.
+- **Real-Time Analytics**: Get post-interview score breakdowns and analytics.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🛠 Tech Stack
+- **Frontend**: React 18, Vite, React Router DOM, Socket.io-client
+- **Backend (Signaling)**: Node.js, Express, Socket.io (WebRTC Signaling)
+- **Networking**: P2P WebRTC with STUN Server standard (`stun:stun.l.google.com:19302`)
 
-## React Compiler
+## 📁 Project Structure
+- `/frontend` - The React Vite client app.
+- `/server` - The Node.js WebRTC signaling server.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🏁 Getting Started
 
-## Expanding the ESLint configuration
+### 1. Start the Backend Signaling Server
+```bash
+cd server
+npm install # if a package.json exists, otherwise skip
+node index.js
+```
+*The signaling server typically runs on port 5000.*
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 2. Start the Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### 3. Open the Application
+Navigate to `http://localhost:5173` (or the port Vite provides) in your browser.
