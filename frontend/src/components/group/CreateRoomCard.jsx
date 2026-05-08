@@ -1,10 +1,11 @@
+"use client";
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { C } from '../../constants/theme';
 import { GlassCard, NeonButton, NeonInput } from '../shared';
 
 export const CreateRoomCard = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [roomName, setRoomName] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState('');
@@ -16,7 +17,7 @@ export const CreateRoomCard = () => {
     // Mock room creation logic
     const newRoom = { id: roomId, name: roomName, isPrivate, password, maxParticipants };
     console.log('Created room:', newRoom);
-    navigate(`/group-room/${roomId}`);
+    router.push(`/group-room/${roomId}`);
   };
 
   return (

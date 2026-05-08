@@ -1,13 +1,14 @@
+"use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { C } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { NeonButton } from '../shared';
 
 export function Header() {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const location = usePathname();
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -26,7 +27,7 @@ export function Header() {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    router.push('/');
   };
 
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : '?';
@@ -40,10 +41,10 @@ export function Header() {
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '16px 24px',
-        background: 'rgba(7, 13, 26, 0.6)',
-        backdropFilter: 'blur(20px)',
+        background: 'rgba(7, 8, 22, 0.7)',
+        backdropFilter: 'blur(24px)',
         borderBottom: `1px solid ${C.border}`,
-        boxShadow: `0 4px 20px rgba(0,0,0,0.2)`,
+        boxShadow: `0 4px 30px rgba(0,0,0,0.3)`,
         zIndex: 1000,
         width: '100%',
         boxSizing: 'border-box'
@@ -53,11 +54,11 @@ export function Header() {
       <div style={{ flex: 1, minWidth: 0, opacity: isDashboard ? 1 : 0, pointerEvents: isDashboard ? 'auto' : 'none' }}>
         {isDashboard && (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               Good morning, {user?.name || 'Alex'} ✨
             </div>
-            <div style={{ fontSize: 13, color: C.textDim, whiteSpace: 'nowrap' }}>
-              You're on a <span style={{ color: C.amber }}>7-day streak</span> — keep it up!
+            <div style={{ fontSize: 13, color: C.textSecondary, whiteSpace: 'nowrap' }}>
+              You're on a <span style={{ color: C.warning }}>7-day streak</span> — keep it up!
             </div>
           </div>
         )}
@@ -66,10 +67,10 @@ export function Header() {
       {/* Middle Section */}
       {isDashboard && (
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', margin: '0 20px' }}>
-          <NeonButton variant="outline" size="sm" onClick={() => navigate('/mock')}>Mock Interview</NeonButton>
-          <NeonButton variant="outline" size="sm" onClick={() => navigate('/coding')}>⌥ Coding Round</NeonButton>
-          <NeonButton variant="outline" size="sm" onClick={() => navigate('/lobby')}>👥 Peer Arena</NeonButton>
-          <NeonButton size="sm" onClick={() => navigate('/solo')}>Start Interview →</NeonButton>
+          <NeonButton variant="outline" size="sm" onClick={() => router.push('/mock')}>Mock Interview</NeonButton>
+          <NeonButton variant="outline" size="sm" onClick={() => router.push('/coding')}>⌥ Coding Round</NeonButton>
+          <NeonButton variant="outline" size="sm" onClick={() => router.push('/lobby')}>👥 Peer Arena</NeonButton>
+          <NeonButton size="sm" onClick={() => router.push('/solo')}>Start Interview →</NeonButton>
         </div>
       )}
 
@@ -84,14 +85,14 @@ export function Header() {
             height: 36,
             padding: '0 12px',
             boxSizing: 'border-box',
-            background: 'rgba(7, 13, 26, 0.6)',
-            border: `1px solid ${C.amber}50`,
+            background: 'rgba(7, 8, 22, 0.6)',
+            border: `1px solid ${C.warning}50`,
             borderRadius: 18,
             backdropFilter: 'blur(10px)',
-            color: C.amber,
+            color: C.warning,
             fontSize: 14,
             fontWeight: 700,
-            boxShadow: `0 0 12px ${C.amber}20`,
+            boxShadow: `0 0 12px ${C.warning}20`,
           }}
         >
           <span style={{ fontSize: 18, lineHeight: 1 }}>🔥</span>
@@ -107,25 +108,25 @@ export function Header() {
             }}
             onMouseEnter={(e) => {
               if (!notifOpen) {
-                e.currentTarget.style.boxShadow = `0 0 15px ${C.cyanGlow}`;
-                e.currentTarget.style.borderColor = C.cyan;
-                e.currentTarget.style.color = C.cyan;
+                e.currentTarget.style.boxShadow = `0 0 15px rgba(167, 139, 250, 0.2)`;
+                e.currentTarget.style.borderColor = C.primary;
+                e.currentTarget.style.color = C.primary;
               }
             }}
             onMouseLeave={(e) => {
               if (!notifOpen) {
                 e.currentTarget.style.boxShadow = 'none';
-                e.currentTarget.style.borderColor = C.border;
-                e.currentTarget.style.color = C.text;
+                e.currentTarget.style.borderColor = C.borderMid;
+                e.currentTarget.style.color = C.textPrimary;
               }
             }}
             style={{
               width: 36,
               height: 36,
               borderRadius: '50%',
-              background: 'rgba(7, 13, 26, 0.6)',
-              border: `1px solid ${notifOpen ? C.cyan : C.border}`,
-              color: notifOpen ? C.cyan : C.text,
+              background: 'rgba(7, 8, 22, 0.6)',
+              border: `1px solid ${notifOpen ? C.primary : C.borderMid}`,
+              color: notifOpen ? C.primary : C.textPrimary,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -133,7 +134,7 @@ export function Header() {
               fontSize: 18,
               backdropFilter: 'blur(10px)',
               transition: 'all 0.2s',
-              boxShadow: notifOpen ? `0 0 15px ${C.cyanGlow}` : 'none',
+              boxShadow: notifOpen ? `0 0 15px rgba(167, 139, 250, 0.2)` : 'none',
             }}
           >
             🔔
@@ -146,12 +147,12 @@ export function Header() {
               top: 'calc(100% + 12px)',
               right: 0,
               width: 320,
-              background: 'rgba(7, 13, 26, 0.95)',
+              background: C.bgElevated,
               border: `1px solid ${C.borderMid}`,
               borderRadius: 16,
               padding: 24,
               backdropFilter: 'blur(20px)',
-              boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 20px ${C.cyanGlow}30`,
+              boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(167, 139, 250, 0.1)`,
               opacity: notifOpen ? 1 : 0,
               transform: notifOpen ? 'translateY(0)' : 'translateY(-10px)',
               visibility: notifOpen ? 'visible' : 'hidden',
@@ -159,7 +160,7 @@ export function Header() {
               zIndex: 10,
             }}
           >
-            <div style={{ fontSize: 14, color: C.textDim, textAlign: 'center' }}>
+            <div style={{ fontSize: 14, color: C.textSecondary, textAlign: 'center' }}>
               No new notifications
             </div>
           </div>
@@ -173,7 +174,7 @@ export function Header() {
               setNotifOpen(false);
             }}
             onMouseEnter={(e) => {
-              if (!profileOpen) e.currentTarget.style.boxShadow = `0 0 18px ${C.cyanGlow}`;
+              if (!profileOpen) e.currentTarget.style.boxShadow = `0 0 18px rgba(167, 139, 250, 0.2)`;
             }}
             onMouseLeave={(e) => {
               if (!profileOpen) e.currentTarget.style.boxShadow = 'none';
@@ -182,8 +183,8 @@ export function Header() {
               width: 36,
               height: 36,
               borderRadius: '50%',
-              background: `linear-gradient(135deg, ${C.cyan}, ${C.violetBright})`,
-              border: profileOpen ? `2px solid ${C.cyan}` : '2px solid transparent',
+              background: `linear-gradient(135deg, ${C.primary}, ${C.secondary})`,
+              border: profileOpen ? `2px solid ${C.primary}` : '2px solid transparent',
               color: '#fff',
               cursor: 'pointer',
               display: 'flex',
@@ -191,7 +192,7 @@ export function Header() {
               justifyContent: 'center',
               fontSize: 16,
               fontWeight: 800,
-              boxShadow: profileOpen ? `0 0 18px ${C.cyanGlow}` : 'none',
+              boxShadow: profileOpen ? `0 0 18px rgba(167, 139, 250, 0.2)` : 'none',
               transition: 'all 0.2s',
             }}
           >
@@ -205,12 +206,12 @@ export function Header() {
               top: 'calc(100% + 12px)',
               right: 0,
               width: 220,
-              background: 'rgba(7, 13, 26, 0.95)',
+              background: C.bgElevated,
               border: `1px solid ${C.borderMid}`,
               borderRadius: 16,
               padding: '8px 0',
               backdropFilter: 'blur(20px)',
-              boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 20px ${C.violetGlow}30`,
+              boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(167, 139, 250, 0.1)`,
               opacity: profileOpen ? 1 : 0,
               transform: profileOpen ? 'translateY(0)' : 'translateY(-10px)',
               visibility: profileOpen ? 'visible' : 'hidden',
@@ -221,7 +222,7 @@ export function Header() {
             }}
           >
             <div style={{ padding: '12px 20px', borderBottom: `1px solid ${C.border}`, marginBottom: 8 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, marginBottom: 2 }}>
                 {user?.name || 'User'}
               </div>
               <div style={{ fontSize: 12, color: C.textMuted, wordBreak: 'break-all' }}>
@@ -232,26 +233,26 @@ export function Header() {
             <DropdownItem
               icon="👤"
               label="Profile"
-              onClick={() => { setProfileOpen(false); navigate('/profile'); }}
+              onClick={() => { setProfileOpen(false); router.push('/profile'); }}
             />
             <DropdownItem
               icon="⚙️"
               label="Settings"
-              onClick={() => { setProfileOpen(false); navigate('/settings'); }}
+              onClick={() => { setProfileOpen(false); router.push('/settings'); }}
             />
             
             <div style={{ margin: '4px 0', borderTop: `1px solid ${C.border}` }} />
             
             <button
               onClick={handleLogout}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(251, 146, 60, 0.1)'}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               style={{
                 padding: '10px 20px',
                 textAlign: 'left',
                 background: 'transparent',
                 border: 'none',
-                color: C.amber,
+                color: C.error,
                 cursor: 'pointer',
                 fontSize: 14,
                 transition: 'background 0.2s',
@@ -274,19 +275,19 @@ function DropdownItem({ icon, label, onClick }) {
     <button
       onClick={onClick}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = 'rgba(6, 182, 212, 0.08)';
-        e.currentTarget.style.color = C.cyan;
+        e.currentTarget.style.background = 'rgba(167, 139, 250, 0.08)';
+        e.currentTarget.style.color = C.primary;
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.background = 'transparent';
-        e.currentTarget.style.color = C.textDim;
+        e.currentTarget.style.color = C.textSecondary;
       }}
       style={{
         padding: '10px 20px',
         textAlign: 'left',
         background: 'transparent',
         border: 'none',
-        color: C.textDim,
+        color: C.textSecondary,
         cursor: 'pointer',
         fontSize: 14,
         transition: 'all 0.2s',

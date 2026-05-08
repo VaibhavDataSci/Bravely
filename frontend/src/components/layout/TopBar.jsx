@@ -1,11 +1,12 @@
+"use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { C } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
 
 export function TopBar() {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -25,7 +26,7 @@ export function TopBar() {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    router.push('/');
   };
 
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : '?';
@@ -200,7 +201,7 @@ export function TopBar() {
           <DropdownItem
             icon="👤"
             label="Profile"
-            onClick={() => { setProfileOpen(false); navigate('/profile'); }}
+            onClick={() => { setProfileOpen(false); router.push('/profile'); }}
           />
           <DropdownItem
             icon="⚙️"

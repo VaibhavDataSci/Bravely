@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { C } from '../../constants/theme';
 
@@ -6,7 +7,7 @@ const MicWave = ({ active = false }) => (
     {Array.from({ length: 9 }).map((_, i) => (
       <div key={i} style={{
         width: 3, borderRadius: 2,
-        background: active ? `linear-gradient(to top, ${C.cyan}, ${C.violetBright})` : C.textMuted,
+        background: active ? `linear-gradient(to top, ${C.primary}, ${C.secondary})` : C.textMuted,
         height: active ? undefined : 6,
         animation: active ? `wave ${0.4 + i * 0.08}s ease-in-out infinite alternate` : 'none',
         transition: 'all 0.3s',
@@ -17,7 +18,5 @@ const MicWave = ({ active = false }) => (
     ))}
   </div>
 );
-
-// Score ring
 
 export { MicWave };

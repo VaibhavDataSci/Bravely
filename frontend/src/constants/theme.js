@@ -1,24 +1,40 @@
 export const C = {
-  bg0: '#030712',
-  bg1: '#070d1a',
-  bg2: '#0d1528',
-  surface: 'rgba(13,21,40,0.85)',
-  surfaceHigh: 'rgba(20,32,58,0.9)',
-  glass: 'rgba(255,255,255,0.04)',
-  glassHover: 'rgba(255,255,255,0.08)',
-  border: 'rgba(6,182,212,0.15)',
-  borderMid: 'rgba(6,182,212,0.3)',
-  cyan: '#06b6d4',
-  cyanDim: 'rgba(6,182,212,0.6)',
-  cyanGlow: 'rgba(6,182,212,0.15)',
-  violet: '#7c3aed',
-  violetBright: '#a855f7',
-  violetGlow: 'rgba(124,58,237,0.2)',
-  pink: '#ec4899',
-  green: '#10b981',
-  amber: '#f59e0b',
-  red: '#ef4444',
-  text: '#e2e8f0',
-  textDim: '#94a3b8',
-  textMuted: '#475569',
+  // Backgrounds
+  bgMain: '#070816',
+  bgSecondary: '#0D1023',
+  bgCard: '#111427',
+  bgElevated: '#171A31',
+  bgSidebar: '#0A0917',
+
+  // Primary Brand
+  primary: '#A78BFA',
+  secondary: '#8B5CF6',
+  glow: '#C4B5FD',
+
+  // Functional
+  success: '#22C55E',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  info: '#38BDF8',
+
+  // Typography
+  textPrimary: '#F8FAFC',
+  textSecondary: '#94A3B8',
+  textMuted: '#64748B',
+  textDisabled: '#475569',
+
+  // Utilities & Borders
+  border: 'rgba(255, 255, 255, 0.05)',
+  borderMid: 'rgba(255, 255, 255, 0.1)',
+  glass: 'rgba(255, 255, 255, 0.03)',
+  glassHover: 'rgba(255, 255, 255, 0.06)',
+
+  // Page Accents
+  accentDashboard: '#A78BFA',    // Violet
+  accentDaily: '#22D3EE',        // Cyan
+  accentMock: '#D946EF',         // Purple
+  accentCoding: '#F97316',       // Orange
+  accentGroup: '#EC4899',        // Pink
+  accentAnalytics: '#3B82F6',    // Blue
+  accentSettings: '#C084FC',     // Lavender
 };

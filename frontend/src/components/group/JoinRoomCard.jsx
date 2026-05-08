@@ -1,10 +1,11 @@
+"use client";
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { C } from '../../constants/theme';
 import { GlassCard, NeonButton, NeonInput } from '../shared';
 
 export const JoinRoomCard = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [roomId, setRoomId] = useState('');
   const [password, setPassword] = useState('');
 
@@ -12,7 +13,7 @@ export const JoinRoomCard = () => {
     if (!roomId.trim()) return;
     // Mock validation logic
     console.log('Joining room:', { roomId, password });
-    navigate(`/group-room/${roomId}`);
+    router.push(`/group-room/${roomId}`);
   };
 
   return (

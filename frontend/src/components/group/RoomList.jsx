@@ -1,5 +1,6 @@
+"use client";
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { C } from '../../constants/theme';
 import { GlassCard, NeonButton, Tag } from '../shared';
 
@@ -12,14 +13,14 @@ const MOCK_ROOMS = [
 const RoomCard = ({ room }) => {
   const [hover, setHover] = useState(false);
   const [joining, setJoining] = useState(false);
-  const navigate = useNavigate();
+  const router = useRouter();
   const isFull = room.participants >= room.max;
 
   const handleJoin = () => {
     if (isFull || joining) return;
     setJoining(true);
     setTimeout(() => {
-      navigate(`/group-room/${room.id}`);
+      router.push(`/group-room/${room.id}`);
     }, 800); // simulate loading
   };
 
@@ -117,13 +118,13 @@ const RoomCard = ({ room }) => {
 };
 
 export const RoomList = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
     <GlassCard style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ fontSize: 20, fontWeight: 700, color: C.text, letterSpacing: '-0.02em' }}>Active Public Rooms</h2>
-        <NeonButton size="sm" onClick={() => navigate('/group-room/quick-join')}>
+        <NeonButton size="sm" onClick={() => router.push('/group-room/quick-join')}>
           ⚡ Quick Join
         </NeonButton>
       </div>

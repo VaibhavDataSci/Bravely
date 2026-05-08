@@ -1,10 +1,11 @@
-import { useNavigate } from 'react-router-dom';
+"use client";
+import { useRouter, usePathname } from 'next/navigation';
 import React, { useState, useEffect, useRef } from 'react';
 import { C } from '../../constants/theme';
 
 // ─── NOTIFICATION SYSTEM ─────────────────────────────────────────────────────
 const NotificationCenter = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [notifs, setNotifs] = React.useState([
     { id: 1, type: 'request', title: 'Interview Request', body: 'Jordan K. wants to practice with you', time: '2m ago', read: false, action: 'p2p' },
