@@ -1,23 +1,25 @@
+"use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
     try {
       const stored = localStorage.getItem('aia_user');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
-
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return !!localStorage.getItem('aia_user');
-  });
+      if (stored) {
+        setUser(JSON.parse(stored));
+        setIsAuthenticated(true);
+      }
+    } catch {}
+  }, []);
 
   // Persist to localStorage whenever user changes
   useEffect(() => {
+    // skip initial render if user is undefined vs null depending on logic
     if (user) {
       localStorage.setItem('aia_user', JSON.stringify(user));
     } else {

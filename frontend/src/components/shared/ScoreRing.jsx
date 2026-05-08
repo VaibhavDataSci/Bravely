@@ -1,7 +1,8 @@
+"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { C } from '../../constants/theme';
 
-const ScoreRing = ({ value, label, color = C.cyan, size = 100 }) => {
+const ScoreRing = ({ value, label, color = C.primary, size = 100 }) => {
   const r = 38; const c = 2 * Math.PI * r;
   const dash = (value / 100) * c;
   return (
@@ -18,14 +19,12 @@ const ScoreRing = ({ value, label, color = C.cyan, size = 100 }) => {
           alignItems: 'center', justifyContent: 'center',
         }}>
           <span style={{ fontSize: 22, fontWeight: 700, color: color, lineHeight: 1 }}>{value}</span>
-          <span style={{ fontSize: 9, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>/ 100</span>
+          <span style={{ fontSize: 9, color: C.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>/ 100</span>
         </div>
       </div>
-      <span style={{ fontSize: 12, color: C.textDim, fontWeight: 500 }}>{label}</span>
+      <span style={{ fontSize: 12, color: C.textSecondary, fontWeight: 500 }}>{label}</span>
     </div>
   );
 };
-
-// Sparkline / mini bar chart
 
 export { ScoreRing };

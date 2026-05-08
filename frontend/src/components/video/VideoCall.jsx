@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import io from 'socket.io-client';
 import { C } from '../../constants/theme';

@@ -1,7 +1,8 @@
+"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { C } from '../../constants/theme';
 
-const Tag = ({ children, color = C.cyan }) => (
+const Tag = ({ children, color = C.primary }) => (
   <span style={{
     fontSize: 11,
     fontWeight: 600,

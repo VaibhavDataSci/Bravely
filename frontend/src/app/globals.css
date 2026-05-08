@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  
+  /* Bravely Design Tokens */
+  --color-bravely-bgMain: #070816;
+  --color-bravely-bgSecondary: #0D1023;
+  --color-bravely-bgCard: #111427;
+  --color-bravely-bgElevated: #171A31;
+  --color-bravely-bgSidebar: #0A0917;
+  --color-bravely-primary: #A78BFA;
+  --color-bravely-secondary: #8B5CF6;
+  --color-bravely-glow: #C4B5FD;
+  --color-bravely-textPrimary: #F8FAFC;
+  --color-bravely-textSecondary: #94A3B8;
+  --color-bravely-border: rgba(255, 255, 255, 0.05);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; background: var(--color-bravely-bgMain); color: var(--color-bravely-textPrimary); overflow: hidden; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--color-bravely-bgMain); }
+::-webkit-scrollbar-thumb { background: var(--color-bravely-bgElevated); border-radius: 2px; }
+
+/* Glassmorphism Utilities */
+@utility glass-panel {
+  backdrop-filter: blur(24px);
+  background-color: var(--color-bravely-bgCard);
+}
+
+@utility glass-border {
+  border: 1px solid transparent;
+  border-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)) 1;
+}
+
+/* Animations */
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 0.4; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes scan-line {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}
+@keyframes lip-sync {
+  0%, 100% { transform: scaleY(1); }
+  25% { transform: scaleY(0.3); }
+  50% { transform: scaleY(0.8); }
+  75% { transform: scaleY(0.5); }
+}
+@keyframes wave {
+  0%, 100% { height: 8px; }
+  50% { height: 28px; }
+}
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(120px) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(120px) rotate(-360deg); }
+}
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.05); }
+}
+@keyframes data-stream {
+  0% { opacity: 0; transform: translateY(-10px); }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(10px); }
+}
+@keyframes particle-float {
+  0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(-100px) translateX(var(--dx, 30px)); opacity: 0; }
+}
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(79, 70, 229, 0.3), 0 0 40px rgba(79, 70, 229, 0.1); }
+  50% { box-shadow: 0 0 30px rgba(79, 70, 229, 0.6), 0 0 60px rgba(79, 70, 229, 0.2); }
+}
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes bar-grow {
+  from { height: 0%; }
+  to { height: var(--target-h, 60%); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ticker {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+@keyframes type-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+@keyframes hint-slide {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes ai-think {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+.code-editor {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-bravely-text);
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  width: 100%;
+  height: 100%;
+  caret-color: var(--color-bravely-primary);
+  tab-size: 2;
+}
+.code-editor::selection { background: rgba(79, 70, 229, 0.2); }
+.token-kw { color: #a855f7; }
+.token-fn { color: #67e8f9; }
+.token-str { color: #86efac; }
+.token-num { color: #fbbf24; }
+.token-cm { color: #475569; font-style: italic; }
+.token-type { color: #f9a8d4; }
