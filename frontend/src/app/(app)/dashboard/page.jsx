@@ -56,8 +56,8 @@ export default function DashboardPage(){
   const perfAreaPath = `${perfStrokePath} L 840 130 L 60 130 Z`;
 
   // Radar polygon points (dynamic from metrics)
-  const radarCenter = { x: 110, y: 110 };
-  const radarMax = 72; // radius
+  const radarCenter = { x: 130, y: 110 };
+  const radarMax = 68; // radius
   const radarAngles = metrics.map((_, i) => (-Math.PI / 2) + (2 * Math.PI * i) / metrics.length);
   const radarPoints = metrics.map((m, i) => {
     const r = (m.pct / 100) * radarMax;
@@ -68,10 +68,17 @@ export default function DashboardPage(){
 
   const radarLabelPositions = metrics.map((m, i) => {
     const angle = radarAngles[i];
-    const x = Math.round(radarCenter.x + (radarMax + 18) * Math.cos(angle));
-    const y = Math.round(radarCenter.y + (radarMax + 18) * Math.sin(angle));
+    const x = Math.round(radarCenter.x + (radarMax + 22) * Math.cos(angle));
+    const y = Math.round(radarCenter.y + (radarMax + 22) * Math.sin(angle));
     return { x, y, label: m.label };
   });
+
+  const milestones = [
+    { label: 'First AI Call Completed', done: true },
+    { label: '7-Day Streak', done: true },
+    { label: 'Reduced filler words 20%', done: true },
+    { label: 'Next goal: Reach 90 confidence score', done: false },
+  ];
 
   return (
     <div className={styles.page}>
@@ -183,10 +190,10 @@ export default function DashboardPage(){
               </div>
             </div>
             <div className={styles.radarWrap}>
-              <svg className={styles.radarSVG} viewBox="0 0 220 220">
-                <circle cx="110" cy="110" r="80" fill="rgba(255,255,255,0.00)" stroke="rgba(255,255,255,0.02)" />
-                <circle cx="110" cy="110" r="56" fill="none" stroke="rgba(255,255,255,0.01)" />
-                <circle cx="110" cy="110" r="32" fill="none" stroke="rgba(255,255,255,0.01)" />
+              <svg className={styles.radarSVG} viewBox="0 0 260 220">
+                <circle cx="130" cy="110" r="76" fill="rgba(255,255,255,0.00)" stroke="rgba(255,255,255,0.02)" />
+                <circle cx="130" cy="110" r="52" fill="none" stroke="rgba(255,255,255,0.01)" />
+                <circle cx="130" cy="110" r="28" fill="none" stroke="rgba(255,255,255,0.01)" />
                 <polygon points={radarPoints} fill="rgba(139,92,246,0.08)" stroke="rgba(167,139,250,0.26)" strokeWidth="2" />
                 {radarPoints.split(' ').map((pt, i) => {
                   const [x, y] = pt.split(',');
@@ -236,19 +243,23 @@ export default function DashboardPage(){
             </div>
           </div>
 
-          {/* Achievements */}
+          {/* Communication Milestones */}
           <div className={styles.cardPremium}>
             <div className={styles.cardHeader}>
               <div>
-                <div className={styles.cardTitle}>Achievements</div>
-                <div className={styles.cardSub}>Milestones &amp; rewards</div>
+                <div className={styles.cardTitle}>Communication Milestones</div>
+                <div className={styles.cardSub}>Your progress timeline</div>
               </div>
             </div>
-            <div className={styles.achieves}>
-              <div className={styles.achieve}><span className="shine">🔥 14-Day Streak</span></div>
-              <div className={styles.achieve}><span className="shine">🎯 Reduced Fillers 20%</span></div>
-              <div className={styles.achieve}><span className="shine">🧠 STAR Storytelling</span></div>
-              <div className={styles.achieve}><span className="shine">🏆 25 Sessions</span></div>
+            <div className={styles.milestoneList}>
+              {milestones.map((ms, i) => (
+                <div key={i} className={styles.milestoneItem}>
+                  <div className={`${styles.milestoneIcon} ${ms.done ? styles.milestoneDone : styles.milestonePending}`}>
+                    {ms.done ? '✓' : '⏳'}
+                  </div>
+                  <div className={ms.done ? styles.milestoneLabel : styles.milestoneLabelPending}>{ms.label}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

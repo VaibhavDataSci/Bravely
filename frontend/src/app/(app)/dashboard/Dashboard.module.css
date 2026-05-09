@@ -52,7 +52,8 @@
   .radarSVG{width:100%;max-width:260px}
 
   .healthGridInline{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  .insightWidget{border-radius:12px;padding:14px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.006));border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(2,6,23,0.45)}
+  .insightWidget{border-radius:12px;padding:14px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.006));border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(2,6,23,0.45);transition:transform 280ms cubic-bezier(.2,.9,.2,1),box-shadow 280ms,border-color 280ms;cursor:default}
+  .insightWidget:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 24px 64px rgba(4,6,18,0.7),0 8px 32px rgba(124,58,237,0.08);border-color:rgba(167,139,250,0.15)}
   .widgetTitle{font-weight:800;margin-bottom:4px;font-size:13px}
   .widgetSmall{color:rgba(200,210,230,0.6);font-size:11px}
   .smallMuted{color:rgba(200,210,230,0.5);font-size:11px}
@@ -68,10 +69,12 @@
   .sessionCardPremium{display:flex;justify-content:space-between;align-items:center;padding:14px;border-radius:12px;background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.006));border:1px solid rgba(255,255,255,0.03);transition:transform 280ms;cursor:pointer}
   .sessionCardPremium:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(4,6,18,0.6)}
 
-  .achieves{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-  .achieve{padding:10px;border-radius:10px;background:linear-gradient(90deg, rgba(167,139,250,0.08), rgba(99,102,241,0.04));border:1px solid rgba(167,139,250,0.08);font-weight:800;font-size:13px}
-  .shine{position:relative;overflow:hidden}
-  .shine::after{content:"";position:absolute;left:-40%;top:0;width:40%;height:100%;background:linear-gradient(90deg, rgba(255,255,255,0.18), rgba(255,255,255,0.03), rgba(255,255,255,0.08));transform:skewX(-18deg);transition:all 700ms}
-  .achieve:hover .shine::after{left:120%}
+  .milestoneList{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+  .milestoneItem{display:flex;align-items:center;gap:12px;padding:2px 0}
+  .milestoneIcon{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:14px;font-weight:800;flex-shrink:0}
+  .milestoneDone{background:linear-gradient(135deg, rgba(255,180,140,0.2), rgba(255,140,140,0.12));color:#FFB48C;border:1px solid rgba(255,180,140,0.15)}
+  .milestonePending{background:rgba(255,255,255,0.03);color:rgba(200,210,230,0.4);border:1px solid rgba(255,255,255,0.04)}
+  .milestoneLabel{font-size:13px;font-weight:500;color:rgba(240,245,255,0.9)}
+  .milestoneLabelPending{font-size:13px;font-weight:500;color:rgba(200,210,230,0.45)}
 
   @media (max-width: 1000px){.layoutSplit{grid-template-columns:1fr}.hero{flex-direction:column;align-items:flex-start}.greetTitle{font-size:32px}.healthGridInline{grid-template-columns:repeat(2,1fr)}.sessionsRow{grid-template-columns:1fr}}
