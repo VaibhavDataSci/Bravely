@@ -25,19 +25,21 @@ const StatCard = ({ icon, label, value }) => (
 );
 
 export default function DaySummaryPage() {
-  const [isRecording, setIsRecording] = useState(true);
+  const [recState, setRecState] = useState('idle'); // 'idle', 'recording', 'processing', 'done'
   const [time, setTime] = useState(180); // 03:00
   const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
     let interval;
-    if (isRecording && time > 0) {
+    if (recState === 'recording' && time > 0) {
       interval = setInterval(() => {
         setTime(t => t - 1);
       }, 1000);
+    } else if (time === 0 && recState === 'recording') {
+      setRecState('processing');
     }
     return () => clearInterval(interval);
-  }, [isRecording, time]);
+  }, [recState, time]);
 
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -45,9 +47,55 @@ export default function DaySummaryPage() {
     return `${m}:${s}`;
   };
 
+  const handleMicClick = () => {
+    if (recState === 'idle') {
+      setRecState('recording');
+    } else if (recState === 'recording') {
+      setRecState('processing');
+      // Simulate backend processing time before ready
+      setTimeout(() => {
+        setRecState('done');
+      }, 2000);
+    }
+  };
+
+  const handleGetFeedback = () => {
+    setShowFeedback(true);
+  };
+
+  const isIdle = recState === 'idle';
+  const isRecording = recState === 'recording';
+  const isProcessing = recState === 'processing';
+  const isDone = recState === 'done';
+
   return (
     <div style={{ padding: '0', maxWidth: 1100, margin: '0 auto', color: C.textPrimary, display: 'flex', flexDirection: 'column', gap: 30 }}>
       
+      <style>{`
+        @keyframes breathe {
+          0% { box-shadow: 0 0 15px rgba(167, 139, 250, 0.15), inset 0 0 10px rgba(167, 139, 250, 0.1); transform: scale(1); }
+          50% { box-shadow: 0 0 35px rgba(167, 139, 250, 0.3), inset 0 0 20px rgba(167, 139, 250, 0.2); transform: scale(1.03); }
+          100% { box-shadow: 0 0 15px rgba(167, 139, 250, 0.15), inset 0 0 10px rgba(167, 139, 250, 0.1); transform: scale(1); }
+        }
+        @keyframes pulse-ring {
+          0% { transform: scale(0.85); opacity: 0.6; }
+          100% { transform: scale(1.5); opacity: 0; }
+        }
+        @keyframes recording-pulse {
+          0% { box-shadow: 0 0 40px rgba(167, 139, 250, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
+          20% { box-shadow: 0 0 80px rgba(167, 139, 250, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.4); transform: scale(1.08); }
+          100% { box-shadow: 0 0 40px rgba(167, 139, 250, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
+        }
+        @keyframes shimmer {
+          0% { opacity: 0.4; }
+          50% { opacity: 1; }
+          100% { opacity: 0.4; }
+        }
+        .mic-idle { animation: breathe 4s ease-in-out infinite; }
+        .mic-recording { animation: recording-pulse 1.8s ease-in-out infinite; }
+        .mic-processing { opacity: 0.7; filter: grayscale(50%); transition: all 0.5s; }
+      `}</style>
+
       {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
@@ -64,46 +112,104 @@ export default function DaySummaryPage() {
         
         {/* LEFT: RECORDING PANEL */}
         <GlassCard style={{ 
-          padding: '60px 40px', 
+          padding: '50px 40px', 
           display: 'flex', 
           flexDirection: 'column', 
           alignItems: 'center', 
-          justifyContent: 'center', 
+          justifyContent: 'flex-start', 
           minHeight: 500,
           background: `radial-gradient(circle at center, rgba(167, 139, 250, 0.05) 0%, transparent 70%)`
         }}>
-          <div style={{ 
-            fontSize: '0.75rem', 
-            fontWeight: 700, 
-            letterSpacing: '0.1em', 
-            color: C.textSecondary, 
-            textTransform: 'uppercase',
-            marginBottom: 16 
-          }}>
-            Voice Recording Active
-          </div>
-          <div style={{ fontSize: '4rem', fontWeight: 800, fontFamily: 'monospace', marginBottom: 50, color: C.textPrimary }}>
-            {formatTime(time)}
-          </div>
           
-          <div style={{ 
-            width: 140, height: 140, 
-            borderRadius: '50%', 
-            background: `linear-gradient(135deg, ${C.primary}, ${C.secondary})`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
-            boxShadow: isRecording ? `0 0 60px rgba(167, 139, 250, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.2)` : `0 0 20px rgba(167, 139, 250, 0.2)`,
-            animation: isRecording ? 'pulse 2s infinite' : 'none',
-            fontSize: '3rem',
-            color: '#fff',
-            marginBottom: 50,
-            transition: 'all 0.3s ease'
-          }} onClick={() => setIsRecording(!isRecording)}>
-            🎙️
+          <div style={{ height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+            {isIdle && (
+              <>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 600, color: C.textPrimary, marginBottom: 8 }}>Tap to Start Speaking</h3>
+                <p style={{ color: C.textSecondary, fontSize: '0.95rem' }}>Your AI coach is ready to listen.</p>
+              </>
+            )}
+            
+            {isRecording && (
+              <>
+                <div style={{ 
+                  fontSize: '0.75rem', 
+                  fontWeight: 700, 
+                  letterSpacing: '0.1em', 
+                  color: C.error || '#EF4444', 
+                  textTransform: 'uppercase',
+                  marginBottom: 12,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  animation: 'shimmer 1.5s infinite'
+                }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.error || '#EF4444' }} />
+                  Live Recording
+                </div>
+                <div style={{ fontSize: '4rem', fontWeight: 800, fontFamily: 'monospace', color: C.textPrimary, lineHeight: 1 }}>
+                  {formatTime(time)}
+                </div>
+              </>
+            )}
+
+            {(isProcessing || isDone) && (
+              <>
+                <div style={{ fontSize: '1.2rem', fontWeight: 600, color: C.primary, animation: isProcessing ? 'shimmer 1.5s infinite' : 'none' }}>
+                  {isProcessing ? 'Generating AI Feedback...' : 'Session Completed'}
+                </div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 800, fontFamily: 'monospace', color: C.textMuted, marginTop: 8 }}>
+                  {formatTime(time)}
+                </div>
+              </>
+            )}
           </div>
 
-          <div style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {isRecording && <MicWave active={true} />}
+          <div style={{ 
+            position: 'relative', 
+            width: 240, height: 240, 
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '20px 0'
+          }}>
+            {/* Outer animated rings */}
+            {(isIdle || isRecording) && (
+              <>
+                <div style={{
+                  position: 'absolute', width: '100%', height: '100%',
+                  borderRadius: '50%', border: `1px solid rgba(167, 139, 250, 0.3)`,
+                  animation: 'pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite',
+                  pointerEvents: 'none',
+                  display: isIdle ? 'block' : 'none' // only show wide rings in idle to invite click, or recording? Let's show in both
+                }} />
+                <div style={{
+                  position: 'absolute', width: '100%', height: '100%',
+                  borderRadius: '50%', border: `1px solid rgba(167, 139, 250, 0.15)`,
+                  animation: 'pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite 1.5s',
+                  pointerEvents: 'none'
+                }} />
+              </>
+            )}
+
+            <div 
+              className={isRecording ? 'mic-recording' : isIdle ? 'mic-idle' : 'mic-processing'}
+              style={{ 
+                width: 150, height: 150, 
+                borderRadius: '50%', 
+                background: isIdle 
+                  ? `linear-gradient(135deg, rgba(167, 139, 250, 0.7), rgba(139, 92, 246, 0.5))` 
+                  : `linear-gradient(135deg, ${C.primary}, ${C.secondary})`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: (isIdle || isRecording) ? 'pointer' : 'default',
+                fontSize: '3rem',
+                color: isIdle ? 'rgba(255,255,255,0.7)' : '#fff',
+                transition: 'all 0.4s ease',
+                zIndex: 10
+              }} onClick={(isIdle || isRecording) ? handleMicClick : undefined}>
+              🎙️
+            </div>
+          </div>
+
+          <div style={{ height: 60, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isRecording ? 1 : 0, transition: 'opacity 0.4s ease', marginTop: 20 }}>
+            <MicWave active={isRecording} />
           </div>
         </GlassCard>
 
@@ -111,7 +217,7 @@ export default function DaySummaryPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {/* Live Transcription */}
-          <GlassCard style={{ padding: '30px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <GlassCard style={{ padding: '30px', flex: 1, display: 'flex', flexDirection: 'column', opacity: (isIdle && !showFeedback) ? 0.3 : 1, transition: 'all 0.5s ease', pointerEvents: isIdle ? 'none' : 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, color: C.textPrimary }}>
                 <span style={{ color: C.textSecondary }}>≡</span> Live Transcription
@@ -119,43 +225,47 @@ export default function DaySummaryPage() {
               <div style={{ fontSize: '0.75rem', color: C.primary, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ 
                   width: 6, height: 6, borderRadius: '50%', background: C.primary, 
-                  animation: 'pulse 1.5s infinite' 
-                }} /> Processing
+                  animation: (isRecording || isProcessing) ? 'pulse 1.5s infinite' : 'none',
+                  opacity: (isRecording || isProcessing) ? 1 : 0.5
+                }} /> {(isRecording || isProcessing) ? 'Processing' : 'Ready'}
               </div>
             </div>
 
             <div style={{ color: C.textSecondary, fontSize: '1.05rem', lineHeight: 1.8, marginBottom: 20 }}>
-              "...the core challenge of the quarterly review is effectively balancing our ambitious growth targets with the operational constraints we encountered in Q2. I believe the team..."
+              {!isIdle ? '"...the core challenge of the quarterly review is effectively balancing our ambitious growth targets with the operational constraints we encountered in Q2. I believe the team..."' : 'Waiting for voice input...'}
             </div>
             
-            <div style={{ 
-              padding: '20px', 
-              background: 'rgba(167, 139, 250, 0.05)', 
-              borderRadius: 12, 
-              borderLeft: `3px solid ${C.primary}`,
-              color: C.textPrimary,
-              fontSize: '1.05rem',
-              lineHeight: 1.6
-            }}>
-              "...needs to prioritize high-leverage activities that align with our long-term strategic vision, <span style={{ color: C.warning }}>specifically</span> focusing on automation and..."
-            </div>
+            {!isIdle && (
+              <div style={{ 
+                padding: '20px', 
+                background: 'rgba(167, 139, 250, 0.05)', 
+                borderRadius: 12, 
+                borderLeft: `3px solid ${C.primary}`,
+                color: C.textPrimary,
+                fontSize: '1.05rem',
+                lineHeight: 1.6,
+                animation: 'shimmer 1s ease-out 1'
+              }}>
+                "...needs to prioritize high-leverage activities that align with our long-term strategic vision, <span style={{ color: C.warning }}>specifically</span> focusing on automation and..."
+              </div>
+            )}
 
-            <div style={{ marginTop: 'auto', paddingTop: 30, display: 'flex', gap: 6 }}>
+            <div style={{ marginTop: 'auto', paddingTop: 30, display: 'flex', gap: 6, opacity: isRecording ? 1 : 0.2 }}>
               <div style={{ width: 4, height: 16, background: C.borderMid, borderRadius: 2 }} />
               <div style={{ width: 4, height: 16, background: C.borderMid, borderRadius: 2 }} />
               <div style={{ width: 4, height: 16, background: C.borderMid, borderRadius: 2 }} />
             </div>
           </GlassCard>
 
-          {!showFeedback ? (
+          {(!showFeedback && (isDone || isProcessing)) ? (
              <NeonButton 
                variant="primary" 
-               onClick={() => setShowFeedback(true)}
-               style={{ alignSelf: 'flex-start' }}
+               onClick={handleGetFeedback}
+               style={{ alignSelf: 'flex-start', opacity: isDone ? 1 : 0.5, pointerEvents: isDone ? 'auto' : 'none' }}
              >
                Get AI Feedback
              </NeonButton>
-          ) : (
+          ) : showFeedback ? (
             /* AI Insight */
             <GlassCard style={{ padding: '24px 30px', display: 'flex', gap: 20, alignItems: 'flex-start' }}>
               <div style={{ 
@@ -173,7 +283,7 @@ export default function DaySummaryPage() {
                 </div>
               </div>
             </GlassCard>
-          )}
+          ) : null}
 
         </div>
       </div>
