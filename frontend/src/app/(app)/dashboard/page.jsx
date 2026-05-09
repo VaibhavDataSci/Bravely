@@ -64,8 +64,8 @@ export default function DashboardPage(){
   const perfAreaPath = `${perfStrokePath} L 840 390 L 60 390 Z`;
 
   // Radar polygon points (dynamic from metrics)
-  const radarCenter = { x: 130, y: 110 };
-  const radarMax = 68; // radius
+  const radarCenter = { x: 200, y: 160 };
+  const radarMax = 100;
   const radarAngles = metrics.map((_, i) => (-Math.PI / 2) + (2 * Math.PI * i) / metrics.length);
   const radarPoints = metrics.map((m, i) => {
     const r = (m.pct / 100) * radarMax;
@@ -76,8 +76,8 @@ export default function DashboardPage(){
 
   const radarLabelPositions = metrics.map((m, i) => {
     const angle = radarAngles[i];
-    const x = Math.round(radarCenter.x + (radarMax + 22) * Math.cos(angle));
-    const y = Math.round(radarCenter.y + (radarMax + 22) * Math.sin(angle));
+    const x = Math.round(radarCenter.x + (radarMax + 32) * Math.cos(angle));
+    const y = Math.round(radarCenter.y + (radarMax + 32) * Math.sin(angle));
     return { x, y, label: m.label };
   });
 
@@ -219,38 +219,23 @@ export default function DashboardPage(){
               </div>
             </div>
             <div className={styles.radarWrap}>
-              <svg className={styles.radarSVG} viewBox="0 0 260 220">
-                <circle cx="130" cy="110" r="76" fill="rgba(255,255,255,0.00)" stroke="rgba(255,255,255,0.02)" />
-                <circle cx="130" cy="110" r="52" fill="none" stroke="rgba(255,255,255,0.01)" />
-                <circle cx="130" cy="110" r="28" fill="none" stroke="rgba(255,255,255,0.01)" />
-                <polygon points={radarPoints} fill="rgba(139,92,246,0.08)" stroke="rgba(167,139,250,0.26)" strokeWidth="2" />
+              <svg className={styles.radarSVG} viewBox="0 0 400 320">
+                <circle cx="200" cy="160" r="108" fill="rgba(255,255,255,0.00)" stroke="rgba(255,255,255,0.025)" />
+                <circle cx="200" cy="160" r="72" fill="none" stroke="rgba(255,255,255,0.015)" />
+                <circle cx="200" cy="160" r="36" fill="none" stroke="rgba(255,255,255,0.01)" />
+                <polygon points={radarPoints} fill="rgba(139,92,246,0.1)" stroke="rgba(167,139,250,0.35)" strokeWidth="2.5" />
                 {radarPoints.split(' ').map((pt, i) => {
                   const [x, y] = pt.split(',');
-                  return <circle key={i} cx={x} cy={y} r={4} fill="#CDBBFF" />
+                  return <circle key={i} cx={x} cy={y} r={5} fill="#CDBBFF" />
                 })}
                 {radarLabelPositions.map((L, i) => (
                   <text key={`lab-${i}`} x={L.x} y={L.y} className={styles.radarLabel} textAnchor="middle">{L.label.toUpperCase()}</text>
                 ))}
               </svg>
-              <div style={{textAlign:'center'}}>
-                <div style={{fontSize:26,fontWeight:800}}>84</div>
+              <div style={{textAlign:'center',marginTop:4}}>
+                <div style={{fontSize:32,fontWeight:800}}>84</div>
                 <div className={styles.smallMuted}>Overall — Excellent</div>
               </div>
-            </div>
-          </div>
-
-          {/* AI Coach Insights */}
-          <div className={styles.cardPremium}>
-            <div className={styles.cardHeader}>
-              <div>
-                <div className={styles.cardTitle}>AI Coach Insights</div>
-                <div className={styles.cardSub}>Conversational recommendations</div>
-              </div>
-            </div>
-            <div className={styles.aiInsights}>
-              <div className={styles.aiCard}>You explain ideas clearly under pressure — add one concise example to increase memorability.</div>
-              <div className={styles.aiCard}>Transitions show slight hesitation — practice 5 timed transitions to smooth flow.</div>
-              <div className={styles.aiCard}>Tone is more natural in unscripted speech — keep practicing spontaneous prompts.</div>
             </div>
           </div>
 
@@ -262,11 +247,11 @@ export default function DashboardPage(){
                 <div className={styles.cardSub}>Commonly used — hover to inspect</div>
               </div>
             </div>
-            <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
-              {['uh','like','you know','so','actually'].map((w,i)=> (
-                <div key={i} className={styles.fillerChip} title={`${w} — ${Math.max(1, 4-i)} times`}>
+            <div className={styles.fillerGrid}>
+              {[{w:'uh',n:4},{w:'like',n:3},{w:'you know',n:2},{w:'so',n:1},{w:'actually',n:1}].map(({w,n},i)=> (
+                <div key={i} className={styles.fillerChip} title={`${w} — ${n} times`}>
                   <div className={styles.fillerWord}>{w}</div>
-                  <div className={styles.fillerCount}>{Math.max(1,4-i)}</div>
+                  <div className={styles.fillerCount}>{n}</div>
                 </div>
               ))}
             </div>

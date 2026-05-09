@@ -41,17 +41,18 @@
   .areaFill{mix-blend-mode:screen}
   .perfMarker{filter:drop-shadow(0 8px 20px rgba(140,90,255,0.14));}
   .xLabel{font-size:14px;fill:rgba(200,210,230,0.55);font-family:var(--font-sans);dominant-baseline:middle}
-  .radarLabel{font-size:11px;fill:rgba(200,210,230,0.6);font-family:var(--font-sans)}
+  .radarLabel{font-size:15px;fill:rgba(210,220,240,0.8);font-family:var(--font-sans)}
   .rangeBtn{padding:6px 10px;border-radius:6px;border:none;color:rgba(220,220,255,0.7);background:transparent;cursor:pointer;font-size:12px}
   .rangeBtn:focus{outline:none}
 
-  .fillerChip{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.008));border:1px solid rgba(255,255,255,0.02);transition:transform 220ms,box-shadow 220ms;cursor:default;font-size:13px}
+  .fillerGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .fillerChip{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-radius:12px;background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.008));border:1px solid rgba(255,255,255,0.02);transition:transform 220ms,box-shadow 220ms;cursor:default}
   .fillerChip:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 16px 48px rgba(0,0,0,0.5)}
-  .fillerWord{font-weight:800;color:#EDE7FF}
-  .fillerCount{background:rgba(255,255,255,0.04);padding:4px 7px;border-radius:6px;font-weight:800;color:#fff;font-size:12px}
+  .fillerWord{font-weight:800;color:#EDE7FF;font-size:15px}
+  .fillerCount{background:rgba(255,255,255,0.06);padding:6px 12px;border-radius:8px;font-weight:800;color:#fff;font-size:14px}
 
   .radarWrap{display:flex;flex-direction:column;gap:8px;align-items:center}
-  .radarSVG{width:100%;max-width:260px}
+  .radarSVG{width:100%;max-width:400px}
 
   .healthGridInline{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .insightWidget{border-radius:12px;padding:14px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.006));border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(2,6,23,0.45);transition:transform 280ms cubic-bezier(.2,.9,.2,1),box-shadow 280ms,border-color 280ms;cursor:default}
