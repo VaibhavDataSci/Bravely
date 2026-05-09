@@ -53,22 +53,23 @@ export default function DailyPracticeHub() {
     },
     {
       id: 'ai-conversation',
-      title: 'AI Conversation',
-      subtitle: 'Practice real-world conversational fluency with AI personas.',
+      title: 'Phone Call with AI',
+      subtitle: 'Practice natural voice conversations to improve fluency and confidence.',
+      supportText: 'Just 10 mins daily builds confidence.',
       path: '/daily-practice/ai-conversation',
       features: [
-        'Hiring manager persona',
-        'Friendly peer mode',
-        'Founder mode',
-        'Professor mode',
-        'Real-time speaking feedback'
+        'Real-time AI conversation',
+        'Improve speaking confidence',
+        'Build conversational fluency',
+        'Reduce hesitation and pauses',
+        'Voice-to-voice interaction'
       ],
       visual: (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 100, color: C.danger, fontSize: 48 }}>
-          🤖
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 100, fontSize: 48 }}>
+          📞
         </div>
       ),
-      cta: 'Talk with AI'
+      cta: 'Start Call'
     },
     {
       id: 'peer-practice',
@@ -156,21 +157,28 @@ export default function DailyPracticeHub() {
                </div>
             )}
 
-            <ul style={{ listStyleType: 'none', padding: 0, margin: '0 0 30px 0', flexGrow: 1 }}>
+            <ul style={{ listStyleType: 'none', padding: 0, margin: '0 0 15px 0', flexGrow: 1 }}>
               {mod.features.map((feature, i) => (
                 <li key={i} style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
                   gap: '8px', 
                   marginBottom: '10px',
-                  color: C.textMuted,
+                  color: mod.customCheck ? '#F3F4F6' : C.textMuted,
                   fontSize: '0.95rem'
                 }}>
-                  <span style={{ color: C.primary, fontSize: '0.8rem' }}>✦</span>
+                  <span style={{ color: mod.customCheck ? (C.success || '#10B981') : C.primary, fontSize: mod.customCheck ? '1.1rem' : '0.8rem' }}>
+                    {mod.customCheck ? '✓' : '✦'}
+                  </span>
                   {feature}
                 </li>
               ))}
             </ul>
+            {mod.supportText && (
+              <div style={{ color: C.textSecondary, fontSize: '0.85rem', fontStyle: 'italic', marginBottom: '20px' }}>
+                {mod.supportText}
+              </div>
+            )}
 
             <NeonButton 
               variant="primary" 

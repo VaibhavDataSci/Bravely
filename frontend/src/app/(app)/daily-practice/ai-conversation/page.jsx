@@ -45,7 +45,7 @@ const ProgressBar = ({ label, value, color }) => (
 );
 
 export default function AIConversationPage() {
-  const [convState, setConvState] = useState('intro'); // 'intro', 'live', 'ended', 'feedback'
+  const [convState, setConvState] = useState('live'); // 'live', 'ended', 'feedback'
   const [micMode, setMicMode] = useState('listening'); // 'listening', 'aiSpeaking'
   
   // Real-time conversation mock logic
@@ -128,47 +128,6 @@ export default function AIConversationPage() {
           </div>
         </div>
       </div>
-
-      {convState === 'intro' && (
-        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 40 }}>
-          <GlassCard style={{ 
-            padding: '80px 40px', 
-            position: 'relative', 
-            overflow: 'hidden',
-            width: '100%',
-            maxWidth: 800,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            textAlign: 'center',
-            background: `linear-gradient(135deg, rgba(30, 27, 75, 0.6), rgba(17, 24, 39, 0.8))`,
-            border: `1px solid ${C.primary}40`,
-            boxShadow: `0 10px 50px ${C.primary}20`
-          }}>
-            <div style={{ position: 'absolute', top: -100, left: -100, width: 400, height: 400, background: C.primary, opacity: 0.15, filter: 'blur(100px)', borderRadius: '50%' }} />
-            <div style={{ position: 'absolute', bottom: -100, right: -100, width: 300, height: 300, background: C.secondary, opacity: 0.15, filter: 'blur(100px)', borderRadius: '50%' }} />
-            
-            <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(167, 139, 250, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', marginBottom: 30, animation: 'breathe 4s infinite' }}>
-              📞
-            </div>
-            
-            <h1 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: 20, color: '#fff', letterSpacing: '-0.02em' }}>Phone Call with AI</h1>
-            <p style={{ color: '#D1D5DB', fontSize: '1.2rem', lineHeight: 1.6, maxWidth: 600, marginBottom: 16 }}>
-              Practice natural voice conversations as if you're on a real phone call. Improve communication fluency, confidence, and impromptu speaking.
-            </p>
-            <p style={{ color: C.textSecondary, fontSize: '1.05rem', lineHeight: 1.6, maxWidth: 500, marginBottom: 50 }}>
-              Speak freely for a few minutes and build stronger conversational confidence. No pressure. No judgment. Just real conversation practice.
-            </p>
-            
-            <NeonButton variant="primary" onClick={handleStart} style={{ padding: '18px 48px', fontSize: '1.2rem', borderRadius: 40 }}>
-              Start Call
-            </NeonButton>
-            <div style={{ fontSize: '0.85rem', color: C.textSecondary, marginTop: 16, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Voice-to-voice AI communication practice
-            </div>
-          </GlassCard>
-        </div>
-      )}
 
       {convState === 'live' && (
         <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 30, marginTop: 20 }}>
@@ -342,7 +301,7 @@ export default function AIConversationPage() {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-            <NeonButton variant="outline" onClick={() => setConvState('intro')} style={{ padding: '12px 30px' }}>
+            <NeonButton variant="outline" onClick={() => window.location.href = '/daily-practice'} style={{ padding: '12px 30px' }}>
               Start Another Call
             </NeonButton>
           </div>
