@@ -47,8 +47,21 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('aia_user');
   };
 
+  const updateProfileResume = (resumeData) => {
+    setUser(prev => prev ? { ...prev, profileResume: resumeData } : null);
+  };
+
+  const removeProfileResume = () => {
+    setUser(prev => {
+      if (!prev) return null;
+      const { profileResume, ...rest } = prev;
+      return rest;
+    });
+  };
+
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, signup, logout, updateProfileResume, removeProfileResume }}>
       {children}
     </AuthContext.Provider>
   );
