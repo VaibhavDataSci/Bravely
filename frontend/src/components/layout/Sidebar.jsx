@@ -8,6 +8,7 @@ const navItems = [
   { id: 'dashboard',       label: 'Dashboard',        icon: '◈' },
   { id: 'daily-practice',  label: 'Daily Practice',   icon: '⬡' },
   { id: 'solo-select',     label: 'Mock Interview',   icon: '◉' },
+  { id: 'peer-practice',   label: 'Peer to Peer',     icon: '👥' },
   { id: 'group-lobby',     label: 'Group Discussion', icon: '⬡' },
 ];
 

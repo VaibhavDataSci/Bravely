@@ -51,7 +51,7 @@ export default function MockModeSelection() {
 
         {/* Option 2: Peer Interview */}
         <div 
-          onClick={() => router.push('/daily-practice/peer-practice')}
+          onClick={() => router.push('/peer-practice')}
           style={{
             cursor: 'pointer',
             transition: 'all 0.3s ease'

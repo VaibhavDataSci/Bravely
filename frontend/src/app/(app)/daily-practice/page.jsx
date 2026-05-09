@@ -72,32 +72,21 @@ export default function DailyPracticeHub() {
       ),
       cta: 'Start Call'
     },
-    {
-      id: 'peer-practice',
-      title: 'Peer-to-Peer Practice',
-      subtitle: 'Anonymous 1:1 speaking practice sessions with verified high performers globally. Real talk, real growth.',
-      path: '/daily-practice/peer-practice',
-      features: [
-        'Anonymous voice calls',
-        'AI transcript analysis',
-        'Communication scoring',
-        'Confidence building',
-        'Real-time peer interaction'
-      ],
-      visual: (
-        <div className={styles.cardIcon} style={{ background: 'linear-gradient(135deg, rgba(253,186,116,0.08), rgba(236,72,153,0.06))' }}>
-          👥
-        </div>
-      ),
-      cta: 'Find a Peer'
-    }
   ];
 
   return (
     <div className={styles.pageWrap}>
+      <div className={styles.insightBanner}>
+        <span style={{ fontSize: 18 }}>⚡</span>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: 12, opacity: 0.9, fontWeight: 700 }}>DAILY INSIGHT:</div>
+          <div style={{ fontSize: 14 }}>Your spontaneity score increased by 12% last week.</div>
+        </div>
+      </div>
+
       <div className={styles.hero}>
-        <div className={styles.heroSVG} aria-hidden>
-          <svg viewBox="0 0 1200 160" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img">
+        <div className={styles.heroSVG} aria-hidden style={{ height: 120 }}>
+          <svg viewBox="0 0 1200 140" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img">
             <defs>
               <linearGradient id="g1" x1="0%" x2="100%" y1="0%" y2="0%">
                 <stop offset="0%" stopColor="#FBF9FF" />
@@ -114,7 +103,7 @@ export default function DailyPracticeHub() {
             </defs>
 
             <g filter="url(#softGlow)" opacity="0.88">
-              <text x="600" y="96" textAnchor="middle" fontFamily="var(--font-sans)" fontWeight="800" fontSize="96"
+              <text x="600" y="85" textAnchor="middle" fontFamily="var(--font-sans)" fontWeight="800" fontSize="80"
                 fill="url(#g1)"
                 stroke="rgba(2,6,23,0.45)"
                 strokeWidth="2.5"
@@ -176,14 +165,6 @@ export default function DailyPracticeHub() {
             </div>
           </GlassCard>
         ))}
-      </div>
-
-      <div className={styles.insightBanner}>
-        <span style={{ fontSize: 18 }}>⚡</span>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontSize: 12, opacity: 0.9, fontWeight: 700 }}>DAILY INSIGHT:</div>
-          <div style={{ fontSize: 14 }}>Your spontaneity score increased by 12% last week.</div>
-        </div>
       </div>
     </div>
   );

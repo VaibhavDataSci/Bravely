@@ -7,7 +7,7 @@
 
 .pageWrap{
   padding: 56px 24px 140px;
-  max-width: 1200px;
+  max-width: 1300px;
   margin: 0 auto;
   color: var(--soft-white);
   font-family: var(--font-sans);
@@ -61,7 +61,7 @@
 /* SVG hero container for pixel-perfect outlined text */
 .heroSVG{
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto 10px;
   position: relative;
   z-index: 3;
@@ -87,10 +87,14 @@
 }
 
 .grid{
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 34px;
   align-items: stretch;
+}
+.grid > * {
+  flex: 0 1 580px;
 }
 
 .card{
@@ -189,19 +193,17 @@
 }
 
 .insightBanner{
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 28px;
+  margin: 0 auto 32px;
+  width: fit-content;
   z-index: 60;
-  padding: 12px 20px;
+  padding: 10px 24px;
   border-radius: 999px;
   background: linear-gradient(90deg, rgba(124,58,237,0.14), rgba(99,102,241,0.08));
   border: 1px solid rgba(167,139,250,0.18);
   color: #fff;
   font-weight:600;
   backdrop-filter: blur(8px);
-  box-shadow: 0 8px 30px rgba(92,45,130,0.25);
+  box-shadow: 0 8px 30px rgba(92,45,130,0.1);
   display:flex;
   gap:12px;
   align-items:center;
@@ -209,9 +211,9 @@
 }
 
 @keyframes float{
-  0%{ transform: translateX(-50%) translateY(0); }
-  50%{ transform: translateX(-50%) translateY(-6px); }
-  100%{ transform: translateX(-50%) translateY(0); }
+  0%{ transform: translateY(0); }
+  50%{ transform: translateY(-6px); }
+  100%{ transform: translateY(0); }
 }
 
 /* Responsive */

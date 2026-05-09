@@ -88,7 +88,7 @@ const P2PPage = () => {
         background: 'rgba(7, 8, 22,0.98)', flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => router.push('/daily-practice/peer-practice')} style={{ padding: '6px 14px', borderRadius: 7, border: `1px solid ${C.borderMid}`, background: 'transparent', color: C.textSecondary, cursor: 'pointer', fontFamily: 'Space Grotesk', fontSize: 12 }}>← Lobby</button>
+          <button onClick={() => router.push('/peer-practice')} style={{ padding: '6px 14px', borderRadius: 7, border: `1px solid ${C.borderMid}`, background: 'transparent', color: C.textSecondary, cursor: 'pointer', fontFamily: 'Space Grotesk', fontSize: 12 }}>← Lobby</button>
           <div style={{ width: 1, height: 20, background: C.borderMid }} />
           <span style={{ fontSize: 14, fontWeight: 700 }}>Peer Interview Room</span>
           <Tag color={C.error}>● Live</Tag>
