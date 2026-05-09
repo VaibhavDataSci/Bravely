@@ -4,7 +4,6 @@ import React, { useState, useCallback } from 'react';
 import { C } from '../../constants/theme';
 
 const navItems = [
-  { id: 'landing',     label: 'Home',             icon: '⬡' },
   { id: 'dashboard',   label: 'Dashboard',        icon: '◈' },
   { id: 'solo-select', label: 'Solo Interview',   icon: '◉' },
   { id: 'mock',        label: 'Mock Interview',   icon: '◈' },
@@ -12,7 +11,6 @@ const navItems = [
   { id: 'lobby',       label: 'Peer Arena',       icon: '⬡' },
   { id: 'group-lobby', label: 'Group Discussion', icon: '⬡' },
   { id: 'report',      label: 'Analysis',         icon: '◈' },
-  { id: 'profile',     label: 'Profile',          icon: '◉' },
 ];
 
 const COLLAPSED_WIDTH = 68;
