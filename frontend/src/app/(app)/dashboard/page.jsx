@@ -3,10 +3,29 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { C } from '@/constants/theme';
 import { GlassCard, NeonButton } from '@/components/shared';
+import { useAuth } from '@/contexts/AuthContext';
 import styles from './Dashboard.module.css';
 
 export default function DashboardPage(){
   const router = useRouter();
+  const { user } = useAuth();
+  const [range, setRange] = useState('7');
+
+  const displayName = user?.profileResume?.personalInfo?.name || user?.name || user?.email?.split('@')[0] || 'User';
+
+  const userRole = user?.profileResume?.role || 'Software Engineer';
+  const isCodingHeavy = userRole.toLowerCase().includes('engineer') || userRole.toLowerCase().includes('developer');
+  const isCloudDevOps = userRole.toLowerCase().includes('cloud') || userRole.toLowerCase().includes('devops');
+  const isHR = userRole.toLowerCase().includes('hr') || userRole.toLowerCase().includes('product') || userRole.toLowerCase().includes('manager');
+
+  let dynamicSubtext = "Clarity + confidence: keep the momentum.";
+  if (isCodingHeavy) {
+    dynamicSubtext = "Your coding consistency improved this week. AI recommends focusing on pacing.";
+  } else if (isHR) {
+    dynamicSubtext = "Your communication scores are improving steadily. Focus on STAR method structure.";
+  } else if (isCloudDevOps) {
+    dynamicSubtext = "Great progress on architectural concepts. Ready for a System Design mock?";
+  }
 
   const metrics = [
     { id:'confidence', label:'Confidence', pct:82, accent:C.primary, insight:'Confidence increased 8% this week.' },
@@ -33,12 +52,10 @@ export default function DashboardPage(){
   const heat = [0,1,2,3,2,1,4, 2,3,4,1,0,2,3, 0,1,2,3,2,1,0];
 
   const sessions = [
-    { title:'Mock — PM Interview', date:'Yesterday', score:92, best:'Structure', area:'Pacing', dur:'28m' },
+    { title: isCloudDevOps ? 'System Design — AWS' : isHR ? 'Mock — PM Interview' : 'Technical — Software Eng', date:'Yesterday', score:92, best:'Structure', area:'Pacing', dur:'28m' },
     { title:'Phone Call with AI', date:'2 days ago', score:78, best:'Clarity', area:'Fillers', dur:'18m' },
     { title:'Peer Practice', date:'4 days ago', score:85, best:'Confidence', area:'Transitions', dur:'22m' },
   ];
-
-  const [range, setRange] = useState('7');
 
   // Week (7d) points — adjusted to fit tighter vertical space
   const weekPoints = [
@@ -93,8 +110,8 @@ export default function DashboardPage(){
       {/* HERO */}
       <div className={styles.hero}>
         <div className={styles.greeting}>
-          <div className={styles.greetTitle}>Welcome back, Vaibhav</div>
-          <div className={styles.greetSub}>Clarity + confidence: keep the momentum.</div>
+          <div className={styles.greetTitle}>Welcome back, {displayName}</div>
+          <div className={styles.greetSub}>{dynamicSubtext}</div>
         </div>
 
         <div className={styles.streakCard}>
