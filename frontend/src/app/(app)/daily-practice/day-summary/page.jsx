@@ -18,7 +18,7 @@ const StatCard = ({ icon, label, value }) => (
     <div style={{ fontSize: '0.75rem', fontWeight: 600, color: C.textSecondary, letterSpacing: '0.05em', textTransform: 'uppercase', textAlign: 'center' }}>
       {label}
     </div>
-    <div style={{ fontSize: '1.75rem', fontWeight: 700, color: C.textPrimary }}>
+    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: C.textPrimary, textAlign: 'center' }}>
       {value}
     </div>
   </GlassCard>
@@ -27,6 +27,7 @@ const StatCard = ({ icon, label, value }) => (
 export default function DaySummaryPage() {
   const [isRecording, setIsRecording] = useState(true);
   const [time, setTime] = useState(180); // 03:00
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
     let interval;
@@ -55,10 +56,6 @@ export default function DaySummaryPage() {
           </div>
           <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '8px' }}>Day Summary</h1>
           <p style={{ color: C.textSecondary, fontSize: '1.05rem' }}>Reflect on your day and improve natural communication clarity.</p>
-        </div>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-           <div style={{ color: C.textSecondary, fontSize: '1.2rem', cursor: 'pointer', padding: 8, borderRadius: '50%', background: C.glass }}>🔔</div>
-           <div style={{ color: C.textSecondary, fontSize: '1.2rem', cursor: 'pointer', padding: 8, borderRadius: '50%', background: C.glass }}>⚙️</div>
         </div>
       </div>
 
@@ -150,23 +147,33 @@ export default function DaySummaryPage() {
             </div>
           </GlassCard>
 
-          {/* AI Insight */}
-          <GlassCard style={{ padding: '24px 30px', display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-            <div style={{ 
-              width: 36, height: 36, borderRadius: 8, 
-              background: 'rgba(167, 139, 250, 0.1)', 
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: C.primary, flexShrink: 0
-            }}>⚡</div>
-            <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.primary, letterSpacing: '0.05em', marginBottom: 8, textTransform: 'uppercase' }}>
-                AI Insight
+          {!showFeedback ? (
+             <NeonButton 
+               variant="primary" 
+               onClick={() => setShowFeedback(true)}
+               style={{ alignSelf: 'flex-start' }}
+             >
+               Get AI Feedback
+             </NeonButton>
+          ) : (
+            /* AI Insight */
+            <GlassCard style={{ padding: '24px 30px', display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+              <div style={{ 
+                width: 36, height: 36, borderRadius: 8, 
+                background: 'rgba(167, 139, 250, 0.1)', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: C.primary, flexShrink: 0
+              }}>⚡</div>
+              <div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.primary, letterSpacing: '0.05em', marginBottom: 8, textTransform: 'uppercase' }}>
+                  AI Insight
+                </div>
+                <div style={{ color: C.textPrimary, fontSize: '0.95rem', lineHeight: 1.6 }}>
+                  You're using <strong>"specifically"</strong> as a transition word. Consider alternating with <strong>"In particular"</strong> for better vocabulary richness.
+                </div>
               </div>
-              <div style={{ color: C.textPrimary, fontSize: '0.95rem', lineHeight: 1.6 }}>
-                You're using <strong>"specifically"</strong> as a transition word. Consider alternating with <strong>"In particular"</strong> for better vocabulary richness.
-              </div>
-            </div>
-          </GlassCard>
+            </GlassCard>
+          )}
 
         </div>
       </div>
@@ -175,57 +182,79 @@ export default function DaySummaryPage() {
       <div style={{ marginTop: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 600 }}>Performance Preview</h2>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <NeonButton variant="outline" style={{ padding: '10px 24px', fontSize: '0.85rem' }}>Save Draft</NeonButton>
-            <NeonButton variant="primary" style={{ padding: '10px 24px', fontSize: '0.85rem', color: C.bgMain }}>End Session</NeonButton>
-          </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 20 }}>
-          <StatCard icon="🚫" label="Filler Words" value="04" />
-          <StatCard icon="⭐" label={<span>Clarity<br/>Score</span>} value={<span>92<span style={{ fontSize: '1rem', color: C.textSecondary }}>%</span></span>} />
-          <StatCard icon="🧠" label="Tone" value={<span style={{ fontSize: '1.1rem', color: C.textPrimary }}>Confident</span>} />
-          <StatCard icon="📖" label="Vocab" value={<span style={{ fontSize: '1.1rem', color: C.textPrimary }}>High</span>} />
-          <StatCard icon="⏱️" label={<span>Pace<br/>(WPM)</span>} value="145" />
-          <GlassCard style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', background: 'rgba(167, 139, 250, 0.05)', border: `1px solid rgba(167, 139, 250, 0.2)` }} hoverEffect>
-             <div style={{ color: C.primary, fontSize: '1.2rem' }}>💡</div>
-             <div style={{ fontSize: '0.75rem', fontWeight: 600, color: C.primary, letterSpacing: '0.05em', textTransform: 'uppercase', textAlign: 'center' }}>
-               Next Step
-             </div>
-             <div style={{ fontSize: '0.95rem', fontWeight: 500, color: C.textPrimary, textAlign: 'center' }}>
-               Pause for Impact
-             </div>
-          </GlassCard>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 20 }}>
+          <StatCard 
+            icon="🚫" 
+            label="Filler Words" 
+            value={showFeedback ? (
+              <div style={{ fontSize: '1rem', display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'center' }}>
+                <span style={{ color: C.primary }}>uh - 3</span>
+                <span style={{ color: C.primary }}>like - 2</span>
+              </div>
+            ) : "-"} 
+          />
+          <StatCard 
+            icon="⭐" 
+            label={<span>Clarity<br/>Score</span>} 
+            value={showFeedback ? <span>92<span style={{ fontSize: '1rem', color: C.textSecondary }}>%</span></span> : "-"} 
+          />
+          <StatCard 
+            icon="🧠" 
+            label="Tone" 
+            value={showFeedback ? <span style={{ fontSize: '1.1rem', color: C.textPrimary }}>Confident</span> : "-"} 
+          />
+          <StatCard 
+            icon="⏱️" 
+            label={<span>Pace<br/>(WPM)</span>} 
+            value={showFeedback ? "145" : "-"} 
+          />
+          {showFeedback ? (
+            <GlassCard style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', background: 'rgba(167, 139, 250, 0.05)', border: `1px solid rgba(167, 139, 250, 0.2)` }} hoverEffect>
+               <div style={{ color: C.primary, fontSize: '1.2rem' }}>💡</div>
+               <div style={{ fontSize: '0.75rem', fontWeight: 600, color: C.primary, letterSpacing: '0.05em', textTransform: 'uppercase', textAlign: 'center' }}>
+                 Next Step
+               </div>
+               <div style={{ fontSize: '0.95rem', fontWeight: 500, color: C.textPrimary, textAlign: 'center' }}>
+                 Pause for Impact
+               </div>
+            </GlassCard>
+          ) : (
+            <StatCard icon="💡" label="Next Step" value="-" />
+          )}
         </div>
       </div>
 
       {/* BOTTOM INSIGHT BANNER */}
-      <GlassCard style={{ 
-        padding: '40px', 
-        marginTop: 10,
-        position: 'relative', 
-        overflow: 'hidden',
-        background: `linear-gradient(to right, ${C.bgCard}, transparent)`,
-        border: `1px solid ${C.borderMid}`
-      }}>
-        <div style={{ 
-          position: 'absolute', 
-          top: -100, right: -50, 
-          width: 400, height: 400, 
-          opacity: 0.1, 
-          pointerEvents: 'none'
+      {showFeedback && (
+        <GlassCard style={{ 
+          padding: '40px', 
+          marginTop: 10,
+          position: 'relative', 
+          overflow: 'hidden',
+          background: `linear-gradient(to right, ${C.bgCard}, transparent)`,
+          border: `1px solid ${C.borderMid}`
         }}>
-          <div style={{ width: '100%', height: '100%', borderRadius: '40%', border: `40px solid ${C.primary}`, transform: 'rotate(45deg)' }} />
-        </div>
-        
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: '60%' }}>
-          <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: 12, color: C.textPrimary }}>Master the Art of Focus</h3>
-          <p style={{ color: C.textSecondary, fontSize: '1.05rem', lineHeight: 1.6, marginBottom: 0 }}>
-            Our advanced AI monitors your narrative arc in real-time. <br/>
-            Keep practicing to unlock the "Executive Presence" mastery badge.
-          </p>
-        </div>
-      </GlassCard>
+          <div style={{ 
+            position: 'absolute', 
+            top: -100, right: -50, 
+            width: 400, height: 400, 
+            opacity: 0.1, 
+            pointerEvents: 'none'
+          }}>
+            <div style={{ width: '100%', height: '100%', borderRadius: '40%', border: `40px solid ${C.primary}`, transform: 'rotate(45deg)' }} />
+          </div>
+          
+          <div style={{ position: 'relative', zIndex: 1, maxWidth: '60%' }}>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: 12, color: C.textPrimary }}>Master the Art of Focus</h3>
+            <p style={{ color: C.textSecondary, fontSize: '1.05rem', lineHeight: 1.6, marginBottom: 0 }}>
+              Our advanced AI monitors your narrative arc in real-time. <br/>
+              Keep practicing to unlock the "Executive Presence" mastery badge.
+            </p>
+          </div>
+        </GlassCard>
+      )}
 
     </div>
   );
