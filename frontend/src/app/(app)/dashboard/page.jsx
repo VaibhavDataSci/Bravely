@@ -34,26 +34,26 @@ export default function DashboardPage(){
 
   // Week (7d) points — adjusted to fit tighter vertical space
   const weekPoints = [
-    { x: 60, y: 220, label: 'Mon' },
-    { x: 190, y: 170, label: 'Tue' },
-    { x: 320, y: 155, label: 'Wed' },
-    { x: 450, y: 175, label: 'Thu' },
-    { x: 580, y: 110, label: 'Fri' },
-    { x: 710, y: 50,  label: 'Sat' },
-    { x: 840, y: 85,  label: 'Sun' },
+    { x: 60, y: 310, label: 'Mon' },
+    { x: 190, y: 240, label: 'Tue' },
+    { x: 320, y: 220, label: 'Wed' },
+    { x: 450, y: 250, label: 'Thu' },
+    { x: 580, y: 150, label: 'Fri' },
+    { x: 710, y: 60,  label: 'Sat' },
+    { x: 840, y: 110,  label: 'Sun' },
   ];
 
   // Month (30d) simplified sample points
   const monthPoints = [
-    { x: 60, y: 230, label: 'Wk1' },{ x: 138, y: 200, label: '' },{ x: 216, y: 215, label: '' },{ x: 294, y: 185, label: '' },
-    { x: 372, y: 160, label: '' },{ x: 450, y: 140, label: '' },{ x: 528, y: 115, label: '' },{ x: 606, y: 100, label: '' },
-    { x: 684, y: 85, label: 'Wk4' },{ x: 762, y: 95, label: '' },{ x: 840, y: 125, label: '' },
+    { x: 60, y: 330, label: 'Wk1' },{ x: 138, y: 290, label: '' },{ x: 216, y: 310, label: '' },{ x: 294, y: 260, label: '' },
+    { x: 372, y: 230, label: '' },{ x: 450, y: 195, label: '' },{ x: 528, y: 160, label: '' },{ x: 606, y: 135, label: '' },
+    { x: 684, y: 110, label: 'Wk4' },{ x: 762, y: 125, label: '' },{ x: 840, y: 170, label: '' },
   ];
 
   const perfPoints = range === '7' ? weekPoints : monthPoints;
   const perfPointsStr = perfPoints.map(p => `${p.x} ${p.y}`).join(' L ');
   const perfStrokePath = `M ${perfPointsStr}`;
-  const perfAreaPath = `${perfStrokePath} L 840 270 L 60 270 Z`;
+  const perfAreaPath = `${perfStrokePath} L 840 390 L 60 390 Z`;
 
   // Radar polygon points (dynamic from metrics)
   const radarCenter = { x: 130, y: 110 };
@@ -126,18 +126,18 @@ export default function DashboardPage(){
                 <button onClick={() => setRange('30')} className={styles.rangeBtn} style={range==='30'?{background:'rgba(255,255,255,0.05)'}:{}}>30D</button>
               </div>
             </div>
-            <svg className={styles.performanceSVG} viewBox="0 0 900 300" preserveAspectRatio="xMinYMin meet">
+            <svg className={styles.performanceSVG} viewBox="0 0 900 440" preserveAspectRatio="xMinYMin meet">
               <defs>
                 <linearGradient id="gconf" x1="0" x2="1"><stop offset="0%" stopColor="#B794F4"/><stop offset="100%" stopColor="#8B5CF6"/></linearGradient>
-                <linearGradient id="areaGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#B794F4" stopOpacity="0.18"/><stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.02"/></linearGradient>
+                <linearGradient id="areaGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#B794F4" stopOpacity="0.22"/><stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.02"/></linearGradient>
               </defs>
               <path d={perfAreaPath} fill="url(#areaGrad)" className={styles.areaFill} />
-              <path d={perfStrokePath} fill="none" stroke="url(#gconf)" strokeWidth="4" className={styles.perfLine} strokeLinecap="round" strokeLinejoin="round" />
+              <path d={perfStrokePath} fill="none" stroke="url(#gconf)" strokeWidth="4.5" className={styles.perfLine} strokeLinecap="round" strokeLinejoin="round" />
               {perfPoints.map((p, idx) => (
-                <circle key={idx} cx={p.x} cy={p.y} r={6} fill="#fff" opacity={0.95} className={styles.perfMarker} />
+                <circle key={idx} cx={p.x} cy={p.y} r={7} fill="#fff" opacity={0.95} className={styles.perfMarker} />
               ))}
               {perfPoints.map((p, idx) => (
-                <text key={`t-${idx}`} x={p.x} y={290} className={styles.xLabel} textAnchor="middle">{p.label}</text>
+                <text key={`t-${idx}`} x={p.x} y={420} className={styles.xLabel} textAnchor="middle">{p.label}</text>
               ))}
             </svg>
           </div>
