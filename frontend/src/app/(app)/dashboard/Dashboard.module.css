@@ -1,0 +1,95 @@
+:root{--navy:#070816;--card:#0f1324;--glass:rgba(255,255,255,0.03);--muted:#96A3BA}
+.page{
+  padding: 36px 48px;
+  min-height: 100vh;
+  background: radial-gradient(900px 360px at 10% 8%, rgba(124,58,237,0.04), transparent), radial-gradient(700px 300px at 88% 82%, rgba(34,211,238,0.02), transparent), linear-gradient(180deg,#05060b,#0b0d18 60%);
+  color: #F6F8FB;
+  font-family: var(--font-sans);
+}
+  .hero{
+    display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:28px
+  }
+  .greeting{display:flex;flex-direction:column;gap:8px;max-width:820px}
+  .greetTitle{font-size:42px;font-weight:800;line-height:1;color:transparent;background:linear-gradient(90deg,#FFFFFF,#DAD0FF);-webkit-background-clip:text;background-clip:text;letter-spacing:-1px}
+  .greetSub{color:rgba(230,235,250,0.8);font-size:16px;max-width:760px}
+  .greetNote{color:rgba(200,210,230,0.55);font-size:12px;margin-top:4px}
+  .streakCard{width:280px;align-self:center;position:relative}
+
+  .streakGlass{border-radius:18px;padding:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.035);box-shadow:0 30px 90px rgba(20,10,40,0.6);backdrop-filter:blur(14px);position:relative;overflow:visible}
+  .streakRing{position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:999px;display:grid;place-items:center;filter:blur(18px);opacity:0.9}
+  .streakRing svg{width:140px;height:140px}
+  .streakValue{font-size:24px;font-weight:800;color:#FFE9D1}
+  .streakLabel{color:rgba(230,235,250,0.8);font-size:12px;margin-top:4px}
+  .streakPulse{animation:ping 2.6s infinite}
+
+  @keyframes ping{0%{transform:scale(0.98);opacity:0.9}50%{transform:scale(1.04);opacity:1}100%{transform:scale(0.98);opacity:0.9}}
+
+  .layoutSplit{display:grid;grid-template-columns:1.6fr .95fr;gap:16px;margin-bottom:16px;align-items:start}
+  .leftColumn{display:flex;flex-direction:column;gap:12px}
+  .rightColumn{display:flex;flex-direction:column;gap:12px}
+  .cardPremium{position:relative;border-radius:16px;padding:20px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.006));border:1px solid rgba(255,255,255,0.035);box-shadow:0 18px 60px rgba(4,6,18,0.6);backdrop-filter:blur(12px);transition:transform 280ms cubic-bezier(.2,.9,.2,1),box-shadow 280ms,border-color 280ms}
+  .cardPremium:hover{transform:translateY(-4px);box-shadow:0 30px 80px rgba(4,6,18,0.7),0 8px 36px rgba(124,58,237,0.06);border-color:rgba(167,139,250,0.12)}
+  .cardHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .cardTitle{font-size:15px;font-weight:800}
+  .cardSub{color:rgba(200,210,230,0.6);font-size:12px}
+
+  .performanceSVG{width:100%;height:auto;display:block}
+  .performanceCard{padding:20px 24px 14px}
+  .performanceCard .cardTitle{font-size:22px}
+  .performanceCard .cardSub{font-size:14px}
+  .perfLine{filter:drop-shadow(0 6px 24px rgba(140,90,255,0.12))}
+  .areaFill{mix-blend-mode:screen}
+  .perfMarker{filter:drop-shadow(0 8px 20px rgba(140,90,255,0.14));}
+  .xLabel{font-size:14px;fill:rgba(200,210,230,0.55);font-family:var(--font-sans);dominant-baseline:middle}
+  .radarLabel{font-size:15px;fill:rgba(210,220,240,0.8);font-family:var(--font-sans)}
+  .rangeBtn{padding:6px 10px;border-radius:6px;border:none;color:rgba(220,220,255,0.7);background:transparent;cursor:pointer;font-size:12px}
+  .rangeBtn:focus{outline:none}
+
+  .fillerGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .fillerChip{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-radius:12px;background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.008));border:1px solid rgba(255,255,255,0.02);transition:transform 220ms,box-shadow 220ms;cursor:default}
+  .fillerChip:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 16px 48px rgba(0,0,0,0.5)}
+  .fillerWord{font-weight:800;color:#EDE7FF;font-size:15px}
+  .fillerCount{background:rgba(255,255,255,0.06);padding:6px 12px;border-radius:8px;font-weight:800;color:#fff;font-size:14px}
+
+  .radarWrap{display:flex;flex-direction:column;gap:8px;align-items:center}
+  .radarSVG{width:100%;max-width:400px}
+
+  .healthGridInline{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .insightWidget{border-radius:12px;padding:14px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.006));border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(2,6,23,0.45);transition:transform 280ms cubic-bezier(.2,.9,.2,1),box-shadow 280ms,border-color 280ms;cursor:default}
+  .insightWidget:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 24px 64px rgba(4,6,18,0.7),0 8px 32px rgba(124,58,237,0.08);border-color:rgba(167,139,250,0.15)}
+  .widgetTitle{font-weight:800;margin-bottom:4px;font-size:13px}
+  .widgetSmall{color:rgba(200,210,230,0.6);font-size:11px}
+  .smallMuted{color:rgba(200,210,230,0.5);font-size:11px}
+
+  .aiInsights{display:flex;flex-direction:column;gap:8px}
+  .aiCard{padding:12px;border-radius:10px;background:linear-gradient(90deg, rgba(139,92,246,0.04), rgba(167,139,250,0.02));border:1px solid rgba(167,139,250,0.06);box-shadow:inset 0 1px 0 rgba(255,255,255,0.01);font-size:13px}
+
+  .sgGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+  .sgCard{border-radius:12px;padding:14px;background:linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.004));border:1px solid rgba(255,255,255,0.025);transition:transform 260ms,box-shadow 260ms}
+  .sgCard:hover{transform:translateY(-3px);box-shadow:0 16px 48px rgba(4,6,18,0.5)}
+  .sgLabel{font-size:12px;font-weight:800;letter-spacing:0.03em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .sgDot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .sgList{display:flex;flex-direction:column;gap:8px}
+  .sgItem{display:flex;align-items:flex-start;gap:10px;padding:6px 0}
+  .sgCheck{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg, rgba(74,222,128,0.15), rgba(74,222,128,0.06));color:#4ADE80;display:grid;place-items:center;font-size:12px;font-weight:800;flex-shrink:0;border:1px solid rgba(74,222,128,0.1)}
+  .sgArrow{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg, rgba(167,139,250,0.12), rgba(167,139,250,0.04));color:#A78BFA;display:grid;place-items:center;font-size:12px;font-weight:800;flex-shrink:0;border:1px solid rgba(167,139,250,0.08)}
+  .sgText{font-size:13px;font-weight:600;color:rgba(240,245,255,0.88)}
+  .sgTip{font-size:11px;color:rgba(200,210,230,0.45);margin-top:2px}
+  .sgPill{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;flex-shrink:0}
+  .sgPillGreen{background:rgba(74,222,128,0.08);color:#4ADE80;border:1px solid rgba(74,222,128,0.1)}
+  .sgPillNeutral{background:rgba(255,255,255,0.03);color:rgba(200,210,230,0.5);border:1px solid rgba(255,255,255,0.04)}
+  .sgInsight{margin-top:12px;padding:10px;border-radius:8px;background:linear-gradient(90deg, rgba(255,255,255,0.008), rgba(255,255,255,0.003));border:1px solid rgba(255,255,255,0.02);font-size:12px;color:rgba(200,210,230,0.6);line-height:1.5}
+
+  .sessionsRow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .sessionCardPremium{display:flex;justify-content:space-between;align-items:center;padding:14px;border-radius:12px;background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.006));border:1px solid rgba(255,255,255,0.03);transition:transform 280ms;cursor:pointer}
+  .sessionCardPremium:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(4,6,18,0.6)}
+
+  .milestoneList{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+  .milestoneItem{display:flex;align-items:center;gap:12px;padding:2px 0}
+  .milestoneIcon{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:14px;font-weight:800;flex-shrink:0}
+  .milestoneDone{background:linear-gradient(135deg, rgba(255,180,140,0.2), rgba(255,140,140,0.12));color:#FFB48C;border:1px solid rgba(255,180,140,0.15)}
+  .milestonePending{background:rgba(255,255,255,0.03);color:rgba(200,210,230,0.4);border:1px solid rgba(255,255,255,0.04)}
+  .milestoneLabel{font-size:13px;font-weight:500;color:rgba(240,245,255,0.9)}
+  .milestoneLabelPending{font-size:13px;font-weight:500;color:rgba(200,210,230,0.45)}
+
+  @media (max-width: 1000px){.layoutSplit{grid-template-columns:1fr}.hero{flex-direction:column;align-items:flex-start}.greetTitle{font-size:32px}.healthGridInline{grid-template-columns:repeat(2,1fr)}.sessionsRow{grid-template-columns:1fr}.sgGrid{grid-template-columns:1fr}}

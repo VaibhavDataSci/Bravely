@@ -2,281 +2,309 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { C } from '@/constants/theme';
-import { GlassCard, ScoreRing, MiniBar, NeonButton, Tag } from '@/components/shared';
-import { useAuth } from '@/contexts/AuthContext';
+import { GlassCard, NeonButton } from '@/components/shared';
+import styles from './Dashboard.module.css';
 
-// ─── DASHBOARD PAGE ─────────────────────────────────────────────────────────
-export default function DashboardPage() {
+export default function DashboardPage(){
   const router = useRouter();
-  const { user } = useAuth();
-  const [timeRange, setTimeRange] = useState('1W');
 
-  // Determine dynamic display name
-  const displayName = user?.profileResume?.personalInfo?.name || user?.name || user?.email?.split('@')[0] || 'User';
-
-  const overallScore = 84;
-  const scores = [
-    { label: 'Confidence', value: 82, color: C.primary, trend: '+4' },
-    { label: 'Clarity', value: 74, color: C.secondary, trend: '+2' },
-    { label: 'Tone', value: 89, color: C.success, trend: '+6' },
-    { label: 'Coding', value: 91, color: C.warning, trend: '+8' },
-  ];
-  const weekData = [55, 62, 58, 70, 74, 80, 85];
-  
-  // Try to use user's preferred role if available, otherwise fallback to static data
-  const userRole = user?.profileResume?.role || 'Software Engineer';
-  const isCodingHeavy = userRole.toLowerCase().includes('engineer') || userRole.toLowerCase().includes('developer');
-  const isCloudDevOps = userRole.toLowerCase().includes('cloud') || userRole.toLowerCase().includes('devops');
-  const isHR = userRole.toLowerCase().includes('hr') || userRole.toLowerCase().includes('product') || userRole.toLowerCase().includes('manager');
-
-  const recentSessions = [
-    { role: `Senior ${userRole} — Google`, date: 'Yesterday', score: 88, type: isCodingHeavy ? 'Technical' : 'Behavioral', icon: isCodingHeavy ? '💻' : '🎯' },
-    { role: isCloudDevOps ? 'System Design — AWS' : isHR ? 'PM — Stripe' : 'Two Sum + System Design', date: '2 days ago', score: 91, type: isCloudDevOps || isCodingHeavy ? 'Coding' : 'Behavioral', icon: isCloudDevOps ? '☁️' : isHR ? '🎯' : '🧩' },
-    { role: 'Peer Mock w/ Jordan K.', date: '3 days ago', score: 79, type: 'Peer P2P', icon: '👥' },
+  const metrics = [
+    { id:'confidence', label:'Confidence', pct:82, accent:C.primary, insight:'Confidence increased 8% this week.' },
+    { id:'clarity', label:'Clarity', pct:74, accent:C.secondary, insight:'Clarity improved in structured answers.' },
+    { id:'fluency', label:'Fluency', pct:69, accent:C.glow, insight:'Fluency steady; try longer turns.' },
+    { id:'structure', label:'Structure', pct:58, accent:C.info, insight:'Work on narrative structure and signposting.' },
+    { id:'vocab', label:'Vocabulary', pct:72, accent:C.accentSettings, insight:'Vocabulary richness improved by 9%.' },
   ];
 
-  const typeColors = { Technical: C.primary, Coding: C.warning, 'Peer P2P': C.secondary, Behavioral: C.success, HR: C.info };
+  const strengths = [
+    { text: 'Clear technical explanations', status: 'Improving' },
+    { text: 'Strong conversational confidence', status: 'Stable' },
+    { text: 'Natural storytelling energy', status: 'Improving' },
+    { text: 'Good speaking consistency', status: 'Stable' },
+  ];
 
-  // Generate dynamic subtext based on profile
-  let dynamicSubtext = "Your interview skills are improving steadily. Focus on reducing filler words and pacing for your next session.";
-  if (isCodingHeavy) {
-    dynamicSubtext = "Your coding consistency improved this week. AI recommends focusing on pacing during algorithm explanations.";
-  } else if (isHR) {
-    dynamicSubtext = "Your communication scores are improving steadily. Try focusing on STAR method structure for behavioral questions.";
-  } else if (isCloudDevOps) {
-    dynamicSubtext = "Great progress on architectural concepts. AI recommends a System Design round next to test load balancing knowledge.";
-  }
+  const growthAreas = [
+    { text: 'Reduce filler words during transitions', tip: 'Try pausing instead of filling silence.' },
+    { text: 'Pause slightly before answering', tip: 'A 1-second pause sounds composed.' },
+    { text: 'Use stronger descriptive vocabulary', tip: 'Replace generic words with vivid ones.' },
+    { text: 'Improve pacing in longer responses', tip: 'Break answers into 2–3 clear sections.' },
+  ];
 
-  // Shared styles
-  const sectionLabel = { fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 };
-  const thinBar = (pct, color) => (
-    <div style={{ height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.04)', marginTop: 6 }}>
-      <div style={{ height: '100%', borderRadius: 2, width: `${pct}%`, background: `linear-gradient(90deg, ${color}60, ${color})`, transition: 'width 1.2s ease' }} />
-    </div>
-  );
+  const heat = [0,1,2,3,2,1,4, 2,3,4,1,0,2,3, 0,1,2,3,2,1,0];
+
+  const sessions = [
+    { title:'Mock — PM Interview', date:'Yesterday', score:92, best:'Structure', area:'Pacing', dur:'28m' },
+    { title:'Phone Call with AI', date:'2 days ago', score:78, best:'Clarity', area:'Fillers', dur:'18m' },
+    { title:'Peer Practice', date:'4 days ago', score:85, best:'Confidence', area:'Transitions', dur:'22m' },
+  ];
+
+  const [range, setRange] = useState('7');
+
+  // Week (7d) points — adjusted to fit tighter vertical space
+  const weekPoints = [
+    { x: 60, y: 310, label: 'Mon' },
+    { x: 190, y: 240, label: 'Tue' },
+    { x: 320, y: 220, label: 'Wed' },
+    { x: 450, y: 250, label: 'Thu' },
+    { x: 580, y: 150, label: 'Fri' },
+    { x: 710, y: 60,  label: 'Sat' },
+    { x: 840, y: 110,  label: 'Sun' },
+  ];
+
+  // Month (30d) simplified sample points
+  const monthPoints = [
+    { x: 60, y: 330, label: 'Wk1' },{ x: 138, y: 290, label: '' },{ x: 216, y: 310, label: '' },{ x: 294, y: 260, label: '' },
+    { x: 372, y: 230, label: '' },{ x: 450, y: 195, label: '' },{ x: 528, y: 160, label: '' },{ x: 606, y: 135, label: '' },
+    { x: 684, y: 110, label: 'Wk4' },{ x: 762, y: 125, label: '' },{ x: 840, y: 170, label: '' },
+  ];
+
+  const perfPoints = range === '7' ? weekPoints : monthPoints;
+  const perfPointsStr = perfPoints.map(p => `${p.x} ${p.y}`).join(' L ');
+  const perfStrokePath = `M ${perfPointsStr}`;
+  const perfAreaPath = `${perfStrokePath} L 840 390 L 60 390 Z`;
+
+  // Radar polygon points (dynamic from metrics)
+  const radarCenter = { x: 200, y: 160 };
+  const radarMax = 100;
+  const radarAngles = metrics.map((_, i) => (-Math.PI / 2) + (2 * Math.PI * i) / metrics.length);
+  const radarPoints = metrics.map((m, i) => {
+    const r = (m.pct / 100) * radarMax;
+    const x = Math.round(radarCenter.x + r * Math.cos(radarAngles[i]));
+    const y = Math.round(radarCenter.y + r * Math.sin(radarAngles[i]));
+    return `${x},${y}`;
+  }).join(' ');
+
+  const radarLabelPositions = metrics.map((m, i) => {
+    const angle = radarAngles[i];
+    const x = Math.round(radarCenter.x + (radarMax + 32) * Math.cos(angle));
+    const y = Math.round(radarCenter.y + (radarMax + 32) * Math.sin(angle));
+    return { x, y, label: m.label };
+  });
+
+  const milestones = [
+    { label: 'First AI Call Completed', done: true },
+    { label: '7-Day Streak', done: true },
+    { label: 'Reduced filler words 20%', done: true },
+    { label: 'Next goal: Reach 90 confidence score', done: false },
+  ];
 
   return (
-    <div style={{ flex: 1, padding: '28px 32px', overflow: 'auto' }}>
+    <div className={styles.page}>
+      {/* HERO */}
+      <div className={styles.hero}>
+        <div className={styles.greeting}>
+          <div className={styles.greetTitle}>Welcome back, Vaibhav</div>
+          <div className={styles.greetSub}>Clarity + confidence: keep the momentum.</div>
+        </div>
 
-      {/* ═══ HERO SECTION ═══ */}
-      <div style={{
-        padding: '28px 32px', borderRadius: 16, marginBottom: 24,
-        background: 'linear-gradient(135deg, rgba(139,92,246,0.06) 0%, rgba(6,182,212,0.04) 50%, rgba(139,92,246,0.03) 100%)',
-        border: '1px solid rgba(139,92,246,0.1)',
-        animation: 'fade-in-up 0.6s ease-out forwards'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.primary, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Dashboard Overview</div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: C.textPrimary, margin: '0 0 6px 0' }}>Welcome back, {displayName} 👋</h1>
-            <p style={{ fontSize: 13, color: C.textMuted, margin: 0, maxWidth: 420, lineHeight: 1.6 }}>
-              {dynamicSubtext}
-            </p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-            {/* Overall Score */}
-            <div style={{ textAlign: 'center' }}>
-              <div style={{
-                fontSize: 56, fontWeight: 900, lineHeight: 1,
-                background: `linear-gradient(135deg, ${C.primary}, ${C.secondary})`,
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              }}>{overallScore}</div>
-              <div style={{ fontSize: 11, color: C.textMuted, marginTop: 4 }}>AI Score</div>
+        <div className={styles.streakCard}>
+          <div className={styles.streakGlass}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div>
+                <div style={{fontSize:12,color:'rgba(255,255,255,0.78)',textTransform:'uppercase',letterSpacing:'0.06em'}}>Streak</div>
+                <div className={styles.streakValue}>14 Days</div>
+                <div className={styles.streakLabel}>Daily speaking momentum is building.</div>
+              </div>
+              <div className={`${styles.streakRing} ${styles.streakPulse}`} aria-hidden>
+                <svg viewBox="0 0 100 100">
+                  <defs>
+                    <linearGradient id="sr" x1="0" x2="1"><stop offset="0%" stopColor="#FFD2A8"/><stop offset="100%" stopColor="#FF8B8B"/></linearGradient>
+                  </defs>
+                  <circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.04)" strokeWidth="10" fill="none" />
+                  <circle cx="50" cy="50" r="40" stroke="url(#sr)" strokeWidth="6" fill="none" strokeDasharray="251.2" strokeDashoffset="30" strokeLinecap="round" transform="rotate(-90 50 50)" />
+                </svg>
+              </div>
             </div>
-            {/* Quick Stats */}
-            <div style={{ display: 'flex', gap: 16 }}>
-              {[
-                { label: 'Streak', val: '7 days', icon: '🔥', color: C.warning },
-                { label: 'This Week', val: '+12%', icon: '📈', color: C.success },
-                { label: 'Sessions', val: '24', icon: '🎤', color: C.primary },
-              ].map(s => (
-                <div key={s.label} style={{
-                  padding: '12px 16px', borderRadius: 10,
-                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                  textAlign: 'center', minWidth: 80,
-                }}>
-                  <div style={{ fontSize: 14, marginBottom: 4 }}>{s.icon}</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: s.color, fontFamily: 'JetBrains Mono' }}>{s.val}</div>
-                  <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN SPLIT: Performance + Health + Focus / Radar + Insights + Achievements */}
+      <div className={styles.layoutSplit}>
+        <div className={styles.leftColumn}>
+          {/* Performance Chart */}
+          <div className={`${styles.cardPremium} ${styles.performanceCard}`}>
+            <div className={styles.cardHeader}>
+              <div>
+                <div className={styles.cardTitle}>Performance Progress</div>
+                <div className={styles.cardSub}>Historical growth of your communication confidence.</div>
+              </div>
+              <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                <button onClick={() => setRange('7')} className={styles.rangeBtn} style={range==='7'?{background:'rgba(255,255,255,0.05)'}:{}}>7D</button>
+                <button onClick={() => setRange('30')} className={styles.rangeBtn} style={range==='30'?{background:'rgba(255,255,255,0.05)'}:{}}>30D</button>
+              </div>
+            </div>
+            <svg className={styles.performanceSVG} viewBox="0 0 900 440" preserveAspectRatio="xMinYMin meet">
+              <defs>
+                <linearGradient id="gconf" x1="0" x2="1"><stop offset="0%" stopColor="#B794F4"/><stop offset="100%" stopColor="#8B5CF6"/></linearGradient>
+                <linearGradient id="areaGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#B794F4" stopOpacity="0.22"/><stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.02"/></linearGradient>
+              </defs>
+              <path d={perfAreaPath} fill="url(#areaGrad)" className={styles.areaFill} />
+              <path d={perfStrokePath} fill="none" stroke="url(#gconf)" strokeWidth="4.5" className={styles.perfLine} strokeLinecap="round" strokeLinejoin="round" />
+              {perfPoints.map((p, idx) => (
+                <circle key={idx} cx={p.x} cy={p.y} r={7} fill="#fff" opacity={0.95} className={styles.perfMarker} />
+              ))}
+              {perfPoints.map((p, idx) => (
+                <text key={`t-${idx}`} x={p.x} y={420} className={styles.xLabel} textAnchor="middle">{p.label}</text>
+              ))}
+            </svg>
+          </div>
+
+          {/* Communication Health */}
+          <div className={styles.healthGridInline}>
+            {metrics.map(m=> (
+              <div key={m.id} className={styles.insightWidget}>
+                <div className={styles.widgetTitle}>{m.label}</div>
+                <div className={styles.widgetSmall}>{m.insight}</div>
+                <div style={{height:8,background:'rgba(255,255,255,0.03)',borderRadius:6,marginTop:8}}>
+                  <div style={{width:`${m.pct}%`,height:'100%',borderRadius:6,background:`linear-gradient(90deg, ${m.accent}, ${C.secondary})`,transition:'width 1s'}} />
+                </div>
+                <div style={{marginTop:6,fontWeight:800,fontSize:13}}>{m.pct}%</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Your Strengths & Growth Areas */}
+          <div className={styles.cardPremium}>
+            <div className={styles.cardHeader}>
+              <div>
+                <div className={styles.cardTitle}>Your Strengths &amp; Growth Areas</div>
+                <div className={styles.cardSub}>Personalized communication insights based on recent sessions.</div>
+              </div>
+            </div>
+            <div className={styles.sgGrid}>
+              {/* Strengths */}
+              <div className={styles.sgCard}>
+                <div className={styles.sgLabel}><span className={styles.sgDot} style={{background:'#4ADE80'}} />Your Strengths</div>
+                <div className={styles.sgList}>
+                  {strengths.map((s,i) => (
+                    <div key={i} className={styles.sgItem}>
+                      <div className={styles.sgCheck}>✓</div>
+                      <div style={{flex:1}}>
+                        <div className={styles.sgText}>{s.text}</div>
+                      </div>
+                      <div className={`${styles.sgPill} ${s.status === 'Improving' ? styles.sgPillGreen : styles.sgPillNeutral}`}>{s.status}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className={styles.sgInsight}>💡 Your confidence improves significantly during unscripted conversations.</div>
+              </div>
+              {/* Growth Areas */}
+              <div className={styles.sgCard}>
+                <div className={styles.sgLabel}><span className={styles.sgDot} style={{background:'#A78BFA'}} />Areas to Improve</div>
+                <div className={styles.sgList}>
+                  {growthAreas.map((g,i) => (
+                    <div key={i} className={styles.sgItem}>
+                      <div className={styles.sgArrow}>→</div>
+                      <div style={{flex:1}}>
+                        <div className={styles.sgText}>{g.text}</div>
+                        <div className={styles.sgTip}>{g.tip}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className={styles.sgInsight}>🎯 Practice shorter pauses to sound more composed.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.rightColumn}>
+          {/* Skill Radar */}
+          <div className={styles.cardPremium}>
+            <div className={styles.cardHeader}>
+              <div>
+                <div className={styles.cardTitle}>Skill Radar</div>
+                <div className={styles.cardSub}>Multidimensional communication analysis</div>
+              </div>
+            </div>
+            <div className={styles.radarWrap}>
+              <svg className={styles.radarSVG} viewBox="0 0 400 320">
+                <circle cx="200" cy="160" r="108" fill="rgba(255,255,255,0.00)" stroke="rgba(255,255,255,0.025)" />
+                <circle cx="200" cy="160" r="72" fill="none" stroke="rgba(255,255,255,0.015)" />
+                <circle cx="200" cy="160" r="36" fill="none" stroke="rgba(255,255,255,0.01)" />
+                <polygon points={radarPoints} fill="rgba(139,92,246,0.1)" stroke="rgba(167,139,250,0.35)" strokeWidth="2.5" />
+                {radarPoints.split(' ').map((pt, i) => {
+                  const [x, y] = pt.split(',');
+                  return <circle key={i} cx={x} cy={y} r={5} fill="#CDBBFF" />
+                })}
+                {radarLabelPositions.map((L, i) => (
+                  <text key={`lab-${i}`} x={L.x} y={L.y} className={styles.radarLabel} textAnchor="middle">{L.label.toUpperCase()}</text>
+                ))}
+              </svg>
+              <div style={{textAlign:'center',marginTop:4}}>
+                <div style={{fontSize:32,fontWeight:800}}>84</div>
+                <div className={styles.smallMuted}>Overall — Excellent</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Filler Words */}
+          <div className={styles.cardPremium}>
+            <div className={styles.cardHeader}>
+              <div>
+                <div className={styles.cardTitle}>Filler Words</div>
+                <div className={styles.cardSub}>Commonly used — hover to inspect</div>
+              </div>
+            </div>
+            <div className={styles.fillerGrid}>
+              {[{w:'uh',n:4},{w:'like',n:3},{w:'you know',n:2},{w:'so',n:1},{w:'actually',n:1}].map(({w,n},i)=> (
+                <div key={i} className={styles.fillerChip} title={`${w} — ${n} times`}>
+                  <div className={styles.fillerWord}>{w}</div>
+                  <div className={styles.fillerCount}>{n}</div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* ═══ SKILL SCORE CARDS ═══ */}
-      <div style={sectionLabel}>Performance Metrics</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 28 }}>
-        {scores.map(sc => (
-          <div key={sc.label} style={{
-            padding: '20px', borderRadius: 12,
-            background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)',
-            display: 'flex', alignItems: 'center', gap: 16,
-            transition: 'all 0.2s', cursor: 'default',
-          }}>
-            <ScoreRing value={sc.value} label="" color={sc.color} size={56} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 2 }}>{sc.label}</div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                <span style={{ fontSize: 22, fontWeight: 700, color: C.textPrimary, fontFamily: 'JetBrains Mono' }}>{sc.value}</span>
-                <span style={{ fontSize: 11, color: C.success, fontWeight: 600 }}>{sc.trend}%</span>
+          {/* Communication Milestones */}
+          <div className={styles.cardPremium}>
+            <div className={styles.cardHeader}>
+              <div>
+                <div className={styles.cardTitle}>Communication Milestones</div>
+                <div className={styles.cardSub}>Your progress timeline</div>
               </div>
-              <MiniBar data={[...weekData.slice(0, 5), sc.value - 5, sc.value]} color={sc.color} height={20} />
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* ═══ STREAK + PROGRESS ROW ═══ */}
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 14, marginBottom: 28 }}>
-        {/* Streak Card */}
-        <div style={{
-          padding: '20px', borderRadius: 12,
-          background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)',
-        }}>
-          <div style={sectionLabel}>Current Streak</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 14 }}>
-            <span style={{ fontSize: 40, fontWeight: 800, color: C.warning, lineHeight: 1 }}>7</span>
-            <span style={{ fontSize: 14, color: C.textMuted }}>days</span>
-          </div>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
-              <div key={i} style={{
-                flex: 1, height: 26, borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: `${C.warning}15`, border: `1px solid ${C.warning}30`,
-                fontSize: 9, color: C.warning, fontWeight: 700,
-              }}>{d}</div>
-            ))}
-          </div>
-          <div style={{ marginTop: 12, fontSize: 11, color: C.textMuted, lineHeight: 1.5 }}>
-            🏆 Best: <span style={{ color: C.warning, fontWeight: 600 }}>14 days</span> · Keep going!
-          </div>
-        </div>
-
-        {/* Weekly Progress Chart */}
-        <div style={{
-          padding: '20px', borderRadius: 12,
-          background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={sectionLabel}>Weekly Progress</div>
-            <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: 2 }}>
-              {['1W', '1M', '3M'].map(t => (
-                <button key={t} onClick={() => setTimeRange(t)} style={{
-                  padding: '4px 12px', borderRadius: 5, fontSize: 10, fontWeight: 600, border: 'none', cursor: 'pointer',
-                  background: timeRange === t ? `${C.primary}18` : 'transparent',
-                  color: timeRange === t ? C.primary : C.textMuted,
-                  fontFamily: 'inherit', transition: 'all 0.2s',
-                }}>{t}</button>
-              ))}
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 70 }}>
-            {weekData.map((v, i) => (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <div style={{ fontSize: 9, color: C.textMuted, fontFamily: 'JetBrains Mono' }}>{v}</div>
-                <div style={{
-                  width: '100%', borderRadius: 4,
-                  height: `${(v / 100) * 55}px`,
-                  background: i === weekData.length - 1
-                    ? `linear-gradient(to top, ${C.primary}, ${C.secondary})`
-                    : `linear-gradient(to top, ${C.primary}30, ${C.primary}50)`,
-                  transition: 'height 1s ease',
-                }} />
-                <span style={{ fontSize: 9, color: C.textMuted }}>{['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'][i]}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ═══ STRENGTHS + RECENT SESSIONS ═══ */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-
-        {/* Strengths & Focus */}
-        <div style={{
-          padding: '20px', borderRadius: 12,
-          background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)',
-        }}>
-          <div style={sectionLabel}>Strengths & Focus Areas</div>
-          <div style={{ marginBottom: 18 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: C.success, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>✓ Strengths</div>
-            {[
-              { label: 'Technical articulation', pct: 89 },
-              { label: 'Story structure (STAR)', pct: 82 },
-              { label: 'Coding accuracy', pct: 91 },
-            ].map(({ label, pct }) => (
-              <div key={label} style={{ marginBottom: 8 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                  <span style={{ fontSize: 12, color: C.textPrimary }}>{label}</span>
-                  <span style={{ fontSize: 11, color: C.success, fontFamily: 'JetBrains Mono', fontWeight: 600 }}>{pct}%</span>
-                </div>
-                {thinBar(pct, C.success)}
-              </div>
-            ))}
-          </div>
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: C.warning, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>→ Needs Improvement</div>
-            {[
-              { label: 'Filler words (um/uh)', pct: 38 },
-              { label: 'Pacing & pauses', pct: 52 },
-              { label: 'Eye contact', pct: 64 },
-            ].map(({ label, pct }) => (
-              <div key={label} style={{ marginBottom: 8 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                  <span style={{ fontSize: 12, color: C.textPrimary }}>{label}</span>
-                  <span style={{ fontSize: 11, color: C.warning, fontFamily: 'JetBrains Mono', fontWeight: 600 }}>{pct}%</span>
-                </div>
-                {thinBar(pct, C.warning)}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Sessions */}
-        <div style={{
-          padding: '20px', borderRadius: 12,
-          background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', ...sectionLabel }}>
-            <span>Recent Sessions</span>
-            <button onClick={() => router.push('/report')} style={{
-              fontSize: 10, color: C.primary, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600,
-            }}>View All →</button>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {recentSessions.map((sess, i) => (
-              <div key={i} onClick={() => router.push('/report')} style={{
-                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
-                borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s',
-                background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.04)',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.04)'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.12)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.015)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)'; }}>
-                <div style={{ fontSize: 20, width: 36, height: 36, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.03)' }}>
-                  {sess.icon}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: C.textPrimary, marginBottom: 2 }}>{sess.role}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 10, color: C.textMuted }}>{sess.date}</span>
-                    <span style={{
-                      fontSize: 9, padding: '1px 6px', borderRadius: 3, fontWeight: 600,
-                      background: `${typeColors[sess.type] || C.primary}12`,
-                      color: typeColors[sess.type] || C.primary,
-                    }}>{sess.type}</span>
+            <div className={styles.milestoneList}>
+              {milestones.map((ms, i) => (
+                <div key={i} className={styles.milestoneItem}>
+                  <div className={`${styles.milestoneIcon} ${ms.done ? styles.milestoneDone : styles.milestonePending}`}>
+                    {ms.done ? '✓' : '⏳'}
                   </div>
+                  <div className={ms.done ? styles.milestoneLabel : styles.milestoneLabelPending}>{ms.label}</div>
                 </div>
-                <div style={{
-                  fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono',
-                  color: sess.score >= 85 ? C.success : sess.score >= 70 ? C.primary : C.warning,
-                }}>{sess.score}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
+        </div>
+      </div>
+
+      {/* Recent Sessions — full width */}
+      <div className={styles.cardPremium}>
+        <div className={styles.cardHeader}>
+          <div>
+            <div className={styles.cardTitle}>Recent Sessions</div>
+            <div className={styles.cardSub}>Latest feedback &amp; takeaways</div>
+          </div>
+        </div>
+        <div className={styles.sessionsRow}>
+          {sessions.map((s,i)=> (
+            <div key={i} className={styles.sessionCardPremium} onClick={() => router.push('/report')}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{width:44,height:44,borderRadius:10,background:'linear-gradient(135deg,#8B5CF6,#A78BFA)',display:'grid',placeItems:'center',fontWeight:800,fontSize:14,color:'#fff'}}>{s.title.split(' ')[0][0]}</div>
+                <div>
+                  <div style={{fontWeight:700,fontSize:13}}>{s.title}</div>
+                  <div className={styles.smallMuted}>{s.date} · {s.dur}</div>
+                </div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontWeight:900,fontSize:16,color: s.score>=90?C.success:s.score>=75?C.primary:C.warning}}>{s.score}</div>
+                <div className={styles.smallMuted} style={{marginTop:4}}>{s.best} · needs {s.area}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
-  );
+  )
 }
