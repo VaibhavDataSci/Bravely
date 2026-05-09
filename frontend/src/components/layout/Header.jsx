@@ -30,7 +30,9 @@ export function Header() {
     router.push('/');
   };
 
-  const initial = user?.name ? user.name.charAt(0).toUpperCase() : '?';
+  const displayName = user?.profileResume?.personalInfo?.name || user?.name || user?.email?.split('@')[0] || 'User';
+  const initial = displayName.charAt(0).toUpperCase();
+  const avatarUrl = user?.profileResume?.personalInfo?.avatar || user?.photoURL || user?.avatarUrl;
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
   
   return (
@@ -55,7 +57,7 @@ export function Header() {
         {isDashboard && (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Good morning, {user?.name || 'Alex'} ✨
+              Good morning, {displayName} ✨
             </div>
             <div style={{ fontSize: 13, color: C.textSecondary, whiteSpace: 'nowrap' }}>
               You're on a <span style={{ color: C.warning }}>7-day streak</span> — keep it up!
@@ -67,10 +69,9 @@ export function Header() {
       {/* Middle Section */}
       {isDashboard && (
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', margin: '0 20px' }}>
-          <NeonButton variant="outline" size="sm" onClick={() => router.push('/mock')}>Mock Interview</NeonButton>
           <NeonButton variant="outline" size="sm" onClick={() => router.push('/coding')}>⌥ Coding Round</NeonButton>
           <NeonButton variant="outline" size="sm" onClick={() => router.push('/daily-practice/peer-practice')}>👥 Peer Arena</NeonButton>
-          <NeonButton size="sm" onClick={() => router.push('/solo')}>Start Interview →</NeonButton>
+          <NeonButton size="sm" onClick={() => router.push('/solo-select')}>Start Mock Interview →</NeonButton>
         </div>
       )}
 
@@ -194,9 +195,15 @@ export function Header() {
               fontWeight: 800,
               boxShadow: profileOpen ? `0 0 18px rgba(167, 139, 250, 0.2)` : 'none',
               transition: 'all 0.2s',
+              overflow: 'hidden',
+              padding: 0
             }}
           >
-            {initial}
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              initial
+            )}
           </button>
 
           {/* Profile Dropdown */}
@@ -223,7 +230,7 @@ export function Header() {
           >
             <div style={{ padding: '12px 20px', borderBottom: `1px solid ${C.border}`, marginBottom: 8 }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, marginBottom: 2 }}>
-                {user?.name || 'User'}
+                {displayName}
               </div>
               <div style={{ fontSize: 12, color: C.textMuted, wordBreak: 'break-all' }}>
                 {user?.email || ''}
