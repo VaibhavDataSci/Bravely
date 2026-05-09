@@ -158,60 +158,6 @@ const Sidebar = ({ page }) => {
         })}
       </div>
 
-      {/* User Profile at Bottom */}
-      <div style={{ marginTop: 'auto', padding: expanded ? '0 12px' : 0, display: 'flex', justifyContent: 'center' }}>
-        <button
-          onClick={() => router.push('/profile')}
-          title={!expanded ? user?.name || 'Profile' : undefined}
-          style={{
-            width: expanded ? '100%' : 44,
-            height: 44,
-            borderRadius: 12,
-            background: 'transparent',
-            border: '1px solid transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: expanded ? 'flex-start' : 'center',
-            padding: expanded ? '0 8px' : 0,
-            gap: expanded ? 10 : 0,
-            transition: 'all 0.2s ease',
-            overflow: 'hidden',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = `rgba(167, 139, 250, 0.05)`;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
-          }}
-        >
-          <div style={{
-            width: 28, height: 28, borderRadius: '50%',
-            background: `linear-gradient(135deg, ${C.primary}, ${C.secondary})`,
-            color: '#fff', fontSize: 12, fontWeight: 700,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0, overflow: 'hidden'
-          }}>
-            {user?.profileResume?.personalInfo?.avatar || user?.photoURL || user?.avatarUrl ? (
-              <img src={user?.profileResume?.personalInfo?.avatar || user?.photoURL || user?.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              (user?.profileResume?.personalInfo?.name || user?.name || user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()
-            )}
-          </div>
-          <div style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-            opacity: expanded ? 1 : 0,
-            width: expanded ? '100%' : 0,
-            transition: 'all 0.25s ease',
-            overflow: 'hidden', whiteSpace: 'nowrap'
-          }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: C.textPrimary }}>
-              {user?.profileResume?.personalInfo?.name || user?.name || user?.email?.split('@')[0] || 'User'}
-            </span>
-            <span style={{ fontSize: 11, color: C.textMuted }}>Profile</span>
-          </div>
-        </button>
-      </div>
     </div>
   );
 };
