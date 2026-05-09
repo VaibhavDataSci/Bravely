@@ -8,9 +8,7 @@ const navItems = [
   { id: 'dashboard',       label: 'Dashboard',        icon: '◈' },
   { id: 'daily-practice',  label: 'Daily Practice',   icon: '⬡' },
   { id: 'solo-select',     label: 'Mock Interview',   icon: '◉' },
-  { id: 'coding',          label: 'Coding Interview', icon: '⌥' },
   { id: 'group-lobby',     label: 'Group Discussion', icon: '⬡' },
-  { id: 'report',          label: 'Analytics',        icon: '◈' },
 ];
 
 const COLLAPSED_WIDTH = 68;
