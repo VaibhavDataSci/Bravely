@@ -34,26 +34,26 @@ export default function DashboardPage(){
 
   // Week (7d) points — adjusted to fit tighter vertical space
   const weekPoints = [
-    { x: 60, y: 170, label: 'Mon' },
-    { x: 160, y: 140, label: 'Tue' },
-    { x: 260, y: 130, label: 'Wed' },
-    { x: 360, y: 140, label: 'Thu' },
-    { x: 460, y: 100, label: 'Fri' },
-    { x: 560, y: 60,  label: 'Sat' },
-    { x: 760, y: 90,  label: 'Sun' },
+    { x: 60, y: 110, label: 'Mon' },
+    { x: 190, y: 90, label: 'Tue' },
+    { x: 320, y: 85, label: 'Wed' },
+    { x: 450, y: 90, label: 'Thu' },
+    { x: 580, y: 65, label: 'Fri' },
+    { x: 710, y: 35,  label: 'Sat' },
+    { x: 840, y: 55,  label: 'Sun' },
   ];
 
   // Month (30d) simplified sample points
   const monthPoints = [
-    { x: 40, y: 170, label: 'Wk1' },{ x: 140, y: 150, label: '' },{ x: 200, y: 160, label: '' },{ x: 260, y: 140, label: '' },
-    { x: 320, y: 130, label: '' },{ x: 380, y: 120, label: '' },{ x: 440, y: 110, label: '' },{ x: 500, y: 100, label: '' },
-    { x: 560, y: 90, label: 'Wk4' },{ x: 660, y: 95, label: '' },{ x: 760, y: 120, label: '' },
+    { x: 60, y: 110, label: 'Wk1' },{ x: 138, y: 95, label: '' },{ x: 216, y: 105, label: '' },{ x: 294, y: 90, label: '' },
+    { x: 372, y: 85, label: '' },{ x: 450, y: 75, label: '' },{ x: 528, y: 65, label: '' },{ x: 606, y: 60, label: '' },
+    { x: 684, y: 55, label: 'Wk4' },{ x: 762, y: 60, label: '' },{ x: 840, y: 75, label: '' },
   ];
 
   const perfPoints = range === '7' ? weekPoints : monthPoints;
   const perfPointsStr = perfPoints.map(p => `${p.x} ${p.y}`).join(' L ');
   const perfStrokePath = `M ${perfPointsStr}`;
-  const perfAreaPath = `${perfStrokePath} L 860 180 L 40 180 Z`;
+  const perfAreaPath = `${perfStrokePath} L 840 130 L 60 130 Z`;
 
   // Radar polygon points (dynamic from metrics)
   const radarCenter = { x: 110, y: 110 };
@@ -104,37 +104,77 @@ export default function DashboardPage(){
         </div>
       </div>
 
-      {/* MAIN SPLIT: Performance / Radar */}
+      {/* MAIN SPLIT: Performance + Health + Focus / Radar + Insights + Achievements */}
       <div className={styles.layoutSplit}>
-        <div className={`${styles.cardPremium} ${styles.performanceCard}`}>
-          <div className={styles.cardHeader}>
-            <div>
-              <div className={styles.cardTitle}>Performance Progress</div>
-              <div className={styles.cardSub}>Historical growth of your communication confidence.</div>
+        <div className={styles.leftColumn}>
+          {/* Performance Chart */}
+          <div className={`${styles.cardPremium} ${styles.performanceCard}`}>
+            <div className={styles.cardHeader}>
+              <div>
+                <div className={styles.cardTitle}>Performance Progress</div>
+                <div className={styles.cardSub}>Historical growth of your communication confidence.</div>
+              </div>
+              <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                <button onClick={() => setRange('7')} className={styles.rangeBtn} style={range==='7'?{background:'rgba(255,255,255,0.05)'}:{}}>7D</button>
+                <button onClick={() => setRange('30')} className={styles.rangeBtn} style={range==='30'?{background:'rgba(255,255,255,0.05)'}:{}}>30D</button>
+              </div>
             </div>
-            <div style={{display:'flex',gap:8,alignItems:'center'}}>
-              <button onClick={() => setRange('7')} className={styles.rangeBtn} style={range==='7'?{background:'rgba(255,255,255,0.03)'}:{}}>7D</button>
-              <button onClick={() => setRange('30')} className={styles.rangeBtn} style={range==='30'?{background:'rgba(255,255,255,0.03)'}:{}}>30D</button>
-            </div>
+            <svg className={styles.performanceSVG} viewBox="0 0 900 140" preserveAspectRatio="xMinYMin meet">
+              <defs>
+                <linearGradient id="gconf" x1="0" x2="1"><stop offset="0%" stopColor="#B794F4"/><stop offset="100%" stopColor="#8B5CF6"/></linearGradient>
+                <linearGradient id="areaGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#B794F4" stopOpacity="0.18"/><stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.02"/></linearGradient>
+              </defs>
+              <path d={perfAreaPath} fill="url(#areaGrad)" className={styles.areaFill} />
+              <path d={perfStrokePath} fill="none" stroke="url(#gconf)" strokeWidth="4" className={styles.perfLine} strokeLinecap="round" strokeLinejoin="round" />
+              {perfPoints.map((p, idx) => (
+                <circle key={idx} cx={p.x} cy={p.y} r={5} fill="#fff" opacity={0.95} className={styles.perfMarker} />
+              ))}
+              {perfPoints.map((p, idx) => (
+                <text key={`t-${idx}`} x={p.x} y={130} className={styles.xLabel} textAnchor="middle">{p.label}</text>
+              ))}
+            </svg>
           </div>
 
-          <svg className={styles.performanceSVG} viewBox="0 0 900 200" preserveAspectRatio="xMinYMin meet">
-            <defs>
-              <linearGradient id="gconf" x1="0" x2="1"><stop offset="0%" stopColor="#B794F4"/><stop offset="100%" stopColor="#8B5CF6"/></linearGradient>
-              <linearGradient id="areaGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#B794F4" stopOpacity="0.18"/><stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.02"/></linearGradient>
-            </defs>
-            <path d={perfAreaPath} fill="url(#areaGrad)" className={styles.areaFill} />
-            <path d={perfStrokePath} fill="none" stroke="url(#gconf)" strokeWidth="4" className={styles.perfLine} strokeLinecap="round" strokeLinejoin="round" />
-            {perfPoints.map((p, idx) => (
-              <circle key={idx} cx={p.x} cy={p.y} r={5} fill="#fff" opacity={0.95} className={styles.perfMarker} />
+          {/* Communication Health */}
+          <div className={styles.healthGridInline}>
+            {metrics.map(m=> (
+              <div key={m.id} className={styles.insightWidget}>
+                <div className={styles.widgetTitle}>{m.label}</div>
+                <div className={styles.widgetSmall}>{m.insight}</div>
+                <div style={{height:8,background:'rgba(255,255,255,0.03)',borderRadius:6,marginTop:8}}>
+                  <div style={{width:`${m.pct}%`,height:'100%',borderRadius:6,background:`linear-gradient(90deg, ${m.accent}, ${C.secondary})`,transition:'width 1s'}} />
+                </div>
+                <div style={{marginTop:6,fontWeight:800,fontSize:13}}>{m.pct}%</div>
+              </div>
             ))}
-            {perfPoints.map((p, idx) => (
-              <text key={`t-${idx}`} x={p.x} y={186} className={styles.xLabel} textAnchor="middle">{p.label}</text>
-            ))}
-          </svg>
+          </div>
+
+          {/* Today's Focus */}
+          <div className={styles.cardPremium}>
+            <div className={styles.cardHeader}>
+              <div>
+                <div className={styles.cardTitle}>Today's Focus</div>
+                <div className={styles.cardSub}>High-impact practice recommendations</div>
+              </div>
+            </div>
+            <div className={styles.focusGrid}>
+              {focus.map((f,i)=> (
+                <div key={i} className={styles.focusCard}>
+                  <div>
+                    <div style={{fontWeight:700,fontSize:13}}>{f.title}</div>
+                    <div className={styles.widgetSmall} style={{marginTop:4}}>{f.rec}</div>
+                  </div>
+                  <div style={{textAlign:'right',flexShrink:0}}>
+                    <div className={styles.priority}>{f.impact}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div>
+        <div className={styles.rightColumn}>
+          {/* Skill Radar */}
           <div className={styles.cardPremium}>
             <div className={styles.cardHeader}>
               <div>
@@ -144,30 +184,27 @@ export default function DashboardPage(){
             </div>
             <div className={styles.radarWrap}>
               <svg className={styles.radarSVG} viewBox="0 0 220 220">
-                {/* concentric rings */}
                 <circle cx="110" cy="110" r="80" fill="rgba(255,255,255,0.00)" stroke="rgba(255,255,255,0.02)" />
                 <circle cx="110" cy="110" r="56" fill="none" stroke="rgba(255,255,255,0.01)" />
                 <circle cx="110" cy="110" r="32" fill="none" stroke="rgba(255,255,255,0.01)" />
-                {/* radar polygon */}
                 <polygon points={radarPoints} fill="rgba(139,92,246,0.08)" stroke="rgba(167,139,250,0.26)" strokeWidth="2" />
-                {/* markers at points */}
                 {radarPoints.split(' ').map((pt, i) => {
                   const [x, y] = pt.split(',');
                   return <circle key={i} cx={x} cy={y} r={4} fill="#CDBBFF" />
                 })}
-                {/* labels */}
                 {radarLabelPositions.map((L, i) => (
                   <text key={`lab-${i}`} x={L.x} y={L.y} className={styles.radarLabel} textAnchor="middle">{L.label.toUpperCase()}</text>
                 ))}
               </svg>
               <div style={{textAlign:'center'}}>
-                <div style={{fontSize:28,fontWeight:800}}>84</div>
+                <div style={{fontSize:26,fontWeight:800}}>84</div>
                 <div className={styles.smallMuted}>Overall — Excellent</div>
               </div>
             </div>
           </div>
 
-          <div className={styles.cardPremium} style={{marginTop:20}}>
+          {/* AI Coach Insights */}
+          <div className={styles.cardPremium}>
             <div className={styles.cardHeader}>
               <div>
                 <div className={styles.cardTitle}>AI Coach Insights</div>
@@ -181,15 +218,15 @@ export default function DashboardPage(){
             </div>
           </div>
 
-          {/* Filler words card */}
-          <div className={styles.cardPremium} style={{marginTop:20}}>
+          {/* Filler Words */}
+          <div className={styles.cardPremium}>
             <div className={styles.cardHeader}>
               <div>
                 <div className={styles.cardTitle}>Filler Words</div>
                 <div className={styles.cardSub}>Commonly used — hover to inspect</div>
               </div>
             </div>
-            <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
+            <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
               {['uh','like','you know','so','actually'].map((w,i)=> (
                 <div key={i} className={styles.fillerChip} title={`${w} — ${Math.max(1, 4-i)} times`}>
                   <div className={styles.fillerWord}>{w}</div>
@@ -198,82 +235,13 @@ export default function DashboardPage(){
               ))}
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Communication Health as premium vertical widgets */}
-      <div className={styles.healthGrid}>
-        {metrics.map(m=> (
-          <div key={m.id} className={styles.insightWidget}>
-            <div className={styles.widgetTitle}>{m.label}</div>
-            <div className={styles.widgetSmall}>{m.insight}</div>
-            <div style={{height:12,background:'rgba(255,255,255,0.03)',borderRadius:8,marginTop:12}}>
-              <div style={{width:`${m.pct}%`,height:'100%',borderRadius:8,background:`linear-gradient(90deg, ${m.accent}, ${C.secondary})`,transition:'width 1s'}} />
-            </div>
-            <div style={{marginTop:10,fontWeight:800}}>{m.pct}%</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Today's Focus + Recent Sessions + Achievements */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 420px',gap:28,marginTop:28}}>
-        <div>
-          <div className={styles.cardPremium}>
-            <div className={styles.cardHeader}>
-              <div>
-                <div className={styles.cardTitle}>Today's Focus</div>
-                <div className={styles.cardSub}>High-impact practice recommendations</div>
-              </div>
-            </div>
-            <div className={styles.focusGrid}>
-              {focus.map((f,i)=> (
-                <div key={i} className={styles.focusCard}>
-                  <div>
-                    <div style={{fontWeight:800}}>{f.title}</div>
-                    <div className={styles.widgetSmall} style={{marginTop:6}}>{f.rec}</div>
-                  </div>
-                  <div style={{textAlign:'right'}}>
-                    <div className={styles.priority}>{f.impact}</div>
-                    <div className={styles.smallMuted} style={{marginTop:6}}>Estimated impact: {i===0?'High':i===1?'Medium':'Low'}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className={styles.cardPremium} style={{marginTop:20}}>
-            <div className={styles.cardHeader}>
-              <div>
-                <div className={styles.cardTitle}>Recent Sessions</div>
-                <div className={styles.cardSub}>Latest feedback & takeaways</div>
-              </div>
-            </div>
-            <div className={styles.sessionsList}>
-              {sessions.map((s,i)=> (
-                <div key={i} className={styles.sessionCardPremium} onClick={() => router.push('/report')}>
-                  <div style={{display:'flex',alignItems:'center',gap:12}}>
-                    <div style={{width:56,height:56,borderRadius:12,background:'linear-gradient(135deg,#8B5CF6,#A78BFA)',display:'grid',placeItems:'center',fontWeight:800,color:'#fff'}}>{s.title.split(' ')[0][0]}</div>
-                    <div>
-                      <div style={{fontWeight:800}}>{s.title}</div>
-                      <div className={styles.smallMuted}>{s.date} · {s.dur}</div>
-                    </div>
-                  </div>
-                  <div style={{textAlign:'right'}}>
-                    <div style={{fontWeight:900,fontSize:18,color: s.score>=90?C.success:s.score>=75?C.primary:C.warning}}>{s.score}</div>
-                    <div className={styles.smallMuted} style={{marginTop:6}}>{s.best} · needs {s.area}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div>
+          {/* Achievements */}
           <div className={styles.cardPremium}>
             <div className={styles.cardHeader}>
               <div>
                 <div className={styles.cardTitle}>Achievements</div>
-                <div className={styles.cardSub}>Milestones & rewards</div>
+                <div className={styles.cardSub}>Milestones &amp; rewards</div>
               </div>
             </div>
             <div className={styles.achieves}>
@@ -286,7 +254,32 @@ export default function DashboardPage(){
         </div>
       </div>
 
-      {/* quick action dock removed per request */}
+      {/* Recent Sessions — full width */}
+      <div className={styles.cardPremium}>
+        <div className={styles.cardHeader}>
+          <div>
+            <div className={styles.cardTitle}>Recent Sessions</div>
+            <div className={styles.cardSub}>Latest feedback &amp; takeaways</div>
+          </div>
+        </div>
+        <div className={styles.sessionsRow}>
+          {sessions.map((s,i)=> (
+            <div key={i} className={styles.sessionCardPremium} onClick={() => router.push('/report')}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{width:44,height:44,borderRadius:10,background:'linear-gradient(135deg,#8B5CF6,#A78BFA)',display:'grid',placeItems:'center',fontWeight:800,fontSize:14,color:'#fff'}}>{s.title.split(' ')[0][0]}</div>
+                <div>
+                  <div style={{fontWeight:700,fontSize:13}}>{s.title}</div>
+                  <div className={styles.smallMuted}>{s.date} · {s.dur}</div>
+                </div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontWeight:900,fontSize:16,color: s.score>=90?C.success:s.score>=75?C.primary:C.warning}}>{s.score}</div>
+                <div className={styles.smallMuted} style={{marginTop:4}}>{s.best} · needs {s.area}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
