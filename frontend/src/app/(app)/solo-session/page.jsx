@@ -1,5 +1,5 @@
 "use client";
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import React, { useState, useEffect, useRef } from 'react';
 import { C } from '@/constants/theme';
 import { NeonButton, GlassCard, Tag, AIAvatar, MicWave } from '@/components/shared';
@@ -50,12 +50,31 @@ const questionBank = {
 // ─── PAGE 3: SOLO INTERVIEW ───────────────────────────────────────────────────
 const SoloPage = () => {
   const router = useRouter();
-  const location = usePathname();
-  const roleName = location.state?.role || 'Software Engineer';
-  const roleId = location.state?.roleId || 'se';
+  const [config, setConfig] = useState({ role: 'Software Engineer', roleId: 'se', interviewRound: 'technical' });
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('aia_session_config');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setConfig(parsed);
+        if (parsed?.interviewRound === 'coding') {
+          router.replace('/coding');
+        }
+      }
+    } catch {}
+  }, [router]);
+
+  const roleName = config.role || 'Software Engineer';
+  const roleId = config.roleId || 'se';
 
   const [questions, setQuestions] = useState(questionBank[roleId] || questionBank['se']);
   const [currentQ, setCurrentQ] = useState(0);
+
+  useEffect(() => {
+    setQuestions(questionBank[roleId] || questionBank['se']);
+    setCurrentQ(0);
+  }, [roleId]);
 
   const [speaking, setSpeaking] = React.useState(true);
   const [micOn, setMicOn] = React.useState(false);
