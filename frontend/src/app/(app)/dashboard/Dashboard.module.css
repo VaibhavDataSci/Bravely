@@ -63,9 +63,21 @@
   .aiInsights{display:flex;flex-direction:column;gap:8px}
   .aiCard{padding:12px;border-radius:10px;background:linear-gradient(90deg, rgba(139,92,246,0.04), rgba(167,139,250,0.02));border:1px solid rgba(167,139,250,0.06);box-shadow:inset 0 1px 0 rgba(255,255,255,0.01);font-size:13px}
 
-  .focusGrid{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-  .focusCard{padding:12px;border-radius:10px;background:linear-gradient(90deg, rgba(255,255,255,0.008), rgba(255,255,255,0.004));border:1px solid rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center;gap:12px}
-  .priority{font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(139,92,246,0.1);color:#CDBBFF;white-space:nowrap}
+  .sgGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+  .sgCard{border-radius:12px;padding:14px;background:linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.004));border:1px solid rgba(255,255,255,0.025);transition:transform 260ms,box-shadow 260ms}
+  .sgCard:hover{transform:translateY(-3px);box-shadow:0 16px 48px rgba(4,6,18,0.5)}
+  .sgLabel{font-size:12px;font-weight:800;letter-spacing:0.03em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .sgDot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .sgList{display:flex;flex-direction:column;gap:8px}
+  .sgItem{display:flex;align-items:flex-start;gap:10px;padding:6px 0}
+  .sgCheck{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg, rgba(74,222,128,0.15), rgba(74,222,128,0.06));color:#4ADE80;display:grid;place-items:center;font-size:12px;font-weight:800;flex-shrink:0;border:1px solid rgba(74,222,128,0.1)}
+  .sgArrow{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg, rgba(167,139,250,0.12), rgba(167,139,250,0.04));color:#A78BFA;display:grid;place-items:center;font-size:12px;font-weight:800;flex-shrink:0;border:1px solid rgba(167,139,250,0.08)}
+  .sgText{font-size:13px;font-weight:600;color:rgba(240,245,255,0.88)}
+  .sgTip{font-size:11px;color:rgba(200,210,230,0.45);margin-top:2px}
+  .sgPill{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;flex-shrink:0}
+  .sgPillGreen{background:rgba(74,222,128,0.08);color:#4ADE80;border:1px solid rgba(74,222,128,0.1)}
+  .sgPillNeutral{background:rgba(255,255,255,0.03);color:rgba(200,210,230,0.5);border:1px solid rgba(255,255,255,0.04)}
+  .sgInsight{margin-top:12px;padding:10px;border-radius:8px;background:linear-gradient(90deg, rgba(255,255,255,0.008), rgba(255,255,255,0.003));border:1px solid rgba(255,255,255,0.02);font-size:12px;color:rgba(200,210,230,0.6);line-height:1.5}
 
   .sessionsRow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .sessionCardPremium{display:flex;justify-content:space-between;align-items:center;padding:14px;border-radius:12px;background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.006));border:1px solid rgba(255,255,255,0.03);transition:transform 280ms;cursor:pointer}
@@ -79,4 +91,4 @@
   .milestoneLabel{font-size:13px;font-weight:500;color:rgba(240,245,255,0.9)}
   .milestoneLabelPending{font-size:13px;font-weight:500;color:rgba(200,210,230,0.45)}
 
-  @media (max-width: 1000px){.layoutSplit{grid-template-columns:1fr}.hero{flex-direction:column;align-items:flex-start}.greetTitle{font-size:32px}.healthGridInline{grid-template-columns:repeat(2,1fr)}.sessionsRow{grid-template-columns:1fr}}
+  @media (max-width: 1000px){.layoutSplit{grid-template-columns:1fr}.hero{flex-direction:column;align-items:flex-start}.greetTitle{font-size:32px}.healthGridInline{grid-template-columns:repeat(2,1fr)}.sessionsRow{grid-template-columns:1fr}.sgGrid{grid-template-columns:1fr}}

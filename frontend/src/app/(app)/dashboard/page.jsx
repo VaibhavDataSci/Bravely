@@ -16,10 +16,18 @@ export default function DashboardPage(){
     { id:'vocab', label:'Vocabulary', pct:72, accent:C.accentSettings, insight:'Vocabulary richness improved by 9%.' },
   ];
 
-  const focus = [
-    { title:'Reduce filler words during storytelling', impact:'High', rec:'Practice 5 short stories with AI.' },
-    { title:'Pause slightly before answering', impact:'Medium', rec:'Practice with pacing prompts.' },
-    { title:'Improve eye-contact confidence', impact:'Low', rec:'Try peer sessions with feedback.' },
+  const strengths = [
+    { text: 'Clear technical explanations', status: 'Improving' },
+    { text: 'Strong conversational confidence', status: 'Stable' },
+    { text: 'Natural storytelling energy', status: 'Improving' },
+    { text: 'Good speaking consistency', status: 'Stable' },
+  ];
+
+  const growthAreas = [
+    { text: 'Reduce filler words during transitions', tip: 'Try pausing instead of filling silence.' },
+    { text: 'Pause slightly before answering', tip: 'A 1-second pause sounds composed.' },
+    { text: 'Use stronger descriptive vocabulary', tip: 'Replace generic words with vivid ones.' },
+    { text: 'Improve pacing in longer responses', tip: 'Break answers into 2–3 clear sections.' },
   ];
 
   const heat = [0,1,2,3,2,1,4, 2,3,4,1,0,2,3, 0,1,2,3,2,1,0];
@@ -156,26 +164,47 @@ export default function DashboardPage(){
             ))}
           </div>
 
-          {/* Today's Focus */}
+          {/* Your Strengths & Growth Areas */}
           <div className={styles.cardPremium}>
             <div className={styles.cardHeader}>
               <div>
-                <div className={styles.cardTitle}>Today's Focus</div>
-                <div className={styles.cardSub}>High-impact practice recommendations</div>
+                <div className={styles.cardTitle}>Your Strengths &amp; Growth Areas</div>
+                <div className={styles.cardSub}>Personalized communication insights based on recent sessions.</div>
               </div>
             </div>
-            <div className={styles.focusGrid}>
-              {focus.map((f,i)=> (
-                <div key={i} className={styles.focusCard}>
-                  <div>
-                    <div style={{fontWeight:700,fontSize:13}}>{f.title}</div>
-                    <div className={styles.widgetSmall} style={{marginTop:4}}>{f.rec}</div>
-                  </div>
-                  <div style={{textAlign:'right',flexShrink:0}}>
-                    <div className={styles.priority}>{f.impact}</div>
-                  </div>
+            <div className={styles.sgGrid}>
+              {/* Strengths */}
+              <div className={styles.sgCard}>
+                <div className={styles.sgLabel}><span className={styles.sgDot} style={{background:'#4ADE80'}} />Your Strengths</div>
+                <div className={styles.sgList}>
+                  {strengths.map((s,i) => (
+                    <div key={i} className={styles.sgItem}>
+                      <div className={styles.sgCheck}>✓</div>
+                      <div style={{flex:1}}>
+                        <div className={styles.sgText}>{s.text}</div>
+                      </div>
+                      <div className={`${styles.sgPill} ${s.status === 'Improving' ? styles.sgPillGreen : styles.sgPillNeutral}`}>{s.status}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+                <div className={styles.sgInsight}>💡 Your confidence improves significantly during unscripted conversations.</div>
+              </div>
+              {/* Growth Areas */}
+              <div className={styles.sgCard}>
+                <div className={styles.sgLabel}><span className={styles.sgDot} style={{background:'#A78BFA'}} />Areas to Improve</div>
+                <div className={styles.sgList}>
+                  {growthAreas.map((g,i) => (
+                    <div key={i} className={styles.sgItem}>
+                      <div className={styles.sgArrow}>→</div>
+                      <div style={{flex:1}}>
+                        <div className={styles.sgText}>{g.text}</div>
+                        <div className={styles.sgTip}>{g.tip}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className={styles.sgInsight}>🎯 Practice shorter pauses to sound more composed.</div>
+              </div>
             </div>
           </div>
         </div>
