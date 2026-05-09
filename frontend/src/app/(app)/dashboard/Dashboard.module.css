@@ -34,9 +34,9 @@
   .cardSub{color:rgba(200,210,230,0.6);font-size:12px}
 
   .performanceSVG{width:100%;height:auto;display:block}
-  .performanceCard{padding:16px 22px 14px}
-  .performanceCard .cardTitle{font-size:18px}
-  .performanceCard .cardSub{font-size:13px}
+  .performanceCard{padding:18px 24px 14px}
+  .performanceCard .cardTitle{font-size:20px}
+  .performanceCard .cardSub{font-size:14px}
   .perfLine{filter:drop-shadow(0 6px 24px rgba(140,90,255,0.12))}
   .areaFill{mix-blend-mode:screen}
   .perfMarker{filter:drop-shadow(0 8px 20px rgba(140,90,255,0.14));}
