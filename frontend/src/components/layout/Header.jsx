@@ -69,7 +69,7 @@ export function Header() {
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', margin: '0 20px' }}>
           <NeonButton variant="outline" size="sm" onClick={() => router.push('/mock')}>Mock Interview</NeonButton>
           <NeonButton variant="outline" size="sm" onClick={() => router.push('/coding')}>⌥ Coding Round</NeonButton>
-          <NeonButton variant="outline" size="sm" onClick={() => router.push('/lobby')}>👥 Peer Arena</NeonButton>
+          <NeonButton variant="outline" size="sm" onClick={() => router.push('/daily-practice/peer-practice')}>👥 Peer Arena</NeonButton>
           <NeonButton size="sm" onClick={() => router.push('/solo')}>Start Interview →</NeonButton>
         </div>
       )}

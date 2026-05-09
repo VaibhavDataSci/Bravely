@@ -4,13 +4,13 @@ import React, { useState, useCallback } from 'react';
 import { C } from '../../constants/theme';
 
 const navItems = [
-  { id: 'dashboard',   label: 'Dashboard',        icon: '◈' },
-  { id: 'solo-select', label: 'Solo Interview',   icon: '◉' },
-  { id: 'mock',        label: 'Mock Interview',   icon: '◈' },
-  { id: 'coding',      label: 'Coding Interview', icon: '⌥' },
-  { id: 'lobby',       label: 'Peer Arena',       icon: '⬡' },
-  { id: 'group-lobby', label: 'Group Discussion', icon: '⬡' },
-  { id: 'report',      label: 'Analysis',         icon: '◈' },
+  { id: 'dashboard',       label: 'Dashboard',        icon: '◈' },
+  { id: 'daily-practice',  label: 'Daily Practice',   icon: '⬡' },
+  { id: 'solo-select',     label: 'Solo Interview',   icon: '◉' },
+  { id: 'mock',            label: 'Mock Interview',   icon: '◈' },
+  { id: 'coding',          label: 'Coding Interview', icon: '⌥' },
+  { id: 'group-lobby',     label: 'Group Discussion', icon: '⬡' },
+  { id: 'report',          label: 'Analytics',        icon: '◈' },
 ];
 
 const COLLAPSED_WIDTH = 68;

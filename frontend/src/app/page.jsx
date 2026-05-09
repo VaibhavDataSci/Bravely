@@ -69,7 +69,7 @@ export default function LandingPage() {
           </p>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 48 }}>
             <NeonButton size="lg" onClick={() => router.push('/dashboard')}>Start Free Session</NeonButton>
-            <NeonButton variant="outline" size="lg" onClick={() => router.push('/lobby')}>👥 Peer Lobby</NeonButton>
+            <NeonButton variant="outline" size="lg" onClick={() => router.push('/daily-practice/peer-practice')}>👥 Peer Lobby</NeonButton>
             <NeonButton variant="ghost" size="lg" onClick={() => router.push('/auth')}>Sign In →</NeonButton>
           </div>
           
