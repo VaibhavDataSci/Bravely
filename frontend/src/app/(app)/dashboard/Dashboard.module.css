@@ -1,7 +1,6 @@
 :root{--navy:#070816;--card:#0f1324;--glass:rgba(255,255,255,0.03);--muted:#96A3BA}
 .page{
-  padding: 36px 48px;
-  min-height: 100vh;
+  padding: 36px 48px 60px;
   background: radial-gradient(900px 360px at 10% 8%, rgba(124,58,237,0.04), transparent), radial-gradient(700px 300px at 88% 82%, rgba(34,211,238,0.02), transparent), linear-gradient(180deg,#05060b,#0b0d18 60%);
   color: #F6F8FB;
   font-family: var(--font-sans);
@@ -22,12 +21,12 @@
   .streakLabel{color:rgba(230,235,250,0.8);font-size:12px;margin-top:4px}
   .streakPulse{animation:ping 2.6s infinite}
 
-  @keyframes ping{0%{transform:scale(0.98);opacity:0.9}50%{transform:scale(1.04);opacity:1}100%{transform:scale(0.98);opacity:0.9}}
+  @keyframes ping{0%{opacity:0.7}50%{opacity:1}100%{opacity:0.7}}
 
   .layoutSplit{display:grid;grid-template-columns:1.6fr .95fr;gap:16px;margin-bottom:16px;align-items:start}
   .leftColumn{display:flex;flex-direction:column;gap:12px}
   .rightColumn{display:flex;flex-direction:column;gap:12px}
-  .cardPremium{position:relative;border-radius:16px;padding:20px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.006));border:1px solid rgba(255,255,255,0.035);box-shadow:0 18px 60px rgba(4,6,18,0.6);backdrop-filter:blur(12px);transition:transform 280ms cubic-bezier(.2,.9,.2,1),box-shadow 280ms,border-color 280ms}
+  .cardPremium{position:relative;border-radius:16px;padding:20px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.006));border:1px solid rgba(255,255,255,0.035);box-shadow:0 18px 60px rgba(4,6,18,0.6);backdrop-filter:blur(12px);transition:transform 280ms cubic-bezier(.2,.9,.2,1),box-shadow 280ms,border-color 280ms;transform:translateZ(0)}
   .cardPremium:hover{transform:translateY(-4px);box-shadow:0 30px 80px rgba(4,6,18,0.7),0 8px 36px rgba(124,58,237,0.06);border-color:rgba(167,139,250,0.12)}
   .cardHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
   .cardTitle{font-size:15px;font-weight:800}
