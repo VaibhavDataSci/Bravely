@@ -69,7 +69,7 @@ export default function DaySummaryPage() {
   const isDone = recState === 'done';
 
   return (
-    <div style={{ padding: '0', maxWidth: 1100, margin: '0 auto', color: C.textPrimary, display: 'flex', flexDirection: 'column', gap: 30 }}>
+    <div style={{ padding: '32px 32px 60px', maxWidth: 1100, margin: '0 auto', color: C.textPrimary, display: 'flex', flexDirection: 'column', gap: 30 }}>
       
       <style>{`
         @keyframes breathe {

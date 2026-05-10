@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { GlassCard, NeonButton, MicWave, Tag } from '@/components/shared';
 import { C } from '@/constants/theme';
 
@@ -73,6 +74,7 @@ const StarPill = ({ label, status }) => {
 };
 
 export default function TopicPracticePage() {
+  const router = useRouter();
   const [topicState, setTopicState] = useState('initial'); // 'initial', 'generating', 'ready'
   const [recState, setRecState] = useState('idle'); // 'idle', 'recording', 'processing', 'done'
   const [showFeedback, setShowFeedback] = useState(false);
@@ -128,7 +130,7 @@ export default function TopicPracticePage() {
   const isDone = recState === 'done';
 
   return (
-    <div style={{ padding: '0', maxWidth: 1100, margin: '0 auto', color: C.textPrimary, display: 'flex', flexDirection: 'column', gap: 30 }}>
+    <div style={{ padding: '32px 32px 60px', maxWidth: 1100, margin: '0 auto', color: C.textPrimary, display: 'flex', flexDirection: 'column', gap: 30 }}>
       
       <style>{`
         @keyframes breathe {
@@ -164,16 +166,6 @@ export default function TopicPracticePage() {
         .fade-in { animation: float-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
       `}</style>
 
-      {/* HEADER */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <div style={{ fontSize: '0.85rem', color: C.textSecondary, marginBottom: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-            Daily Practice <span style={{ margin: '0 8px', color: C.textMuted }}>/</span> Topic of the Day
-          </div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '8px' }}>Topic of the Day</h1>
-          <p style={{ color: C.textSecondary, fontSize: '1.05rem' }}>An AI-guided communication challenge to sharpen your everyday speaking.</p>
-        </div>
-      </div>
 
       {topicState === 'initial' || topicState === 'generating' ? (
         <GlassCard style={{ 
@@ -393,9 +385,14 @@ export default function TopicPracticePage() {
                   <p style={{ color: C.textSecondary, fontSize: '1.05rem', lineHeight: 1.6, marginBottom: 0 }}>
                     Mastering the STAR method is key for leadership roles. Would you like to retry this prompt with an AI guide mapping your results?
                   </p>
-                  <NeonButton variant="primary" style={{ marginTop: 24, padding: '12px 24px' }} onClick={() => { setRecState('idle'); setShowFeedback(false); setTopicState('initial'); }}>
-                    Try Another Topic
-                  </NeonButton>
+                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
+                    <NeonButton variant="outline" style={{ padding: '12px 24px' }} onClick={() => router.push('/daily-practice')}>
+                      ← Back to Daily Practice
+                    </NeonButton>
+                    <NeonButton variant="primary" style={{ padding: '12px 24px' }} onClick={() => { setRecState('idle'); setShowFeedback(false); setTopicState('initial'); }}>
+                      Try Another Topic
+                    </NeonButton>
+                  </div>
                 </div>
               </GlassCard>
             </div>

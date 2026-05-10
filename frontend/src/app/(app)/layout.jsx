@@ -1,15 +1,19 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { Sidebar, ParticlesBg, Header } from '@/components/layout';
+import { Sidebar, ParticlesBg, Header, DailyPracticeHeader } from '@/components/layout';
 
 // Routes that trigger fullscreen immersive interview mode
 const IMMERSIVE_ROUTES = ['solo-session', 'mock-room', 'group-room', 'coding'];
+
+// Daily-practice sub-routes where the Header should be hidden
+const DAILY_PRACTICE_ROUTES = [];
 
 export default function AppLayout({ children }) {
   const pathname = usePathname();
   const page = pathname.split('/').pop() || 'dashboard';
   const isImmersive = IMMERSIVE_ROUTES.includes(page);
+  const hideHeader = DAILY_PRACTICE_ROUTES.includes(page);
 
   // Animate transition
   const [entered, setEntered] = useState(false);
@@ -42,8 +46,10 @@ export default function AppLayout({ children }) {
       <Sidebar page={page} />
 
       <div style={{ flex: 1, position: 'relative', zIndex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <Header />
-        <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
+        {!hideHeader && <Header />}
+        {hideHeader && <DailyPracticeHeader />
+        }
+        <div style={{ flex: 1, overflow: 'auto', position: 'relative', background: '#05060b', isolation: 'isolate' }}>
           {children}
         </div>
       </div>

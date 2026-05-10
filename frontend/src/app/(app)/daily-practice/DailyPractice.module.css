@@ -6,15 +6,15 @@
 }
 
 .pageWrap{
-  padding: 56px 24px 140px;
-  max-width: 1300px;
+  padding: 48px 32px 120px;
+  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   color: var(--soft-white);
   font-family: var(--font-sans);
   position: relative;
-  min-height: 100vh;
+  box-sizing: border-box;
   background: radial-gradient(800px 400px at 10% 10%, rgba(139,92,246,0.08), transparent), radial-gradient(600px 300px at 90% 80%, rgba(34,211,238,0.04), transparent);
-  /* subtle film grain */
   background-image: radial-gradient(closest-side, rgba(255,255,255,0.01), transparent), radial-gradient(1200px 600px at 50% 10%, rgba(124,58,237,0.02), transparent), radial-gradient(700px 350px at 20% 80%, rgba(34,211,238,0.01), transparent);
 }
 
@@ -87,14 +87,16 @@
 }
 
 .grid{
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 34px;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
 }
-.grid > * {
-  flex: 0 1 580px;
+/* Centre the lone 3rd card when it wraps to its own row */
+.grid > *:last-child:nth-child(odd){
+  grid-column: 1 / -1;
+  max-width: calc(50% - 12px);
+  margin: 0 auto;
+  width: 100%;
 }
 
 .card{
@@ -219,6 +221,7 @@
 /* Responsive */
 @media (max-width: 900px){
   .grid{ grid-template-columns: 1fr; }
+  .grid > *:last-child:nth-child(odd){ grid-column: auto; max-width: 100%; margin: 0; }
   .bgFadedIcon{ font-size: 120px; right:-6%; }
-  .pageWrap{ padding-bottom: 140px; }
+  .pageWrap{ padding-bottom: 80px; }
 }

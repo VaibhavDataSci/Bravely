@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { GlassCard, NeonButton, MicWave, Tag } from '@/components/shared';
 import { C } from '@/constants/theme';
 
@@ -45,6 +46,7 @@ const ProgressBar = ({ label, value, color }) => (
 );
 
 export default function AIConversationPage() {
+  const router = useRouter();
   const [convState, setConvState] = useState('live'); // 'live', 'ended', 'feedback'
   const [micMode, setMicMode] = useState('listening'); // 'listening', 'aiSpeaking'
   
@@ -84,7 +86,7 @@ export default function AIConversationPage() {
   const isAiSpeaking = micMode === 'aiSpeaking';
 
   return (
-    <div style={{ padding: '0', maxWidth: 1100, margin: '0 auto', color: C.textPrimary, display: 'flex', flexDirection: 'column', gap: 30 }}>
+    <div style={{ padding: '32px 32px 60px', maxWidth: 1100, margin: '0 auto', color: C.textPrimary, display: 'flex', flexDirection: 'column', gap: 30 }}>
       
       <style>{`
         @keyframes breathe {
@@ -120,14 +122,6 @@ export default function AIConversationPage() {
         .fade-in { animation: float-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
       `}</style>
 
-      {/* HEADER */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <div style={{ fontSize: '0.85rem', color: C.textSecondary, marginBottom: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-            Daily Practice <span style={{ margin: '0 8px', color: C.textMuted }}>/</span> Phone Call with AI
-          </div>
-        </div>
-      </div>
 
       {convState === 'live' && (
         <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 30, marginTop: 20 }}>
@@ -300,8 +294,11 @@ export default function AIConversationPage() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-            <NeonButton variant="outline" onClick={() => window.location.href = '/daily-practice'} style={{ padding: '12px 30px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 20 }}>
+            <NeonButton variant="outline" onClick={() => router.push('/daily-practice')} style={{ padding: '12px 30px' }}>
+              ← Back to Daily Practice
+            </NeonButton>
+            <NeonButton variant="primary" onClick={() => { setConvState('live'); setMicMode('listening'); }} style={{ padding: '12px 30px' }}>
               Start Another Call
             </NeonButton>
           </div>
