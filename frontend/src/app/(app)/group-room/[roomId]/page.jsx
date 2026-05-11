@@ -11,6 +11,7 @@ const GroupPage = () => {
   const router = useRouter();
   const { roomId } = useParams();
   const { user } = useAuth();
+  const userId = React.useMemo(() => user?.email || `user-${roomId || 'group-default'}`, [roomId, user?.email]);
   const [activeSpeak, setActiveSpeak] = React.useState(0);
 
   const participants = [
@@ -24,7 +25,7 @@ const GroupPage = () => {
     <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 320px', height: '100vh', overflow: 'hidden', background: '#030712' }}>
       
       {/* Video Call main area */}
-      <VideoCall roomId={roomId || 'group-default'} userId={user?.email || `user-${Math.floor(Math.random()*1000)}`} mode="group" onEndCall={() => router.push('/report')} />
+      <VideoCall roomId={roomId || 'group-default'} userId={userId} mode="group" onEndCall={() => router.push('/report')} />
 
       {/* Right panel */}
       <div style={{

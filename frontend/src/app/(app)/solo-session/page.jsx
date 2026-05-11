@@ -1,5 +1,5 @@
 "use client";
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import React, { useState, useEffect, useRef } from 'react';
 import { C } from '@/constants/theme';
 import { NeonButton, GlassCard, Tag, AIAvatar, MicWave } from '@/components/shared';
@@ -50,12 +50,36 @@ const questionBank = {
 // ─── PAGE 3: SOLO INTERVIEW ───────────────────────────────────────────────────
 const SoloPage = () => {
   const router = useRouter();
-  const location = usePathname();
-  const roleName = location.state?.role || 'Software Engineer';
-  const roleId = location.state?.roleId || 'se';
+  const [config] = useState(() => {
+    if (typeof window === 'undefined') {
+      return { role: 'Software Engineer', roleId: 'se', interviewRound: 'technical' };
+    }
+    try {
+      const saved = sessionStorage.getItem('aia_session_config');
+      return saved ? JSON.parse(saved) : { role: 'Software Engineer', roleId: 'se', interviewRound: 'technical' };
+    } catch {
+      return { role: 'Software Engineer', roleId: 'se', interviewRound: 'technical' };
+    }
+  });
+
+  useEffect(() => {
+    if (config?.interviewRound === 'coding') {
+      router.replace('/coding');
+    }
+  }, [config?.interviewRound, router]);
+
+  const roleName = config.role || 'Software Engineer';
+  const roleId = config.roleId || 'se';
 
   const [questions, setQuestions] = useState(questionBank[roleId] || questionBank['se']);
   const [currentQ, setCurrentQ] = useState(0);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setQuestions(questionBank[roleId] || questionBank['se']);
+      setCurrentQ(0);
+    }, 0);
+  }, [roleId]);
 
   const [speaking, setSpeaking] = React.useState(true);
   const [micOn, setMicOn] = React.useState(false);
@@ -129,7 +153,7 @@ const SoloPage = () => {
             {speaking ? '▶ AI Speaking' : '⏸ Waiting for your response'}
           </div>
           <p style={{ fontSize: 18, fontWeight: 500, lineHeight: 1.6, color: C.textPrimary }}>
-            "Tell me about a time you had to lead a cross-functional team through a difficult technical decision."
+            &quot;Tell me about a time you had to lead a cross-functional team through a difficult technical decision.&quot;
           </p>
         </GlassCard>
       </div>

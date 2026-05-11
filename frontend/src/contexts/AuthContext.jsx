@@ -4,18 +4,16 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
+  const [user, setUser] = useState(() => {
+    if (typeof window === 'undefined') return null;
     try {
       const stored = localStorage.getItem('aia_user');
-      if (stored) {
-        setUser(JSON.parse(stored));
-        setIsAuthenticated(true);
-      }
-    } catch {}
-  }, []);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!user);
 
   // Persist to localStorage whenever user changes
   useEffect(() => {
@@ -47,8 +45,21 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('aia_user');
   };
 
+  const updateProfileResume = (resumeData) => {
+    setUser(prev => prev ? { ...prev, profileResume: resumeData } : null);
+  };
+
+  const removeProfileResume = () => {
+    setUser(prev => {
+      if (!prev) return null;
+      const { profileResume, ...rest } = prev;
+      return rest;
+    });
+  };
+
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, signup, logout, updateProfileResume, removeProfileResume }}>
       {children}
     </AuthContext.Provider>
   );

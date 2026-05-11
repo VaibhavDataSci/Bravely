@@ -6,43 +6,13 @@ import { NeonButton, Tag, MicWave } from '@/components/shared';
 import { Toast } from '@/components/layout';
 
 // ─── PAGE: P2P INTERVIEW ROOM ─────────────────────────────────────────────────
-const P2PPage = () => {
-  const router = useRouter();
 
-  const [time, setTime] = React.useState(0);
-  const [muted, setMuted] = React.useState(false);
-  const [camOn, setCamOn] = React.useState(true);
-  const [roles, setRoles] = React.useState({ left: 'interviewer', right: 'candidate' });
-  const [aiTab, setAiTab] = React.useState('live');
-  const [swapping, setSwapping] = React.useState(false);
-  const [activeSpeaker, setActiveSpeaker] = React.useState('left');
-  const [toast, setToast] = React.useState(null);
 
-  React.useEffect(() => {
-    const t = setInterval(() => setTime(x => x + 1), 1000);
-    return () => clearInterval(t);
-  }, []);
-  React.useEffect(() => {
-    const id = setInterval(() => setActiveSpeaker(s => s === 'left' ? 'right' : 'left'), 5000);
-    return () => clearInterval(id);
-  }, []);
 
-  const fmt = s => `${String(Math.floor(s / 60)).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
+const roleColor = { interviewer: C.secondary, candidate: C.primary };
+const roleLabel = { interviewer: 'HR / Interviewer', candidate: 'Candidate' };
 
-  const swapRoles = () => {
-    setSwapping(true);
-    setTimeout(() => {
-      setRoles(r => ({ left: r.right, right: r.left }));
-      setSwapping(false);
-      setToast('Roles swapped successfully!');
-      setTimeout(() => setToast(null), 2500);
-    }, 600);
-  };
-
-  const roleColor = { interviewer: C.secondary, candidate: C.primary };
-  const roleLabel = { interviewer: 'HR / Interviewer', candidate: 'Candidate' };
-
-  const VideoCard = ({ side, name, avatar, speaking, role }) => (
+const VideoCard = ({ side, name, avatar, speaking, role, muted, camOn }) => (
     <div style={{
       flex: 1, borderRadius: 16, position: 'relative', overflow: 'hidden',
       background: `radial-gradient(ellipse at 40% 30%, #0f2040 0%, #070d1a 100%)`,
@@ -77,6 +47,42 @@ const P2PPage = () => {
     </div>
   );
 
+const P2PPage = () => {
+  const router = useRouter();
+
+  const [time, setTime] = React.useState(0);
+  const [muted, setMuted] = React.useState(false);
+  const [camOn, setCamOn] = React.useState(true);
+  const [roles, setRoles] = React.useState({ left: 'interviewer', right: 'candidate' });
+  const [aiTab, setAiTab] = React.useState('live');
+  const [swapping, setSwapping] = React.useState(false);
+  const [activeSpeaker, setActiveSpeaker] = React.useState('left');
+  const [toast, setToast] = React.useState(null);
+
+  React.useEffect(() => {
+    const t = setInterval(() => setTime(x => x + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+  React.useEffect(() => {
+    const id = setInterval(() => setActiveSpeaker(s => s === 'left' ? 'right' : 'left'), 5000);
+    return () => clearInterval(id);
+  }, []);
+
+  const fmt = s => `${String(Math.floor(s / 60)).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
+
+  const swapRoles = () => {
+    setSwapping(true);
+    setTimeout(() => {
+      setRoles(r => ({ left: r.right, right: r.left }));
+      setSwapping(false);
+      setToast('Roles swapped successfully!');
+      setTimeout(() => setToast(null), 2500);
+    }, 600);
+  };
+
+    
+  
+
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', flexDirection: 'column' }}>
       {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
@@ -88,7 +94,7 @@ const P2PPage = () => {
         background: 'rgba(7, 8, 22,0.98)', flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => router.push('/lobby')} style={{ padding: '6px 14px', borderRadius: 7, border: `1px solid ${C.borderMid}`, background: 'transparent', color: C.textSecondary, cursor: 'pointer', fontFamily: 'Space Grotesk', fontSize: 12 }}>← Lobby</button>
+          <button onClick={() => router.push('/peer-practice')} style={{ padding: '6px 14px', borderRadius: 7, border: `1px solid ${C.borderMid}`, background: 'transparent', color: C.textSecondary, cursor: 'pointer', fontFamily: 'Space Grotesk', fontSize: 12 }}>← Lobby</button>
           <div style={{ width: 1, height: 20, background: C.borderMid }} />
           <span style={{ fontSize: 14, fontWeight: 700 }}>Peer Interview Room</span>
           <Tag color={C.error}>● Live</Tag>
@@ -138,6 +144,8 @@ const P2PPage = () => {
             avatar="🧑"
             speaking={activeSpeaker === 'left'}
             role={roles.left}
+            muted={muted}
+            camOn={camOn}
           />
           {/* Stats below */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
@@ -158,6 +166,8 @@ const P2PPage = () => {
             avatar="👤"
             speaking={activeSpeaker === 'right'}
             role={roles.right}
+            muted={muted}
+            camOn={camOn}
           />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
             {[{ l: 'Speaking', v: '38%' }, { l: 'Responses', v: '7' }, { l: 'Avg Pace', v: '168 wpm' }].map(({ l, v }) => (
