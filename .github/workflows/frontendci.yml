@@ -38,8 +38,8 @@ jobs:
         run: npm install
         working-directory: ./frontend
 
-      - name: Run TypeCheck
-        run: tsc --noEmit
+      - name: Run ESLint
+        run: npm run lint
         working-directory: ./frontend
 
       - name: Build Next.js
