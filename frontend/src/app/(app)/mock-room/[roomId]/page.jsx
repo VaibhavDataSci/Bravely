@@ -11,6 +11,7 @@ const MockPage = () => {
   const router = useRouter();
   const { roomId } = useParams();
   const { user } = useAuth();
+  const userId = React.useMemo(() => user?.email || `user-${roomId || 'mock-default'}`, [roomId, user?.email]);
   
   const [liveFeedback, setLiveFeedback] = React.useState([
     { text: 'Strong opening statement', color: C.success, t: '00:12' },
@@ -21,7 +22,7 @@ const MockPage = () => {
   return (
     <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 360px', height: '100vh', overflow: 'hidden', background: '#030712' }}>
       {/* Main area - Video Call */}
-      <VideoCall roomId={roomId || 'mock-default'} userId={user?.email || `user-${Math.floor(Math.random()*1000)}`} mode="mock" onEndCall={() => router.push('/report')} />
+      <VideoCall roomId={roomId || 'mock-default'} userId={userId} mode="mock" onEndCall={() => router.push('/report')} />
 
       {/* Feedback panel */}
       <div style={{
@@ -76,7 +77,7 @@ const MockPage = () => {
         <div style={{ padding: 16, borderTop: `1px solid ${C.borderMid}` }}>
           <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Next Question Preview</div>
           <div style={{ background: C.bgCard, borderRadius: 8, padding: '12px 14px', fontSize: 12, color: C.textSecondary, lineHeight: 1.5, border: `1px solid ${C.borderMid}` }}>
-            "How do you approach technical debt in a fast-moving startup?"
+            &quot;How do you approach technical debt in a fast-moving startup?&quot;
           </div>
         </div>
       </div>

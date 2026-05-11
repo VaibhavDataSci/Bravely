@@ -21,11 +21,12 @@ export default function AppLayout({ children }) {
     if (isImmersive) {
       const t = setTimeout(() => setEntered(true), 50);
       return () => clearTimeout(t);
+    } else {
+      const t = setTimeout(() => setEntered(false), 0);
+      return () => clearTimeout(t);
     }
-    setEntered(false);
   }, [isImmersive]);
 
-  // ─── FULLSCREEN IMMERSIVE MODE ─────────────────────────────────────────────
   if (isImmersive) {
     return (
       <div style={{

@@ -267,7 +267,7 @@ export default function AIConversationPage() {
                    </div>
                  </div>
                  <p style={{ color: C.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                   You rely heavily on safe, common words. Try to replace words like "good" or "fine" with more descriptive adjectives like "effective" or "optimal".
+                   You rely heavily on safe, common words. Try to replace words like &quot;good&quot; or &quot;fine&quot; with more descriptive adjectives like &quot;effective&quot; or &quot;optimal&quot;.
                  </p>
                </div>
             </GlassCard>
@@ -287,7 +287,7 @@ export default function AIConversationPage() {
                 <div style={{ fontSize: '0.85rem', fontWeight: 600, color: C.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>Opportunities for Growth</div>
                 <ul style={{ margin: 0, paddingLeft: 20, color: C.textPrimary, fontSize: '1.05rem', lineHeight: 1.7 }}>
                   <li style={{ marginBottom: 12 }}>Pause slightly before changing topics.</li>
-                  <li style={{ marginBottom: 12 }}>Reduce transitional fillers like "uh" when bridging thoughts.</li>
+                  <li style={{ marginBottom: 12 }}>Reduce transitional fillers like &quot;uh&quot; when bridging thoughts.</li>
                   <li>Expand on personal experiences with more specific, descriptive details.</li>
                 </ul>
               </GlassCard>

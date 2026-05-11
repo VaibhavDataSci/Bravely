@@ -34,10 +34,8 @@ export default function RoleSelectionPage() {
   const activeResume = tempResume || profileResume;
 
   // Suggested roles from resume
-  const [suggestedRoles, setSuggestedRoles] = useState([]);
-  useEffect(() => {
-    if (activeResume) setSuggestedRoles(suggestRolesFromResume(activeResume));
-    else setSuggestedRoles([]);
+  const suggestedRoles = React.useMemo(() => {
+    return activeResume ? suggestRolesFromResume(activeResume) : [];
   }, [activeResume]);
 
   // Dynamic contexts based on role + round
@@ -52,7 +50,8 @@ export default function RoleSelectionPage() {
 
   // Reset context when role or round changes
   useEffect(() => {
-    setInterviewContext(null);
+    const t = setTimeout(() => setInterviewContext(null), 0);
+    return () => clearTimeout(t);
   }, [selectedRole?.id, interviewRound]);
 
   const handleTempUpload = (source) => {
@@ -198,7 +197,7 @@ export default function RoleSelectionPage() {
                   <span style={{ fontSize: 16 }}>⚡</span>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: C.textPrimary }}>Temporary Resume - {tempResume.filename}</div>
-                    <div style={{ fontSize: 12, color: C.warning, fontStyle: 'italic' }}>Session only — won't replace your profile resume</div>
+                    <div style={{ fontSize: 12, color: C.warning, fontStyle: 'italic' }}>Session only — won&apos;t replace your profile resume</div>
                   </div>
                 </div>
               </div>

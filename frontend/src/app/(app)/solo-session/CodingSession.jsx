@@ -51,11 +51,13 @@ export default function CodingSession({ config, resume }) {
   // Init
   useEffect(() => {
     const p = getProblemsForSession(config, resume);
-    setProblems(p);
-    if (p.length) setCode(p[0].starterCode[lang] || '');
-    const msg = pick(CODING_AI_MESSAGES.intro);
-    setAiMsg(msg);
-    setChat([{ role: 'ai', text: msg, t: '00:00' }]);
+    setTimeout(() => {
+      setProblems(p);
+      if (p.length) setCode(p[0].starterCode[lang] || '');
+      const msg = pick(CODING_AI_MESSAGES.intro);
+      setAiMsg(msg);
+      setChat([{ role: 'ai', text: msg, t: '00:00' }]);
+    }, 0);
     setTimeout(() => {
       setAiState('waiting');
       const m2 = pick(CODING_AI_MESSAGES.askApproach);
@@ -64,13 +66,14 @@ export default function CodingSession({ config, resume }) {
     }, 5000);
   }, [config, resume]);
 
-  useEffect(() => {
+  const handleLanguageChange = useCallback((nextLang) => {
+    setLang(nextLang);
     const p = problems[idx];
     if (p && !done) {
-      const langObj = LANGUAGES.find(l => l.id === lang);
-      setCode(p.starterCode[lang] || langObj?.starter || '// Language not available for this problem');
+      const langObj = LANGUAGES.find(l => l.id === nextLang);
+      setCode(p.starterCode[nextLang] || langObj?.starter || '// Language not available for this problem');
     }
-  }, [lang]);
+  }, [done, idx, problems]);
 
   // Close lang dropdown on outside click
   useEffect(() => {
@@ -218,7 +221,7 @@ export default function CodingSession({ config, resume }) {
                     onKeyDown={e => {
                       if (e.key === 'Escape') setLangOpen(false);
                       if (e.key === 'Enter' && filteredLangs.length > 0) {
-                        setLang(filteredLangs[0].id); setLangOpen(false);
+                        handleLanguageChange(filteredLangs[0].id); setLangOpen(false);
                       }
                     }}
                     style={{
@@ -235,7 +238,7 @@ export default function CodingSession({ config, resume }) {
                   )}
                   {filteredLangs.map(l => (
                     <button key={l.id}
-                      onClick={() => { setLang(l.id); setLangOpen(false); }}
+                      onClick={() => { handleLanguageChange(l.id); setLangOpen(false); }}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '8px 14px',
                         background: lang === l.id ? 'rgba(139,92,246,0.08)' : 'transparent',
@@ -298,7 +301,7 @@ export default function CodingSession({ config, resume }) {
                   <div className={s.exampleCode}>
                     <div><span className={s.exampleMuted}>Input: </span>{ex.input}</div>
                     <div><span className={s.exampleMuted}>Output: </span><span className={s.exampleGreen}>{ex.output}</span></div>
-                    {ex.explanation && <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, marginTop: 4 }}>// {ex.explanation}</div>}
+                    {ex.explanation && <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, marginTop: 4 }}>{'// '}{ex.explanation}</div>}
                   </div>
                 </div>
               ))}

@@ -95,7 +95,7 @@ const ReportPage = () => {
           </div>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.primary, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>Interview Analysis</div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 4px 0', color: C.textPrimary }}>{displayName}'s Session Report</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 4px 0', color: C.textPrimary }}>{displayName}&apos;s Session Report</h2>
             <p style={{ color: C.textMuted, fontSize: 12, margin: 0 }}>Senior SWE · Google · April 30, 2026 · 24 min</p>
           </div>
         </div>

@@ -87,8 +87,10 @@ export default function TopicPracticePage() {
 
   useEffect(() => {
     if (recState === 'recording') {
-      setStarS('analyzing');
-      setStarT('pending');
+      setTimeout(() => {
+        setStarS('analyzing');
+        setStarT('pending');
+      }, 0);
       const timings = [
         setTimeout(() => setStarS('detected'), 2000),
         setTimeout(() => setStarT('analyzing'), 2500),
@@ -99,9 +101,13 @@ export default function TopicPracticePage() {
       ];
       return () => timings.forEach(clearTimeout);
     } else if (recState === 'processing' || recState === 'done') {
-      if (starR === 'analyzing' || starR === 'pending') setStarR('missing');
+      setTimeout(() => {
+        if (starR === 'analyzing' || starR === 'pending') setStarR('missing');
+      }, 0);
     } else if (recState === 'idle') {
-      setStarS('pending'); setStarT('pending'); setStarA('pending'); setStarR('pending');
+      setTimeout(() => {
+        setStarS('pending'); setStarT('pending'); setStarA('pending'); setStarR('pending');
+      }, 0);
     }
   }, [recState]);
 
@@ -219,7 +225,7 @@ export default function TopicPracticePage() {
             </div>
             
             <h2 style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1.3, color: '#fff', maxWidth: '90%' }}>
-              "Describe a time you had to pivot your strategy quickly."
+              &quot;Describe a time you had to pivot your strategy quickly.&quot;
             </h2>
           </GlassCard>
 
@@ -371,7 +377,7 @@ export default function TopicPracticePage() {
                   <GlassCard style={{ padding: '24px', borderLeft: `4px solid ${C.error || '#EF4444'}` }}>
                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: C.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Area for Growth</div>
                      <h4 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: 8, color: C.textPrimary }}>Missing Outcomes</h4>
-                     <p style={{ color: C.textSecondary, fontSize: '0.95rem', lineHeight: 1.6 }}>Your story ended abruptly. Always conclude with data-driven impact. Try: "As a result, we hit deadline and saved 20% budget."</p>
+                     <p style={{ color: C.textSecondary, fontSize: '0.95rem', lineHeight: 1.6 }}>Your story ended abruptly. Always conclude with data-driven impact. Try: &quot;As a result, we hit deadline and saved 20% budget.&quot;</p>
                   </GlassCard>
                 </div>
               </div>

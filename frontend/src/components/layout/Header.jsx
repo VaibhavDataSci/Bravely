@@ -33,7 +33,7 @@ export function Header() {
   const displayName = user?.profileResume?.personalInfo?.name || user?.name || user?.email?.split('@')[0] || 'User';
   const initial = displayName.charAt(0).toUpperCase();
   const avatarUrl = user?.profileResume?.personalInfo?.avatar || user?.photoURL || user?.avatarUrl;
-  const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
+  const isDashboard = location === '/dashboard' || location === '/';
   
   return (
     <div
@@ -60,7 +60,7 @@ export function Header() {
               Good morning, {displayName} ✨
             </div>
             <div style={{ fontSize: 13, color: C.textSecondary, whiteSpace: 'nowrap' }}>
-              You're on a <span style={{ color: C.warning }}>7-day streak</span> — keep it up!
+              You&apos;re on a <span style={{ color: C.warning }}>7-day streak</span> - keep it up!
             </div>
           </div>
         )}

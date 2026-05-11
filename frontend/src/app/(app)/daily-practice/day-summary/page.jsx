@@ -36,7 +36,7 @@ export default function DaySummaryPage() {
         setTime(t => t - 1);
       }, 1000);
     } else if (time === 0 && recState === 'recording') {
-      setRecState('processing');
+      setTimeout(() => setRecState('processing'), 0);
     }
     return () => clearInterval(interval);
   }, [recState, time]);
@@ -51,7 +51,7 @@ export default function DaySummaryPage() {
     if (recState === 'idle') {
       setRecState('recording');
     } else if (recState === 'recording') {
-      setRecState('processing');
+      setTimeout(() => setRecState('processing'), 0);
       // Simulate backend processing time before ready
       setTimeout(() => {
         setRecState('done');
@@ -246,7 +246,7 @@ export default function DaySummaryPage() {
                 lineHeight: 1.6,
                 animation: 'shimmer 1s ease-out 1'
               }}>
-                "...needs to prioritize high-leverage activities that align with our long-term strategic vision, <span style={{ color: C.warning }}>specifically</span> focusing on automation and..."
+                &quot;...needs to prioritize high-leverage activities that align with our long-term strategic vision, <span style={{ color: C.warning }}>specifically</span> focusing on automation and...&quot;
               </div>
             )}
 
@@ -279,7 +279,7 @@ export default function DaySummaryPage() {
                   AI Insight
                 </div>
                 <div style={{ color: C.textPrimary, fontSize: '0.95rem', lineHeight: 1.6 }}>
-                  You're using <strong>"specifically"</strong> as a transition word. Consider alternating with <strong>"In particular"</strong> for better vocabulary richness.
+                  You&apos;re using <strong>&quot;specifically&quot;</strong> as a transition word. Consider alternating with <strong>&quot;In particular&quot;</strong> for better vocabulary richness.
                 </div>
               </div>
             </GlassCard>
@@ -360,7 +360,7 @@ export default function DaySummaryPage() {
             <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: 12, color: C.textPrimary }}>Master the Art of Focus</h3>
             <p style={{ color: C.textSecondary, fontSize: '1.05rem', lineHeight: 1.6, marginBottom: 0 }}>
               Our advanced AI monitors your narrative arc in real-time. <br/>
-              Keep practicing to unlock the "Executive Presence" mastery badge.
+              Keep practicing to unlock the &quot;Executive Presence&quot; mastery badge.
             </p>
           </div>
         </GlassCard>

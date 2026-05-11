@@ -4,7 +4,7 @@ import { C } from '../../constants/theme';
 
 // ─── AVATAR COMPONENT ─────────────────────────────────────────────────────────
 const AIAvatar = ({ size = 280, speaking = false, style = {} }) => {
-  const t = Date.now();
+  const [t] = useState(() => Date.now());
   return (
     <div style={{ position: 'relative', width: size, height: size, ...style }}>
       {/* Outer glow ring */}
