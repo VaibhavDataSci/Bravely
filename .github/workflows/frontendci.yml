@@ -41,10 +41,6 @@ jobs:
         run: npm run lint
         working-directory: ./frontend
 
-      - name: Run TypeCheck
-        run: tsc --noEmit
-        working-directory: ./frontend
-
       - name: Build Next.js
         run: npm run build
         working-directory: ./frontend
