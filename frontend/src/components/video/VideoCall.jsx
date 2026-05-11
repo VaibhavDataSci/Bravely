@@ -71,6 +71,65 @@ export const VideoCall = ({ roomId, userId, mode = 'mock', onEndCall }) => {
   const timerRef = useRef()
   const timeVal = useRef(0)
 
+  const createPeer = useCallback((userToSignal, callerID, stream) => {
+    const peer = new RTCPeerConnection(ICE_SERVERS);
+
+    peer.onicecandidate = (event) => {
+      if (event.candidate) {
+        socketRef.current.emit('ice-candidate', {
+          target: userToSignal,
+          caller: callerID,
+          candidate: event.candidate
+        });
+      }
+    };
+
+    stream.getTracks().forEach(track => peer.addTrack(track, stream));
+
+    peer.createOffer().then(offer => {
+      peer.setLocalDescription(offer);
+      socketRef.current.emit('offer', {
+        target: userToSignal,
+        caller: callerID,
+        sdp: offer
+      });
+    });
+
+    peer.ontrack = (event) => {
+      setRemoteStreams(prev => ({
+         ...prev,
+         [userToSignal]: event.streams[0]
+      }));
+    };
+
+    return peer;
+  }, []);
+
+  const addPeer = useCallback((callerID, stream) => {
+    const peer = new RTCPeerConnection(ICE_SERVERS);
+    
+    peer.onicecandidate = (event) => {
+      if (event.candidate) {
+        socketRef.current.emit('ice-candidate', {
+           target: callerID,
+           caller: socketRef.current.id,
+           candidate: event.candidate
+        });
+      }
+    };
+
+    stream.getTracks().forEach(track => peer.addTrack(track, stream));
+
+    peer.ontrack = (event) => {
+      setRemoteStreams(prev => ({
+         ...prev,
+         [callerID]: event.streams[0]
+      }));
+    };
+
+    return peer;
+  }, []);
+
   useEffect(() => {
     // Timer Logic
     timerRef.current = setInterval(() => {
@@ -177,68 +236,8 @@ export const VideoCall = ({ roomId, userId, mode = 'mock', onEndCall }) => {
          peersRef.current[id].close();
       });
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId]);
-
-
-  const createPeer = (userToSignal, callerID, stream) => {
-    const peer = new RTCPeerConnection(ICE_SERVERS);
-
-    peer.onicecandidate = (event) => {
-      if (event.candidate) {
-        socketRef.current.emit('ice-candidate', {
-          target: userToSignal,
-          caller: callerID,
-          candidate: event.candidate
-        });
-      }
-    };
-
-    stream.getTracks().forEach(track => peer.addTrack(track, stream));
-
-    peer.createOffer().then(offer => {
-      peer.setLocalDescription(offer);
-      socketRef.current.emit('offer', {
-        target: userToSignal,
-        caller: callerID,
-        sdp: offer
-      });
-    });
-
-    peer.ontrack = (event) => {
-      setRemoteStreams(prev => ({
-         ...prev,
-         [userToSignal]: event.streams[0]
-      }));
-    };
-
-    return peer;
-  };
-
-  const addPeer = (callerID, stream) => {
-    const peer = new RTCPeerConnection(ICE_SERVERS);
-    
-    peer.onicecandidate = (event) => {
-      if (event.candidate) {
-        socketRef.current.emit('ice-candidate', {
-           target: callerID,
-           caller: socketRef.current.id,
-           candidate: event.candidate
-        });
-      }
-    };
-
-    stream.getTracks().forEach(track => peer.addTrack(track, stream));
-
-    peer.ontrack = (event) => {
-      setRemoteStreams(prev => ({
-         ...prev,
-         [callerID]: event.streams[0]
-      }));
-    };
-
-    return peer;
-  };
+   
+  }, [addPeer, createPeer, roomId]);
 
 
   const toggleMic = () => {

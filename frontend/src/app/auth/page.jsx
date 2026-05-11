@@ -36,7 +36,9 @@ export default function AuthPage() {
 
   // Clear error when user starts typing
   useEffect(() => {
-    if (error) setError('');
+    let t;
+    if (error) t = setTimeout(() => setError(''), 0);
+    return () => clearTimeout(t);
   }, [email, password, name, confirm, error]);
 
   // Validation helper
@@ -107,7 +109,7 @@ export default function AuthPage() {
         <div style={{ zIndex: 2, maxWidth: 300 }}>
           <GlassCard style={{ padding: '16px 20px', textAlign: 'center' }}>
             <div style={{ fontSize: 13, color: C.textSecondary, lineHeight: 1.7, fontStyle: 'italic' }}>
-              "{speaking ? 'Welcome back! Ready for your session?' : 'Let\'s analyze your communication style.'}"
+              &quot;{speaking ? 'Welcome back! Ready for your session?' : 'Let&apos;s analyze your communication style.'}&quot;
             </div>
             <MicWave active={speaking} />
           </GlassCard>
