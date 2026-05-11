@@ -17,10 +17,11 @@ on:
 
 jobs:
   lint-and-build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [22.x]
 
     steps:
@@ -37,8 +38,8 @@ jobs:
         run: npm install
         working-directory: ./frontend
 
-      - name: Run ESLint
-        run: npm run lint
+      - name: Run TypeCheck
+        run: tsc --noEmit
         working-directory: ./frontend
 
       - name: Build Next.js
