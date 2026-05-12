@@ -17,31 +17,38 @@ const particles = Array.from({ length: 20 }).map((_, i) => {
   };
 });
 
-const ParticlesBg = () => (
-  <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-    {particles.map((p) => (
-      <div key={p.id} style={{
-        position: 'absolute',
-        width: p.width,
-        height: p.height,
-        borderRadius: '50%',
-        background: p.color,
-        left: p.left,
-        animation: `particle-float ${p.duration} ease-in-out infinite`,
-        animationDelay: p.delay,
-        '--dx': p.dx,
-        opacity: 0.4,
-      }} />
-    ))}
-    <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.03 }} xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-          <path d="M 60 0 L 0 0 0 60" fill="none" stroke={C.cyan} strokeWidth="1" />
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#grid)" />
-    </svg>
-  </div>
-);
+const ParticlesBg = () => {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+      {mounted && particles.map((p) => (
+        <div key={p.id} style={{
+          position: 'absolute',
+          width: p.width,
+          height: p.height,
+          borderRadius: '50%',
+          background: p.color,
+          left: p.left,
+          animation: `particle-float ${p.duration} ease-in-out infinite`,
+          animationDelay: p.delay,
+          '--dx': p.dx,
+          opacity: 0.4,
+        }} />
+      ))}
+      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.03 }} xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+            <path d="M 60 0 L 0 0 0 60" fill="none" stroke={C.cyan} strokeWidth="1" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+      </svg>
+    </div>
+  );
+};
 
 export { ParticlesBg };

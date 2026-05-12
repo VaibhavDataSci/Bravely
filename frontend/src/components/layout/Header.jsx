@@ -4,6 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { C } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { NeonButton } from '../shared';
+import { Code, Users, Flame, Bell, Sparkles, User, Settings, LogOut } from 'lucide-react';
 
 export function Header() {
   const { user, logout } = useAuth();
@@ -12,9 +13,11 @@ export function Header() {
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const headerRef = useRef(null);
 
   useEffect(() => {
+    setMounted(true);
     const handleClickOutside = (e) => {
       if (headerRef.current && !headerRef.current.contains(e.target)) {
         setNotifOpen(false);
@@ -56,8 +59,8 @@ export function Header() {
       <div style={{ flex: 1, minWidth: 0, opacity: isDashboard ? 1 : 0, pointerEvents: isDashboard ? 'auto' : 'none' }}>
         {isDashboard && (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Good morning, {displayName} ✨
+            <div style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 6 }}>
+              Good morning, {mounted ? displayName : 'User'} <Sparkles size={18} color={C.primary} />
             </div>
             <div style={{ fontSize: 13, color: C.textSecondary, whiteSpace: 'nowrap' }}>
               You&apos;re on a <span style={{ color: C.warning }}>7-day streak</span> - keep it up!
@@ -69,8 +72,8 @@ export function Header() {
       {/* Middle Section */}
       {isDashboard && (
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', margin: '0 20px' }}>
-          <NeonButton variant="outline" size="sm" onClick={() => router.push('/coding')}>⌥ Coding Round</NeonButton>
-          <NeonButton variant="outline" size="sm" onClick={() => router.push('/peer-practice')}>👥 Peer Arena</NeonButton>
+          <NeonButton variant="outline" size="sm" onClick={() => router.push('/coding')} style={{ display: 'flex', gap: 6 }}><Code size={16} /> Coding Round</NeonButton>
+          <NeonButton variant="outline" size="sm" onClick={() => router.push('/peer-practice')} style={{ display: 'flex', gap: 6 }}><Users size={16} /> Peer Arena</NeonButton>
           <NeonButton size="sm" onClick={() => router.push('/solo-select')}>Start Mock Interview →</NeonButton>
         </div>
       )}
@@ -96,7 +99,7 @@ export function Header() {
             boxShadow: `0 0 12px ${C.warning}20`,
           }}
         >
-          <span style={{ fontSize: 18, lineHeight: 1 }}>🔥</span>
+          <span style={{ display: 'flex', alignItems: 'center' }}><Flame size={18} /></span>
           <span>0</span>
         </div>
 
@@ -138,7 +141,7 @@ export function Header() {
               boxShadow: notifOpen ? `0 0 15px rgba(167, 139, 250, 0.2)` : 'none',
             }}
           >
-            🔔
+            <Bell size={18} />
           </button>
 
           {/* Notification Dropdown */}
@@ -199,10 +202,10 @@ export function Header() {
               padding: 0
             }}
           >
-            {avatarUrl ? (
+            {mounted && avatarUrl ? (
               <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              initial
+              mounted ? initial : 'U'
             )}
           </button>
 
@@ -230,20 +233,20 @@ export function Header() {
           >
             <div style={{ padding: '12px 20px', borderBottom: `1px solid ${C.border}`, marginBottom: 8 }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, marginBottom: 2 }}>
-                {displayName}
+                {mounted ? displayName : 'User'}
               </div>
               <div style={{ fontSize: 12, color: C.textMuted, wordBreak: 'break-all' }}>
-                {user?.email || ''}
+                {mounted ? (user?.email || '') : ''}
               </div>
             </div>
             
             <DropdownItem
-              icon="👤"
+              icon={<User size={16} />}
               label="Profile"
               onClick={() => { setProfileOpen(false); router.push('/profile'); }}
             />
             <DropdownItem
-              icon="⚙️"
+              icon={<Settings size={16} />}
               label="Settings"
               onClick={() => { setProfileOpen(false); router.push('/settings'); }}
             />
@@ -268,7 +271,7 @@ export function Header() {
                 gap: 12,
               }}
             >
-              <span>🚪</span> Logout
+              <span><LogOut size={16} /></span> Logout
             </button>
           </div>
         </div>

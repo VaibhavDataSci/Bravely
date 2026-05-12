@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { C } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
 import { NeonButton, GlassCard, Tag, AIAvatar, MicWave } from '../components/shared';
+import { Users, Mic } from 'lucide-react';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -36,7 +37,8 @@ export default function LandingPage() {
         zIndex: 10,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <img src="/bravely-logo.jpeg" alt="Bravely" style={{ height: 44, objectFit: 'contain' }} />
+          <img src="/Bravely-logo.png" alt="Bravely" style={{ height: 44, objectFit: 'contain' }} />
+          <span style={{ fontSize: 24, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>Bravely</span>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <NeonButton variant="ghost" size="sm">Features</NeonButton>
@@ -69,7 +71,7 @@ export default function LandingPage() {
           </p>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 48 }}>
             <NeonButton size="lg" onClick={() => router.push('/dashboard')}>Start Free Session</NeonButton>
-            <NeonButton variant="outline" size="lg" onClick={() => router.push('/peer-practice')}>👥 Peer Lobby</NeonButton>
+            <NeonButton variant="outline" size="lg" onClick={() => router.push('/peer-practice')} style={{ display: 'flex', gap: 8, alignItems: 'center' }}><Users size={18} /> Peer Lobby</NeonButton>
             <NeonButton variant="ghost" size="lg" onClick={() => router.push('/auth')}>Sign In →</NeonButton>
           </div>
           
@@ -91,7 +93,7 @@ export default function LandingPage() {
           {/* Speaking indicator */}
           <GlassCard style={{ padding: '16px 28px', textAlign: 'center', minWidth: 280 }}>
             <div style={{ fontSize: 13, color: C.textSecondary, marginBottom: 8 }}>
-              {speaking ? '🎙 AI is analyzing...' : '"Let\'s begin the simulation"'}
+              {speaking ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Mic size={14} /> AI is analyzing...</span> : '"Let\'s begin the simulation"'}
             </div>
             <MicWave active={speaking} />
           </GlassCard>

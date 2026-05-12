@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { C } from '@/constants/theme';
 import { GlassCard, NeonButton } from '@/components/shared';
@@ -10,6 +10,11 @@ export default function DashboardPage(){
   const router = useRouter();
   const { user } = useAuth();
   const [range, setRange] = useState('7');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const displayName = user?.profileResume?.personalInfo?.name || user?.name || user?.email?.split('@')[0] || 'User';
 
@@ -110,7 +115,7 @@ export default function DashboardPage(){
       {/* HERO */}
       <div className={styles.hero}>
         <div className={styles.greeting}>
-          <div className={styles.greetTitle}>Welcome back, {displayName}</div>
+          <div className={styles.greetTitle}>Welcome back, {mounted ? displayName : 'User'}</div>
           <div className={styles.greetSub}>{dynamicSubtext}</div>
         </div>
 

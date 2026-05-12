@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import { C } from '@/constants/theme';
 import { GlassCard, Tag, NeonButton } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
+import { User, FileText, CheckCircle, Paperclip, CloudUpload, Flame, Zap, Trophy, Target, Gem, Star } from 'lucide-react';
 
 // ─── SIMULATED RESUME PARSER ────────────────────────────────────────────────
 const SIMULATED_PARSE_RESULTS = {
@@ -62,12 +63,12 @@ const ProfilePage = () => {
   };
 
   const achievements = [
-    { icon: '🔥', label: '7-Day Streak', earned: true },
-    { icon: '⚡', label: 'Speed Talker', earned: true },
-    { icon: '🏆', label: 'Top 10%', earned: true },
-    { icon: '🎯', label: '50 Interviews', earned: false },
-    { icon: '💎', label: 'Perfect Score', earned: false },
-    { icon: '🌟', label: 'All Roles', earned: false },
+    { icon: <Flame size={28} />, label: '7-Day Streak', earned: true },
+    { icon: <Zap size={28} />, label: 'Speed Talker', earned: true },
+    { icon: <Trophy size={28} />, label: 'Top 10%', earned: true },
+    { icon: <Target size={28} />, label: '50 Interviews', earned: false },
+    { icon: <Gem size={28} />, label: 'Perfect Score', earned: false },
+    { icon: <Star size={28} />, label: 'All Roles', earned: false },
   ];
 
   const uploadTimestamp = profileResume?.uploadedAt
@@ -85,7 +86,7 @@ const ProfilePage = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 36, boxShadow: `0 0 30px rgba(167, 139, 250, 0.2)`,
             animation: 'glow-pulse 3s ease infinite',
-          }}>👤</div>
+          }}><User size={48} color="#fff" /></div>
           <div style={{ flex: 1 }}>
             <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4 }}>{user?.name || 'Alex Martinez'}</h2>
             <p style={{ color: C.textSecondary, fontSize: 14, marginBottom: 12 }}>{user?.email || 'alex@email.com'} · Pro Plan · Member since Jan 2026</p>
@@ -116,7 +117,7 @@ const ProfilePage = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <span style={{ fontSize: 20 }}>📄</span>
+              <span style={{ fontSize: 20, display: 'flex' }}><FileText size={20} /></span>
               <h3 style={{ fontSize: 18, fontWeight: 700, color: C.textPrimary, margin: 0 }}>Resume Management</h3>
             </div>
             <p style={{ fontSize: 13, color: C.textSecondary, margin: 0 }}>
@@ -138,7 +139,7 @@ const ProfilePage = () => {
             display: 'flex', alignItems: 'center', gap: 10,
             animation: 'fade-up 0.4s ease',
           }}>
-            <span style={{ fontSize: 18 }}>✅</span>
+            <span style={{ fontSize: 18, display: 'flex' }}><CheckCircle size={18} color={C.success} /></span>
             <span style={{ fontSize: 13, color: C.success, fontWeight: 600 }}>Resume parsed successfully! Your interviews will now be personalized.</span>
           </div>
         )}
@@ -157,7 +158,7 @@ const ProfilePage = () => {
                   background: `linear-gradient(135deg, ${C.primary}20, ${C.secondary}20)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 22, border: `1px solid ${C.borderMid}`,
-                }}>📎</div>
+                }}><Paperclip size={24} color={C.primary} /></div>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: C.textPrimary }}>{profileResume.filename}</div>
                   <div style={{ fontSize: 12, color: C.textMuted }}>{profileResume.fileSize} · Uploaded {uploadTimestamp}</div>
@@ -240,7 +241,7 @@ const ProfilePage = () => {
                   background: `linear-gradient(135deg, ${C.primary}15, ${C.secondary}15)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 24, border: `1px solid ${C.borderMid}`,
-                }}>☁️</div>
+                }}><CloudUpload size={28} color={C.primary} /></div>
                 <div style={{ fontSize: 15, color: C.textPrimary, fontWeight: 500 }}>
                   <span style={{ color: C.primary, fontWeight: 600 }}>Click to upload</span> or drag and drop
                 </div>
