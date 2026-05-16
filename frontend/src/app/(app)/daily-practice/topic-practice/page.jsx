@@ -102,7 +102,7 @@ export default function TopicPracticePage() {
       return () => timings.forEach(clearTimeout);
     } else if (recState === 'processing' || recState === 'done') {
       setTimeout(() => {
-        if (starR === 'analyzing' || starR === 'pending') setStarR('missing');
+        setStarR(prev => (prev === 'analyzing' || prev === 'pending') ? 'missing' : prev);
       }, 0);
     } else if (recState === 'idle') {
       setTimeout(() => {

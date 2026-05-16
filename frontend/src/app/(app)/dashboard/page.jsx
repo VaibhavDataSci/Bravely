@@ -10,10 +10,11 @@ export default function DashboardPage(){
   const router = useRouter();
   const { user } = useAuth();
   const [range, setRange] = useState('7');
-  const [mounted, setMounted] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const t = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(t);
   }, []);
 
   const displayName = user?.profileResume?.personalInfo?.name || user?.name || user?.email?.split('@')[0] || 'User';
@@ -115,7 +116,7 @@ export default function DashboardPage(){
       {/* HERO */}
       <div className={styles.hero}>
         <div className={styles.greeting}>
-          <div className={styles.greetTitle}>Welcome back, {mounted ? displayName : 'User'}</div>
+          <div className={styles.greetTitle}>Welcome back, {isMounted ? displayName : 'User'}</div>
           <div className={styles.greetSub}>{dynamicSubtext}</div>
         </div>
 

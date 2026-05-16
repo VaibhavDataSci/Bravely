@@ -13,11 +13,15 @@ export function Header() {
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const headerRef = useRef(null);
 
   useEffect(() => {
-    setMounted(true);
+    const t = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (headerRef.current && !headerRef.current.contains(e.target)) {
         setNotifOpen(false);
@@ -60,7 +64,7 @@ export function Header() {
         {isDashboard && (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 6 }}>
-              Good morning, {mounted ? displayName : 'User'} <Sparkles size={18} color={C.primary} />
+              Good morning, {isMounted ? displayName : 'User'} <Sparkles size={18} color={C.primary} />
             </div>
             <div style={{ fontSize: 13, color: C.textSecondary, whiteSpace: 'nowrap' }}>
               You&apos;re on a <span style={{ color: C.warning }}>7-day streak</span> - keep it up!
@@ -202,10 +206,10 @@ export function Header() {
               padding: 0
             }}
           >
-            {mounted && avatarUrl ? (
+            {isMounted && avatarUrl ? (
               <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              mounted ? initial : 'U'
+              isMounted ? initial : 'U'
             )}
           </button>
 
@@ -233,10 +237,10 @@ export function Header() {
           >
             <div style={{ padding: '12px 20px', borderBottom: `1px solid ${C.border}`, marginBottom: 8 }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, marginBottom: 2 }}>
-                {mounted ? displayName : 'User'}
+                {isMounted ? displayName : 'User'}
               </div>
               <div style={{ fontSize: 12, color: C.textMuted, wordBreak: 'break-all' }}>
-                {mounted ? (user?.email || '') : ''}
+                {isMounted ? (user?.email || '') : ''}
               </div>
             </div>
             

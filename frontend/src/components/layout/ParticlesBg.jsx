@@ -10,22 +10,17 @@ const particles = Array.from({ length: 20 }).map((_, i) => {
     width: i % 2 === 0 ? 2 : 1,
     height: i % 3 === 0 ? 2 : 1,
     color: i % 3 === 0 ? C.cyan : i % 3 === 1 ? C.violetBright : '#ffffff',
-    left: `${((i * 17.3) + rand * 23) % 100}%`,
-    duration: `${8 + (i % 7) + rand * 5}s`,
-    delay: `${(i * 0.6 + rand * 3) % 10}s`,
-    dx: `${((i % 5) - 2) * 20 + rand * 20}px`,
+    left: `${(((i * 17.3) + rand * 23) % 100).toFixed(2)}%`,
+    duration: `${(8 + (i % 7) + rand * 5).toFixed(2)}s`,
+    delay: `${((i * 0.6 + rand * 3) % 10).toFixed(2)}s`,
+    dx: `${(((i % 5) - 2) * 20 + rand * 20).toFixed(2)}px`,
   };
 });
 
 const ParticlesBg = () => {
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
   return (
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-      {mounted && particles.map((p) => (
+      {particles.map((p) => (
         <div key={p.id} style={{
           position: 'absolute',
           width: p.width,
