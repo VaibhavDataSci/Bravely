@@ -3,13 +3,14 @@ import { useRouter, usePathname } from 'next/navigation';
 import React, { useState, useCallback } from 'react';
 import { C } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
+import { LayoutDashboard, Mic, Target, Users, MessagesSquare, Pin, PinOff } from 'lucide-react';
 
 const navItems = [
-  { id: 'dashboard',       label: 'Dashboard',        icon: '◈' },
-  { id: 'daily-practice',  label: 'Daily Practice',   icon: '⬡' },
-  { id: 'solo-select',     label: 'Mock Interview',   icon: '◉' },
-  { id: 'peer-practice',   label: 'Peer to Peer',     icon: '👥' },
-  { id: 'group-lobby',     label: 'Group Discussion', icon: '⬡' },
+  { id: 'dashboard',       label: 'Dashboard',        icon: <LayoutDashboard size={20} /> },
+  { id: 'daily-practice',  label: 'Daily Practice',   icon: <Mic size={20} /> },
+  { id: 'solo-select',     label: 'Mock Interview',   icon: <Target size={20} /> },
+  { id: 'peer-practice',   label: 'Peer to Peer',     icon: <Users size={20} /> },
+  { id: 'group-lobby',     label: 'Group Discussion', icon: <MessagesSquare size={20} /> },
 ];
 
 const COLLAPSED_WIDTH = 68;
@@ -57,20 +58,28 @@ const Sidebar = ({ page }) => {
       }}>
         {/* Logo */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: expanded ? 10 : 0,
-          minWidth: 36,
+          display: 'flex', alignItems: 'center', gap: expanded ? 8 : 0,
+          minWidth: 36, overflow: 'hidden',
         }}>
           <img
-            src="/bravely-logo.jpeg"
+            src="/Bravely-logo.png"
             alt="Bravely"
             style={{
-              width:      expanded ? 120 : 36,
-              height:     expanded ? 'auto' : 36,
+              width: 32,
+              height: 32,
               objectFit: 'contain',
-              // Width/height cause layout — tie them to the sidebar width transition
-              transition: 'width 0.22s cubic-bezier(0.4, 0, 0.2, 1), height 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+              flexShrink: 0,
             }}
           />
+          <span style={{
+            fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px',
+            whiteSpace: 'nowrap', opacity: expanded ? 1 : 0,
+            maxWidth: expanded ? 100 : 0,
+            transition: 'opacity 0.2s ease, max-width 0.2s ease',
+            pointerEvents: 'none',
+          }}>
+            Bravely
+          </span>
         </div>
         {/* Pin/unpin button — only visible when expanded */}
         <button
@@ -79,7 +88,9 @@ const Sidebar = ({ page }) => {
           style={{
             height: 28, borderRadius: 6,
             background: pinned ? `rgba(167, 139, 250, 0.1)` : 'transparent',
-            border: `1px solid ${pinned ? `rgba(167, 139, 250, 0.3)` : 'transparent'}`,
+            borderStyle: 'solid',
+            borderWidth: expanded ? 1 : 0,
+            borderColor: pinned ? `rgba(167, 139, 250, 0.3)` : 'transparent',
             color:  pinned ? C.primary : C.textMuted,
             cursor: 'pointer', fontSize: 14,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -87,13 +98,12 @@ const Sidebar = ({ page }) => {
             width:        expanded ? 28 : 0,
             overflow:     'hidden',
             padding:      expanded ? undefined : 0,
-            borderWidth:  expanded ? 1 : 0,
             // Opacity is GPU-only — no repaint
             transition:   'opacity 0.15s ease',
             pointerEvents: expanded ? 'auto' : 'none',
             flexShrink: 0,
           }}
-        >{pinned ? '📌' : '📍'}</button>
+        >{pinned ? <PinOff size={16} /> : <Pin size={16} />}</button>
       </div>
 
       {/* Nav items */}

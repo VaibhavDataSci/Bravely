@@ -101,7 +101,7 @@ export default function AuthPage() {
       }}>
         <ParticlesBg />
         <div style={{ textAlign: 'center', zIndex: 2 }}>
-          <img src="/bravely-logo.jpeg" alt="Bravely" style={{ width: 140, objectFit: 'contain', marginBottom: 12 }} />
+          <img src="/Bravely-logo.png" alt="Bravely" style={{ width: 140, objectFit: 'contain', marginBottom: 12 }} />
           <div style={{ fontSize: 14, color: C.textSecondary, fontWeight: 400 }}>Master Difficult Conversations.</div>
         </div>
         <AIAvatar size={240} speaking={speaking} style={{ zIndex: 2 }} />

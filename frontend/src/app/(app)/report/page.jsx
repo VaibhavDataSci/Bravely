@@ -9,6 +9,12 @@ const ReportPage = () => {
   const router = useRouter();
   const { user } = useAuth();
   const [expandedQ, setExpandedQ] = useState(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  React.useEffect(() => {
+    const t = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(t);
+  }, []);
 
   const displayName = user?.profileResume?.personalInfo?.name || user?.name || user?.email?.split('@')[0] || 'User';
   const avatarUrl = user?.profileResume?.personalInfo?.avatar || user?.photoURL || user?.avatarUrl;
@@ -87,15 +93,15 @@ const ReportPage = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             overflow: 'hidden', flexShrink: 0
           }}>
-            {avatarUrl ? (
+            {isMounted && avatarUrl ? (
               <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              initial
+              isMounted ? initial : 'U'
             )}
           </div>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.primary, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>Interview Analysis</div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 4px 0', color: C.textPrimary }}>{displayName}&apos;s Session Report</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 4px 0', color: C.textPrimary }}>{isMounted ? displayName : 'User'}&apos;s Session Report</h2>
             <p style={{ color: C.textMuted, fontSize: 12, margin: 0 }}>Senior SWE · Google · April 30, 2026 · 24 min</p>
           </div>
         </div>

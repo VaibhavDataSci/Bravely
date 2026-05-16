@@ -10,38 +10,40 @@ const particles = Array.from({ length: 20 }).map((_, i) => {
     width: i % 2 === 0 ? 2 : 1,
     height: i % 3 === 0 ? 2 : 1,
     color: i % 3 === 0 ? C.cyan : i % 3 === 1 ? C.violetBright : '#ffffff',
-    left: `${((i * 17.3) + rand * 23) % 100}%`,
-    duration: `${8 + (i % 7) + rand * 5}s`,
-    delay: `${(i * 0.6 + rand * 3) % 10}s`,
-    dx: `${((i % 5) - 2) * 20 + rand * 20}px`,
+    left: `${(((i * 17.3) + rand * 23) % 100).toFixed(2)}%`,
+    duration: `${(8 + (i % 7) + rand * 5).toFixed(2)}s`,
+    delay: `${((i * 0.6 + rand * 3) % 10).toFixed(2)}s`,
+    dx: `${(((i % 5) - 2) * 20 + rand * 20).toFixed(2)}px`,
   };
 });
 
-const ParticlesBg = () => (
-  <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-    {particles.map((p) => (
-      <div key={p.id} style={{
-        position: 'absolute',
-        width: p.width,
-        height: p.height,
-        borderRadius: '50%',
-        background: p.color,
-        left: p.left,
-        animation: `particle-float ${p.duration} ease-in-out infinite`,
-        animationDelay: p.delay,
-        '--dx': p.dx,
-        opacity: 0.4,
-      }} />
-    ))}
-    <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.03 }} xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-          <path d="M 60 0 L 0 0 0 60" fill="none" stroke={C.cyan} strokeWidth="1" />
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#grid)" />
-    </svg>
-  </div>
-);
+const ParticlesBg = () => {
+  return (
+    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+      {particles.map((p) => (
+        <div key={p.id} style={{
+          position: 'absolute',
+          width: p.width,
+          height: p.height,
+          borderRadius: '50%',
+          background: p.color,
+          left: p.left,
+          animation: `particle-float ${p.duration} ease-in-out infinite`,
+          animationDelay: p.delay,
+          '--dx': p.dx,
+          opacity: 0.4,
+        }} />
+      ))}
+      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.03 }} xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+            <path d="M 60 0 L 0 0 0 60" fill="none" stroke={C.cyan} strokeWidth="1" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+      </svg>
+    </div>
+  );
+};
 
 export { ParticlesBg };
