@@ -62,6 +62,15 @@ fastify.ready((err) => {
   });
 });
 
+fastify.get('/health', async (request, reply) => {
+  return { 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+  };
+});
+
 const PORT = process.env.PORT || 5000;
 
 const start = async () => {
