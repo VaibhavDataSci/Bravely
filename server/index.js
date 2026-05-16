@@ -3,6 +3,15 @@ import { Server } from 'socket.io';
 
 const fastify = Fastify({ logger: true });
 
+fastify.get('/health', async (request, reply) => {
+  return { 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+  };
+});
+
 // We need to wait for fastify to be ready before attaching socket.io
 fastify.ready((err) => {
   if (err) throw err;
@@ -60,15 +69,6 @@ fastify.ready((err) => {
       console.log(`User disconnected: ${socket.id}`);
     });
   });
-});
-
-fastify.get('/health', async (request, reply) => {
-  return { 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    memory: process.memoryUsage(),
-  };
 });
 
 const PORT = process.env.PORT || 5000;
