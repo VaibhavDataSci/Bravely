@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { C } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAiHealth } from '../../hooks/useAiHealth';
+import { useDashboard } from '../../hooks/useDashboard';
 
 export function TopBar() {
   const { user, logout } = useAuth();
@@ -11,6 +13,10 @@ export function TopBar() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const topBarRef = useRef(null);
+  const { data: dashboardData } = useDashboard('7');
+  const streakCount = dashboardData?.streak?.current ?? 0;
+  const { status: aiStatus } = useAiHealth();
+  const aiUp = aiStatus === 'ok';
 
   // Click outside to close active dropdowns
   useEffect(() => {
@@ -64,7 +70,29 @@ export function TopBar() {
         }}
       >
         <span style={{ fontSize: 18, lineHeight: 1 }}>🔥</span>
-        <span>0</span>
+        <span>{streakCount}</span>
+      </div>
+
+      {/* AI Status */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          height: 30,
+          padding: '0 10px',
+          background: aiUp ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+          border: `1px solid ${aiUp ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}`,
+          borderRadius: 15,
+          color: aiUp ? '#34D399' : '#F87171',
+          fontSize: 11,
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
+        }}
+      >
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: aiUp ? '#34D399' : '#F87171' }} />
+        {aiUp ? 'AI Online' : 'AI Offline'}
       </div>
 
       {/* Notification Icon */}

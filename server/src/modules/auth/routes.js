@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const db = require('../../config/db');
+const { createOrGetLocalUser } = require('../../services/runtimeStore');
 
 module.exports = async function (fastify, opts) {
   
@@ -31,7 +32,12 @@ module.exports = async function (fastify, opts) {
       return { token, user };
     } catch (err) {
       request.log.error(err);
-      return reply.code(500).send({ error: 'Internal Server Error' });
+      const localUser = createOrGetLocalUser({ email, name });
+      if (!localUser) {
+        return reply.code(500).send({ error: 'Internal Server Error' });
+      }
+      const token = fastify.jwt.sign({ id: localUser.id, role: localUser.role, email: localUser.email });
+      return { token, user: localUser };
     }
   });
 
@@ -63,7 +69,12 @@ module.exports = async function (fastify, opts) {
       return { token, user: userWithoutPassword };
     } catch (err) {
       request.log.error(err);
-      return reply.code(500).send({ error: 'Internal Server Error' });
+      const localUser = createOrGetLocalUser({ email, name: email.split('@')[0] });
+      if (!localUser) {
+        return reply.code(500).send({ error: 'Internal Server Error' });
+      }
+      const token = fastify.jwt.sign({ id: localUser.id, role: localUser.role, email: localUser.email });
+      return { token, user: localUser };
     }
   });
 
@@ -76,6 +87,10 @@ module.exports = async function (fastify, opts) {
       return { user: result.rows[0] };
     } catch (err) {
       request.log.error(err);
+      const localUser = createOrGetLocalUser({ email: request.user.email, name: request.user.email?.split('@')[0] });
+      if (localUser) {
+        return { user: localUser };
+      }
       return reply.code(500).send({ error: 'Internal Server Error' });
     }
   });

@@ -1,5 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { loginWithPassword, signupWithPassword, logoutAuth } from '@/services/authService';
 
 const AuthContext = createContext(null);
 
@@ -25,15 +26,17 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
-  const login = ({ email, name }) => {
-    const userData = { email, name: name || email.split('@')[0] };
+  const login = async ({ email, password }) => {
+    const result = await loginWithPassword({ email, password });
+    const userData = result?.user || { email, name: email.split('@')[0] };
     setUser(userData);
     setIsAuthenticated(true);
     return userData;
   };
 
-  const signup = ({ email, name }) => {
-    const userData = { email, name };
+  const signup = async ({ email, name, password }) => {
+    const result = await signupWithPassword({ email, name, password });
+    const userData = result?.user || { email, name };
     setUser(userData);
     setIsAuthenticated(true);
     return userData;
@@ -43,6 +46,7 @@ export function AuthProvider({ children }) {
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('aia_user');
+    logoutAuth();
   };
 
   const updateProfileResume = (resumeData) => {
