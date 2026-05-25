@@ -46,7 +46,7 @@ export default function AuthPage() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError('');
 
     if (!email.trim()) {
@@ -79,15 +79,18 @@ export default function AuthPage() {
 
     setLoading(true);
 
-    setTimeout(() => {
+    try {
       if (mode === 'login') {
-        login({ email: email.trim(), name: '' });
+        await login({ email: email.trim(), password });
       } else {
-        signup({ email: email.trim(), name: name.trim() });
+        await signup({ email: email.trim(), name: name.trim(), password });
       }
-      setLoading(false);
       router.push('/dashboard');
-    }, 1400);
+    } catch (err) {
+      setError(err?.message || 'Authentication failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

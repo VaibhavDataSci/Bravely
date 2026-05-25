@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { C } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
+import { useDashboard } from '../../hooks/useDashboard';
+import { useAiHealth } from '../../hooks/useAiHealth';
 import { NeonButton } from '../shared';
 import { Code, Users, Flame, Bell, Sparkles, User, Settings, LogOut } from 'lucide-react';
 
@@ -15,6 +17,8 @@ export function Header() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const headerRef = useRef(null);
+  const { data: dashboardData } = useDashboard('7');
+  const { status: aiStatus } = useAiHealth();
 
   useEffect(() => {
     const t = setTimeout(() => setIsMounted(true), 0);
@@ -41,6 +45,8 @@ export function Header() {
   const initial = displayName.charAt(0).toUpperCase();
   const avatarUrl = user?.profileResume?.personalInfo?.avatar || user?.photoURL || user?.avatarUrl;
   const isDashboard = location === '/dashboard' || location === '/';
+  const streakCount = dashboardData?.streak?.current ?? 0;
+  const aiUp = aiStatus === 'ok';
   
   return (
     <div
@@ -67,7 +73,7 @@ export function Header() {
               Good morning, {isMounted ? displayName : 'User'} <Sparkles size={18} color={C.primary} />
             </div>
             <div style={{ fontSize: 13, color: C.textSecondary, whiteSpace: 'nowrap' }}>
-              You&apos;re on a <span style={{ color: C.warning }}>7-day streak</span> - keep it up!
+              You&apos;re on a <span style={{ color: C.warning }}>{streakCount}-day streak</span> - keep it up!
             </div>
           </div>
         )}
@@ -84,6 +90,28 @@ export function Header() {
 
       {/* Right Section */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: isDashboard ? 1 : 'unset', justifyContent: 'flex-end' }}>
+        {/* AI Status */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            height: 32,
+            padding: '0 10px',
+            boxSizing: 'border-box',
+            background: aiUp ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+            border: `1px solid ${aiUp ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}`,
+            borderRadius: 16,
+            color: aiUp ? '#34D399' : '#F87171',
+            fontSize: 12,
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+          }}
+        >
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: aiUp ? '#34D399' : '#F87171' }} />
+          {aiUp ? 'AI Online' : 'AI Offline'}
+        </div>
         {/* Streak Counter */}
         <div
           style={{
@@ -104,7 +132,7 @@ export function Header() {
           }}
         >
           <span style={{ display: 'flex', alignItems: 'center' }}><Flame size={18} /></span>
-          <span>0</span>
+          <span>{streakCount}</span>
         </div>
 
         {/* Notification Icon */}

@@ -1,5 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { fetchCurrentUser, loginWithPassword, signupWithPassword, logoutAuth } from '@/services/authService';
 
 const AuthContext = createContext(null);
 
@@ -15,6 +16,26 @@ export function AuthProvider({ children }) {
   });
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!user);
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+
+    fetchCurrentUser()
+      .then((result) => {
+        if (cancelled || !result?.user) return;
+        setUser((prev) => ({
+          ...(prev || {}),
+          ...result.user,
+          profileResume: prev?.profileResume ?? result.user.profileResume,
+        }));
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
+
   // Persist to localStorage whenever user changes
   useEffect(() => {
     // skip initial render if user is undefined vs null depending on logic
@@ -25,15 +46,17 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
-  const login = ({ email, name }) => {
-    const userData = { email, name: name || email.split('@')[0] };
+  const login = async ({ email, password }) => {
+    const result = await loginWithPassword({ email, password });
+    const userData = result?.user || { email, name: email.split('@')[0] };
     setUser(userData);
     setIsAuthenticated(true);
     return userData;
   };
 
-  const signup = ({ email, name }) => {
-    const userData = { email, name };
+  const signup = async ({ email, name, password }) => {
+    const result = await signupWithPassword({ email, name, password });
+    const userData = result?.user || { email, name };
     setUser(userData);
     setIsAuthenticated(true);
     return userData;
@@ -43,6 +66,7 @@ export function AuthProvider({ children }) {
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('aia_user');
+    logoutAuth();
   };
 
   const updateProfileResume = (resumeData) => {

@@ -1,7 +1,9 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { GlassCard, NeonButton, MicWave } from '@/components/shared';
 import { C } from '@/constants/theme';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { analyzeDailyTranscript, startDailySession } from '@/services/dailyService';
 
 const StatCard = ({ icon, label, value }) => (
   <GlassCard style={{ 
@@ -28,18 +30,27 @@ export default function DaySummaryPage() {
   const [recState, setRecState] = useState('idle'); // 'idle', 'recording', 'processing', 'done'
   const [time, setTime] = useState(180); // 03:00
   const [showFeedback, setShowFeedback] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+  const [analysis, setAnalysis] = useState(null);
+  const [apiNote, setApiNote] = useState('');
+  const startedAtRef = useRef(null);
+  const autoStopRef = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
+  const {
+    supported,
+    listening,
+    transcript,
+    error: speechError,
+    resetTranscript,
+    startListening,
+    stopListening,
+  } = useSpeechRecognition();
 
-  useEffect(() => {
-    let interval;
-    if (recState === 'recording' && time > 0) {
-      interval = setInterval(() => {
-        setTime(t => t - 1);
-      }, 1000);
-    } else if (time === 0 && recState === 'recording') {
-      setTimeout(() => setRecState('processing'), 0);
-    }
-    return () => clearInterval(interval);
-  }, [recState, time]);
+  const scores = analysis?.scores || {};
+  const metrics = analysis?.metrics || {};
+  const fillerWords = analysis?.analysis?.filler_words?.detected || [];
+  const topFiller = fillerWords.slice(0, 2);
+  const insight = analysis?.feedback?.actionable_tip || analysis?.feedback?.improvements?.[0] || 'Record a response to unlock AI feedback.';
 
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -47,15 +58,72 @@ export default function DaySummaryPage() {
     return `${m}:${s}`;
   };
 
-  const handleMicClick = () => {
+  const submitForAnalysis = useCallback(async (spokenText) => {
+    setRecState('processing');
+    setApiNote('');
+    const elapsedSeconds = startedAtRef.current
+      ? Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000))
+      : Math.max(1, 180 - time);
+    try {
+      const result = await analyzeDailyTranscript({
+        sessionId,
+        mode: 'day-summary',
+        transcript: spokenText,
+        duration: elapsedSeconds,
+      });
+      setAnalysis(result);
+      if (result?.source === 'fallback') setApiNote('AI service offline. Showing local fallback feedback.');
+    } catch (err) {
+      setApiNote(err?.message || 'Unable to reach AI feedback. Showing empty fallback.');
+      setAnalysis(null);
+    } finally {
+      setRecState('done');
+      startedAtRef.current = null;
+    }
+  }, [sessionId, time]);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    let interval;
+    if (recState === 'recording') {
+      autoStopRef.current = false;
+      if (!startedAtRef.current) startedAtRef.current = Date.now();
+      interval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startedAtRef.current) / 1000);
+        const remaining = Math.max(0, 180 - elapsed);
+        setTime(remaining);
+        if (remaining === 0 && !autoStopRef.current) {
+          autoStopRef.current = true;
+          stopListening();
+          setTimeout(() => submitForAnalysis(transcript), 0);
+        }
+      }, 250);
+    }
+    return () => clearInterval(interval);
+  }, [recState, stopListening, submitForAnalysis, transcript]);
+
+  const handleMicClick = async () => {
     if (recState === 'idle') {
+      setShowFeedback(false);
+      setAnalysis(null);
+      resetTranscript();
+      setTime(180);
+      startedAtRef.current = Date.now();
+      autoStopRef.current = false;
+      try {
+        const started = await startDailySession({ mode: 'day-summary' });
+        setSessionId(started.sessionId);
+      } catch {
+        setApiNote('Backend unavailable. You can still record locally, but feedback may be limited.');
+      }
+      startListening();
       setRecState('recording');
     } else if (recState === 'recording') {
-      setTimeout(() => setRecState('processing'), 0);
-      // Simulate backend processing time before ready
-      setTimeout(() => {
-        setRecState('done');
-      }, 2000);
+      stopListening();
+      await submitForAnalysis(transcript);
     }
   };
 
@@ -227,15 +295,15 @@ export default function DaySummaryPage() {
                   width: 6, height: 6, borderRadius: '50%', background: C.primary, 
                   animation: (isRecording || isProcessing) ? 'pulse 1.5s infinite' : 'none',
                   opacity: (isRecording || isProcessing) ? 1 : 0.5
-                }} /> {(isRecording || isProcessing) ? 'Processing' : 'Ready'}
+                }} /> {(isRecording || isProcessing) ? (listening ? 'Listening' : 'Processing') : 'Ready'}
               </div>
             </div>
 
             <div style={{ color: C.textSecondary, fontSize: '1.05rem', lineHeight: 1.8, marginBottom: 20 }}>
-              {!isIdle ? '"...the core challenge of the quarterly review is effectively balancing our ambitious growth targets with the operational constraints we encountered in Q2. I believe the team..."' : 'Waiting for voice input...'}
+              {!isIdle ? (transcript || 'Listening for your voice...') : 'Waiting for voice input...'}
             </div>
             
-            {!isIdle && (
+            {!isIdle && transcript && (
               <div style={{ 
                 padding: '20px', 
                 background: 'rgba(167, 139, 250, 0.05)', 
@@ -246,9 +314,30 @@ export default function DaySummaryPage() {
                 lineHeight: 1.6,
                 animation: 'shimmer 1s ease-out 1'
               }}>
-                &quot;...needs to prioritize high-leverage activities that align with our long-term strategic vision, <span style={{ color: C.warning }}>specifically</span> focusing on automation and...&quot;
+                {transcript.slice(-180)}
               </div>
             )}
+
+            {(() => {
+              const showWarning = hydrated && (speechError || apiNote || !supported);
+              const message = !supported
+                ? 'Speech recognition is unavailable in this browser. Use Chrome or Edge for live transcript.'
+                : (speechError || apiNote || '');
+              return (
+                <div
+                  style={{
+                    marginTop: 14,
+                    color: C.warning || '#F59E0B',
+                    fontSize: 13,
+                    lineHeight: 1.5,
+                    minHeight: 18,
+                    visibility: showWarning ? 'visible' : 'hidden',
+                  }}
+                >
+                  {showWarning ? message : ''}
+                </div>
+              );
+            })()}
 
             <div style={{ marginTop: 'auto', paddingTop: 30, display: 'flex', gap: 6, opacity: isRecording ? 1 : 0.2 }}>
               <div style={{ width: 4, height: 16, background: C.borderMid, borderRadius: 2 }} />
@@ -279,7 +368,7 @@ export default function DaySummaryPage() {
                   AI Insight
                 </div>
                 <div style={{ color: C.textPrimary, fontSize: '0.95rem', lineHeight: 1.6 }}>
-                  You&apos;re using <strong>&quot;specifically&quot;</strong> as a transition word. Consider alternating with <strong>&quot;In particular&quot;</strong> for better vocabulary richness.
+                  {insight}
                 </div>
               </div>
             </GlassCard>
@@ -300,25 +389,26 @@ export default function DaySummaryPage() {
             label="Filler Words" 
             value={showFeedback ? (
               <div style={{ fontSize: '1rem', display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'center' }}>
-                <span style={{ color: C.primary }}>uh - 3</span>
-                <span style={{ color: C.primary }}>like - 2</span>
+                {topFiller.length ? topFiller.map((item) => (
+                  <span key={item.word} style={{ color: C.primary }}>{item.word} - {item.count}</span>
+                )) : <span style={{ color: C.success || '#10b981' }}>none</span>}
               </div>
             ) : "-"} 
           />
           <StatCard 
             icon="⭐" 
             label={<span>Clarity<br/>Score</span>} 
-            value={showFeedback ? <span>92<span style={{ fontSize: '1rem', color: C.textSecondary }}>%</span></span> : "-"} 
+            value={showFeedback ? <span>{Math.round(scores.clarity_score || 0)}<span style={{ fontSize: '1rem', color: C.textSecondary }}>%</span></span> : "-"} 
           />
           <StatCard 
             icon="🧠" 
             label="Tone" 
-            value={showFeedback ? <span style={{ fontSize: '1.1rem', color: C.textPrimary }}>Confident</span> : "-"} 
+            value={showFeedback ? <span style={{ fontSize: '1.1rem', color: C.textPrimary }}>{(scores.confidence_score || 0) >= 70 ? 'Confident' : 'Developing'}</span> : "-"} 
           />
           <StatCard 
             icon="⏱️" 
             label={<span>Pace<br/>(WPM)</span>} 
-            value={showFeedback ? "145" : "-"} 
+            value={showFeedback ? Math.round(metrics.words_per_minute || 0) : "-"} 
           />
           {showFeedback ? (
             <GlassCard style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', background: 'rgba(167, 139, 250, 0.05)', border: `1px solid rgba(167, 139, 250, 0.2)` }} hoverEffect>
@@ -327,7 +417,7 @@ export default function DaySummaryPage() {
                  Next Step
                </div>
                <div style={{ fontSize: '0.95rem', fontWeight: 500, color: C.textPrimary, textAlign: 'center' }}>
-                 Pause for Impact
+                 {analysis?.feedback?.improvements?.[0] || 'Pause for Impact'}
                </div>
             </GlassCard>
           ) : (
@@ -359,8 +449,7 @@ export default function DaySummaryPage() {
           <div style={{ position: 'relative', zIndex: 1, maxWidth: '60%' }}>
             <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: 12, color: C.textPrimary }}>Master the Art of Focus</h3>
             <p style={{ color: C.textSecondary, fontSize: '1.05rem', lineHeight: 1.6, marginBottom: 0 }}>
-              Our advanced AI monitors your narrative arc in real-time. <br/>
-              Keep practicing to unlock the &quot;Executive Presence&quot; mastery badge.
+              {analysis?.analysis?.communication_quality || 'Your AI feedback will become richer as you add more complete spoken examples.'}
             </p>
           </div>
         </GlassCard>

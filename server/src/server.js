@@ -1,5 +1,5 @@
 const buildApp = require('./app');
-const { PORT } = require('./config/env');
+const { PORT, ENABLE_REDIS_JOBS } = require('./config/env');
 const { Server } = require('socket.io');
 
 async function start() {
@@ -18,8 +18,13 @@ async function start() {
     // Attach Socket Handlers
     require('./socket/index')(io);
 
-    // Initialize Queues Worker
-    require('./queues/worker');
+    // Initialize queue worker only when explicitly enabled.
+    if (ENABLE_REDIS_JOBS) {
+      require('./queues/worker');
+      app.log.info('Redis jobs enabled: reports worker started');
+    } else {
+      app.log.warn('Redis jobs disabled (set ENABLE_REDIS_JOBS=true to enable BullMQ worker)');
+    }
 
     await app.listen({ port: PORT, host: '0.0.0.0' });
     app.log.info(`Server listening on port ${PORT}`);

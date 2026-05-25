@@ -1,66 +1,617 @@
 "use client";
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import React, { useState, useEffect, useRef } from 'react';
 import { C } from '@/constants/theme';
 import { NeonButton, GlassCard, Tag, AIAvatar, MicWave } from '@/components/shared';
+import { endInterview, startInterview, submitInterviewAnswer } from '@/services/interviewService';
 
-const CameraPreview = () => {
-  const videoRef = useRef(null);
-  useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-      if (videoRef.current) videoRef.current.srcObject = stream;
-    }).catch(console.error);
-  }, []);
-  return (
-    <div style={{ position: 'absolute', bottom: 24, right: 24, width: 200, height: 150, borderRadius: 12, overflow: 'hidden', border: `1px solid ${C.borderMid}`, background: '#000', boxShadow: `0 4px 20px rgba(0,0,0,0.5)` }}>
-      <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
-      <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, fontSize: 10, color: '#fff', fontFamily: 'Space Grotesk' }}>You</div>
-    </div>
-  );
-};
+function readSessionConfig() {
+  try {
+    const raw = sessionStorage.getItem('aia_session_config');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
-const questionBank = {
-  'se': [
-    'Tell me about a challenging bug you fixed and how you approached it.',
-    'How do you handle performance bottlenecks in a web application?',
-    'Explain the difference between REST and GraphQL.',
-  ],
-  'pm': [
-    'How do you prioritize features when there are conflicting requests?',
-    'Design an elevator system for a blind person.',
-    'Tell me about a product you love and how you would improve it.',
-  ],
-  'da': [
-    'Explain p-value to a non-technical stakeholder.',
-    'Write a SQL query to find the top 5 users by engagement.',
-    'How do you handle missing or corrupt data in a dataset?',
-  ],
-  'hr': [
-    'Tell me about a time you failed and what you learned.',
-    'Where do you see your career in 5 years?',
-    'How do you handle conflicts with a team member?',
-  ],
-  'sd': [
-    'How would you design a system like Twitter from scratch?',
-    'Explain how a load balancer works and when you need one.',
-    'Can you explain the CAP theorem and the trade-offs involved?',
-  ],
-};
+function readSessionResume() {
+  try {
+    const raw = sessionStorage.getItem('aia_session_resume');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
-// ─── PAGE 3: SOLO INTERVIEW ───────────────────────────────────────────────────
-const SoloPage = () => {
+function clampScore(value) {
+  return Math.max(0, Math.min(100, Math.round(value || 0)));
+}
+
+function scorePace(wordsPerMinute) {
+  if (!Number.isFinite(Number(wordsPerMinute)) || Number(wordsPerMinute) <= 0) return 0;
+  const ideal = 135;
+  const distance = Math.abs(Number(wordsPerMinute) - ideal);
+  return clampScore(100 - distance * 1.35);
+}
+
+function computeTranscriptScores(text, elapsedSeconds) {
+  const cleaned = String(text || '').trim();
+  if (!cleaned) return { confidence: 0, clarity: 0, pace: 0 };
+
+  const words = cleaned.toLowerCase().match(/[a-z']+/g) || [];
+  const wordCount = words.length;
+  const uniqueWords = new Set(words).size;
+  const sentenceCount = Math.max(1, (cleaned.match(/[.!?]+/g) || []).length);
+  const avgSentenceLength = wordCount / sentenceCount;
+  const measuredSeconds = Number.isFinite(Number(elapsedSeconds)) && Number(elapsedSeconds) > 0
+    ? Number(elapsedSeconds)
+    : 0;
+  const estimatedSeconds = Math.max(2, (wordCount / 145) * 60);
+  const durationMinutes = Math.max(Math.max(measuredSeconds, estimatedSeconds) / 60, 0.05);
+  const wordsPerMinute = wordCount / durationMinutes;
+
+  const fillerSet = new Set(['um', 'uh', 'like', 'actually', 'basically', 'literally', 'just', 'maybe', 'kind', 'sort']);
+  const hedgeSet = new Set(['maybe', 'probably', 'guess', 'think', 'somehow', 'perhaps']);
+  const fillerCount = words.filter((word) => fillerSet.has(word)).length;
+  const hedgeCount = words.filter((word) => hedgeSet.has(word)).length;
+  let repeatedPairs = 0;
+  for (let i = 1; i < words.length; i += 1) {
+    if (words[i] === words[i - 1]) repeatedPairs += 1;
+  }
+
+  const vocabularyRatio = wordCount ? uniqueWords / wordCount : 0;
+  const completeEnding = /[.!?]$/.test(cleaned);
+  const clarity =
+    34 +
+    Math.min(wordCount, 80) * 0.35 +
+    vocabularyRatio * 22 +
+    (avgSentenceLength >= 8 && avgSentenceLength <= 26 ? 18 : 8) +
+    (completeEnding ? 8 : 2) -
+    fillerCount * 4 -
+    repeatedPairs * 5;
+
+  const confidence =
+    36 +
+    Math.min(wordCount, 70) * 0.42 +
+    (words.some((word) => ['led', 'built', 'improved', 'delivered', 'owned', 'created', 'solved'].includes(word)) ? 12 : 4) +
+    (completeEnding ? 7 : 2) -
+    hedgeCount * 6 -
+    fillerCount * 3;
+
+  return {
+    confidence: clampScore(confidence),
+    clarity: clampScore(clarity),
+    pace: scorePace(wordsPerMinute),
+  };
+}
+
+export default function SoloPage() {
   const router = useRouter();
-  const [config] = useState(() => {
-    if (typeof window === 'undefined') {
-      return { role: 'Software Engineer', roleId: 'se', interviewRound: 'technical' };
+  const videoRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const postureTimerRef = useRef(null);
+  const poseLandmarkerRef = useRef(null);
+  const poseFrameRef = useRef(null);
+  const poseNoLandmarkRef = useRef(0);
+  const postureScoreRef = useRef(70);
+  const lastVideoTimeRef = useRef(-1);
+  const restoreMediapipeConsoleRef = useRef(null);
+  const micOnRef = useRef(false);
+  const endingRef = useRef(false);
+  const speechRetryTimersRef = useRef([]);
+  const currentUtteranceRef = useRef(null);
+  const startRecognitionRef = useRef(null);
+
+  const [config, setConfig] = useState(null);
+
+  useEffect(() => {
+    setConfig(readSessionConfig() || {
+      role: 'Software Engineer',
+      roleId: 'se',
+      interviewRound: 'behavioral',
+      interviewContext: 'General',
+    });
+  }, []);
+
+  const [sessionId, setSessionId] = useState('');
+  const [questions, setQuestions] = useState([]);
+  const [currentQ, setCurrentQ] = useState(0);
+  const [questionText, setQuestionText] = useState('Preparing your personalized question...');
+
+  const [time, setTime] = useState(0);
+  const [micOn, setMicOn] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [interim, setInterim] = useState('');
+  const [speaking, setSpeaking] = useState(true);
+  const [answerStartedAt, setAnswerStartedAt] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [latestScores, setLatestScores] = useState({ confidence: 0, clarity: 0, pace: 0 });
+  const [feedback, setFeedback] = useState('');
+  const [posture, setPosture] = useState({ score: 70, label: 'Stable posture' });
+  const [sessionReady, setSessionReady] = useState(false);
+
+  const [canUseSpeech, setCanUseSpeech] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCanUseSpeech(
+        'SpeechRecognition' in window || 'webkitSpeechRecognition' in window
+      );
     }
+  }, []);
+
+  useEffect(() => {
+    micOnRef.current = micOn;
+  }, [micOn]);
+
+  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+
+  const stopListeningNow = useCallback(() => {
+    micOnRef.current = false;
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      recognitionRef.current = null;
+    }
+    setMicOn(false);
+    setInterim('');
+  }, []);
+
+  const speakQuestion = useCallback(function speakQuestion(text, attempt = 0) {
+    if (endingRef.current || typeof window === 'undefined' || !window.speechSynthesis || !text) return;
+
+    const voices = window.speechSynthesis.getVoices();
+    window.speechSynthesis.cancel();
+    stopListeningNow();
+    setSpeaking(true);
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+    utterance.volume = 1;
+
+    if (voices.length) {
+      utterance.voice = voices.find((voice) => /female|samantha|allison|google us english/i.test(voice.name)) || voices[0];
+    }
+
+    currentUtteranceRef.current = utterance;
+    utterance.onstart = () => {
+      if (!endingRef.current) {
+        stopListeningNow();
+        setSpeaking(true);
+      }
+    };
+    utterance.onend = () => {
+      if (currentUtteranceRef.current === utterance) currentUtteranceRef.current = null;
+      setSpeaking(false);
+      if (!endingRef.current && canUseSpeech) {
+        micOnRef.current = true;
+        setMicOn(true);
+        startRecognitionRef.current?.();
+      }
+    };
+    utterance.onerror = () => {
+      if (currentUtteranceRef.current === utterance) currentUtteranceRef.current = null;
+      setSpeaking(false);
+      if (!endingRef.current && attempt < 2) {
+        const retry = setTimeout(() => speakQuestion(text, attempt + 1), 300);
+        speechRetryTimersRef.current.push(retry);
+      }
+    };
+
+    if (!voices.length && attempt < 1) {
+      const retry = setTimeout(() => {
+        window.speechSynthesis.speak(utterance);
+      }, 60);
+      speechRetryTimersRef.current.push(retry);
+      return;
+    }
+
+    window.speechSynthesis.speak(utterance);
+  }, [canUseSpeech, stopListeningNow]);
+
+  const stopSpeech = useCallback(() => {
+    endingRef.current = true;
+    speechRetryTimersRef.current.forEach((timer) => clearTimeout(timer));
+    speechRetryTimersRef.current = [];
+    currentUtteranceRef.current = null;
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.pause();
+      window.speechSynthesis.cancel();
+    }
+    stopListeningNow();
+    setSpeaking(false);
+  }, [stopListeningNow]);
+
+  const enableMediapipeConsoleFilter = useCallback(() => {
+    if (restoreMediapipeConsoleRef.current) return;
+
+    const originalError = console.error;
+    console.error = (...args) => {
+      const message = args.map((arg) => String(arg)).join(' ');
+      if (message.includes('INFO: Created TensorFlow Lite XNNPACK delegate for CPU.')) {
+        return;
+      }
+      originalError(...args);
+    };
+
+    restoreMediapipeConsoleRef.current = () => {
+      console.error = originalError;
+      restoreMediapipeConsoleRef.current = null;
+    };
+  }, []);
+
+  const computePostureFromLandmarks = useCallback((landmarks) => {
+    const clamp = (value, min = 0, max = 100) => Math.max(min, Math.min(max, value));
+    const distance = (a, b) => Math.hypot((a.x || 0) - (b.x || 0), (a.y || 0) - (b.y || 0));
+    const visibility = (point) => point?.visibility ?? point?.presence ?? 0.82;
+
+    const leftShoulder = landmarks?.[11];
+    const rightShoulder = landmarks?.[12];
+    const leftHip = landmarks?.[23];
+    const rightHip = landmarks?.[24];
+    const nose = landmarks?.[0];
+
+    if (!leftShoulder || !rightShoulder || !leftHip || !rightHip) {
+      return { score: Math.round(postureScoreRef.current), label: 'Move back so your shoulders and torso are visible' };
+    }
+
+    const corePoints = [leftShoulder, rightShoulder, leftHip, rightHip];
+    const visibilityAvg = corePoints.reduce((sum, point) => sum + visibility(point), 0) / corePoints.length;
+    const visibleCoreCount = corePoints.filter((point) => visibility(point) >= 0.45).length;
+    if (visibilityAvg < 0.45 || visibleCoreCount < 3) {
+      const faded = postureScoreRef.current * 0.78 + 46 * 0.22;
+      postureScoreRef.current = faded;
+      return { score: Math.round(faded), label: 'Improve lighting or move into frame for posture tracking' };
+    }
+
+    const shoulderMid = {
+      x: (leftShoulder.x + rightShoulder.x) / 2,
+      y: (leftShoulder.y + rightShoulder.y) / 2,
+    };
+    const hipMid = {
+      x: (leftHip.x + rightHip.x) / 2,
+      y: (leftHip.y + rightHip.y) / 2,
+    };
+
+    const torsoDx = hipMid.x - shoulderMid.x;
+    const torsoDy = Math.max(hipMid.y - shoulderMid.y, 0.001);
+    const torsoTiltDeg = Math.abs(Math.atan2(torsoDx, torsoDy) * (180 / Math.PI));
+    const shoulderWidth = Math.max(distance(leftShoulder, rightShoulder), 0.001);
+    const torsoLength = Math.max(distance(shoulderMid, hipMid), 0.001);
+    const shoulderSlopeRatio = Math.abs(leftShoulder.y - rightShoulder.y) / shoulderWidth;
+    const centerOffset = Math.abs(shoulderMid.x - 0.5);
+    const headOffset = nose ? Math.abs(nose.x - shoulderMid.x) / shoulderWidth : 0.25;
+    const frameSizeScore = clamp((shoulderWidth - 0.13) / 0.18, 0, 1);
+    const uprightScore = clamp(1 - (torsoTiltDeg / 22), 0, 1);
+    const shoulderLevelScore = clamp(1 - (shoulderSlopeRatio / 0.22), 0, 1);
+    const centeredScore = clamp(1 - (centerOffset / 0.3), 0, 1);
+    const headAlignedScore = clamp(1 - (headOffset / 0.78), 0, 1);
+    const torsoVisibleScore = clamp((torsoLength - 0.11) / 0.24, 0, 1);
+
+    const rawScore =
+      uprightScore * 28 +
+      shoulderLevelScore * 20 +
+      centeredScore * 20 +
+      headAlignedScore * 12 +
+      frameSizeScore * 10 +
+      torsoVisibleScore * 6 +
+      clamp(visibilityAvg, 0, 1) * 4;
+
+    const smoothed = postureScoreRef.current * 0.52 + clamp(rawScore, 28, 98) * 0.48;
+    postureScoreRef.current = smoothed;
+    const score = Math.round(smoothed);
+
+    return {
+      score,
+      label:
+        score >= 84 ? 'Strong posture and framing' :
+        score >= 70 ? 'Good posture' :
+        score >= 55 ? 'Sit upright and re-center your shoulders' :
+        'Move into frame and straighten your posture',
+    };
+  }, []);
+
+  const startRecognition = useCallback(() => {
+    if (!canUseSpeech) return;
+
+    const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Ctor) return;
+
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      recognitionRef.current = null;
+    }
+
+    const rec = new Ctor();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 3;
+    rec.lang = (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : 'en-US';
+
+    rec.onresult = (event) => {
+      let interimText = '';
+      let finalText = '';
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        const t = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalText += `${t} `;
+        } else {
+          interimText += t;
+        }
+      }
+      if (finalText) {
+        setTranscript((prev) => `${prev} ${finalText}`.trim());
+      }
+      setInterim(interimText);
+    };
+
+    rec.onerror = () => {
+      setMicOn(false);
+    };
+
+    rec.onend = () => {
+      if (micOnRef.current) {
+        try { rec.start(); } catch {}
+      }
+    };
+
+    recognitionRef.current = rec;
     try {
-      const saved = sessionStorage.getItem('aia_session_config');
-      return saved ? JSON.parse(saved) : { role: 'Software Engineer', roleId: 'se', interviewRound: 'technical' };
+      rec.start();
     } catch {
-      return { role: 'Software Engineer', roleId: 'se', interviewRound: 'technical' };
+      setMicOn(false);
     }
-  });
+  }, [canUseSpeech]);
+
+  useEffect(() => {
+    startRecognitionRef.current = startRecognition;
+  }, [startRecognition]);
+
+  const stopRecognition = useCallback(() => {
+    stopListeningNow();
+  }, [stopListeningNow]);
+
+  const stopSessionMedia = useCallback(() => {
+    endingRef.current = true;
+    stopSpeech();
+    if (postureTimerRef.current) {
+      clearInterval(postureTimerRef.current);
+      postureTimerRef.current = null;
+    }
+    if (poseFrameRef.current) {
+      cancelAnimationFrame(poseFrameRef.current);
+      poseFrameRef.current = null;
+    }
+    if (poseLandmarkerRef.current?.close) {
+      try { poseLandmarkerRef.current.close(); } catch {}
+    }
+    poseLandmarkerRef.current = null;
+    restoreMediapipeConsoleRef.current?.();
+    stopRecognition();
+    setMicOn(false);
+    if (videoRef.current?.srcObject) {
+      const tracks = videoRef.current.srcObject.getTracks?.() || [];
+      tracks.forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  }, [stopRecognition, stopSpeech]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        stopSessionMedia();
+      }
+    };
+    const handlePageHide = () => {
+      stopSessionMedia();
+    };
+
+    window.addEventListener('pagehide', handlePageHide);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [stopSessionMedia]);
+
+  const startCameraAndPosture = useCallback(async () => {
+    const startFaceFallback = () => {
+      if (typeof window.FaceDetector === 'undefined') {
+        postureTimerRef.current = setInterval(() => {
+          setPosture((prev) => ({
+            score: Math.max(35, Math.round(prev.score * 0.92 + 58 * 0.08)),
+            label: 'Camera active (landmarks unavailable on this browser)',
+          }));
+        }, 2000);
+        return;
+      }
+
+      const detector = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+      postureTimerRef.current = setInterval(async () => {
+        if (!videoRef.current || videoRef.current.readyState < 2) return;
+        try {
+          const faces = await detector.detect(videoRef.current);
+          if (!faces.length) {
+            setPosture({ score: 40, label: 'Face not detected - adjust camera' });
+            return;
+          }
+          const box = faces[0].boundingBox;
+          const centerX = box.x + box.width / 2;
+          const vw = videoRef.current.videoWidth || 1;
+          const offset = Math.abs((centerX / vw) - 0.5);
+          const size = Math.min(1, Math.max(0, box.width / Math.max(vw * 0.22, 1)));
+          const rawScore = 42 + (1 - Math.min(offset / 0.34, 1)) * 38 + size * 20;
+          const score = clampScore(postureScoreRef.current * 0.55 + rawScore * 0.45);
+          postureScoreRef.current = score;
+          setPosture({
+            score,
+            label: score > 78 ? 'Great posture and framing' : score > 62 ? 'Good posture' : 'Sit centered for better posture score',
+          });
+        } catch {
+          setPosture({ score: 60, label: 'Posture analysis temporarily unavailable' });
+        }
+      }, 1800);
+    };
+
+    const waitForVideoReady = () => new Promise((resolve, reject) => {
+      const video = videoRef.current;
+      if (!video) {
+        reject(new Error('Video element unavailable'));
+        return;
+      }
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        resolve();
+        return;
+      }
+      const onReady = () => {
+        video.removeEventListener('loadedmetadata', onReady);
+        resolve();
+      };
+      video.addEventListener('loadedmetadata', onReady, { once: true });
+      setTimeout(() => {
+        video.removeEventListener('loadedmetadata', onReady);
+        reject(new Error('Video not ready'));
+      }, 4000);
+    });
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await waitForVideoReady();
+        await videoRef.current.play();
+      }
+    } catch {
+      setPosture({ score: 55, label: 'Camera unavailable' });
+      return;
+    }
+
+    try {
+      enableMediapipeConsoleFilter();
+      const vision = await import('@mediapipe/tasks-vision');
+      const { PoseLandmarker, FilesetResolver } = vision;
+
+      const fileset = await FilesetResolver.forVisionTasks(
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/wasm'
+      );
+
+      poseLandmarkerRef.current = await PoseLandmarker.createFromOptions(fileset, {
+        baseOptions: {
+          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+        },
+        runningMode: 'VIDEO',
+        numPoses: 1,
+        minPoseDetectionConfidence: 0.5,
+        minPosePresenceConfidence: 0.5,
+        minTrackingConfidence: 0.5,
+      });
+
+      poseNoLandmarkRef.current = 0;
+      lastVideoTimeRef.current = -1;
+
+      const loop = () => {
+        if (!videoRef.current || !poseLandmarkerRef.current) return;
+        if (videoRef.current.readyState >= 2 && videoRef.current.currentTime !== lastVideoTimeRef.current) {
+          try {
+            lastVideoTimeRef.current = videoRef.current.currentTime;
+            const result = poseLandmarkerRef.current.detectForVideo(videoRef.current, performance.now());
+            const landmarks = result?.landmarks?.[0];
+          if (landmarks?.length) {
+              poseNoLandmarkRef.current = 0;
+              const next = computePostureFromLandmarks(landmarks);
+              setPosture(next);
+            } else {
+              poseNoLandmarkRef.current += 1;
+              if (poseNoLandmarkRef.current >= 45) {
+                setPosture({ score: 52, label: 'Posture landmarks missing - switching to fallback' });
+                if (poseFrameRef.current) {
+                  cancelAnimationFrame(poseFrameRef.current);
+                  poseFrameRef.current = null;
+                }
+                if (poseLandmarkerRef.current?.close) {
+                  try { poseLandmarkerRef.current.close(); } catch {}
+                }
+                poseLandmarkerRef.current = null;
+                startFaceFallback();
+                return;
+              }
+            }
+          } catch {
+            // fall through to keep looping
+          }
+        }
+        poseFrameRef.current = window.requestAnimationFrame(loop);
+      };
+
+      poseFrameRef.current = window.requestAnimationFrame(loop);
+      return;
+    } catch {
+      startFaceFallback();
+    }
+  }, [computePostureFromLandmarks, enableMediapipeConsoleFilter]);
+
+  const submitCurrentAnswer = useCallback(async () => {
+    if (!sessionId || loading) return;
+
+    const text = `${transcript} ${interim}`.trim();
+    if (!text) {
+      setError('Please speak your answer before submitting.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await submitInterviewAnswer({
+        sessionId,
+        question: questionText,
+        text,
+        posture,
+        resume: readSessionResume(),
+        config,
+      });
+
+      setLatestScores({
+        confidence: Math.round(res?.scores?.confidence_score || 0),
+        clarity: Math.round(res?.scores?.clarity_score || 0),
+        pace: scorePace(res?.metrics?.words_per_minute) || Math.round(res?.scores?.filler_score || 0),
+      });
+
+      setFeedback(res?.feedback?.actionable_tip || 'Good response. Keep answers structured using STAR.');
+      const next = res?.nextQuestion;
+      if (next) {
+        const nextIndex = currentQ + 1;
+        setCurrentQ(nextIndex);
+        setQuestions((prev) => {
+          const copy = [...prev];
+          copy[nextIndex] = next;
+          return copy;
+        });
+        setQuestionText(next);
+        setTranscript('');
+        setInterim('');
+        setAnswerStartedAt(null);
+        endingRef.current = false;
+      } else {
+        endingRef.current = true;
+        stopSessionMedia();
+        const ended = await endInterview({ sessionId });
+        if (ended?.reportId) {
+          sessionStorage.setItem('aia_latest_report_id', ended.reportId);
+        }
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      setFeedback('');
+      setError(err?.message || 'Failed to analyze this answer. Please retry.');
+    } finally {
+      setLoading(false);
+    }
+  }, [sessionId, loading, transcript, interim, questionText, posture, currentQ, router, config, stopSessionMedia]);
 
   useEffect(() => {
     if (config?.interviewRound === 'coding') {
@@ -68,149 +619,208 @@ const SoloPage = () => {
     }
   }, [config?.interviewRound, router]);
 
-  const roleName = config.role || 'Software Engineer';
-  const roleId = config.roleId || 'se';
+  useEffect(() => {
+    if (!config) return;
+    let timer;
+    const bootstrap = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        await startCameraAndPosture();
+        endingRef.current = false;
+        const resume = readSessionResume();
+        const started = await startInterview({ config, resume });
+        setSessionId(started.sessionId);
+        setQuestions(started.questions || []);
+        setQuestionText(started.firstQuestion || 'Tell me about yourself.');
+        setSessionReady(true);
+      } catch (err) {
+        setError(err?.message || 'Unable to start interview. Please try again.');
+      } finally {
+        setLoading(false);
+      }
 
-  const [questions, setQuestions] = useState(questionBank[roleId] || questionBank['se']);
-  const [currentQ, setCurrentQ] = useState(0);
+      timer = setInterval(() => setTime((t) => t + 1), 1000);
+    };
+
+    bootstrap();
+
+    return () => {
+      if (timer) clearInterval(timer);
+      stopSessionMedia();
+    };
+  }, [config, speakQuestion, startCameraAndPosture, stopSessionMedia]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setQuestions(questionBank[roleId] || questionBank['se']);
-      setCurrentQ(0);
-    }, 0);
-  }, [roleId]);
+    if (sessionReady && questionText && !loading) {
+      const t = window.requestAnimationFrame(() => {
+        if (!endingRef.current) speakQuestion(questionText);
+      });
+      return () => window.cancelAnimationFrame(t);
+    }
+    return undefined;
+  }, [sessionReady, questionText, loading, speakQuestion]);
 
-  const [speaking, setSpeaking] = React.useState(true);
-  const [micOn, setMicOn] = React.useState(false);
-  const [time, setTime] = React.useState(0);
-  const [feedback, setFeedback] = React.useState(null);
+  useEffect(() => {
+    if (sessionReady && !speaking && answerStartedAt === null && (transcript || interim)) {
+      setAnswerStartedAt(time);
+    }
+  }, [sessionReady, speaking, answerStartedAt, transcript, interim, time]);
 
-  React.useEffect(() => {
-    const t = setInterval(() => setTime(x => x + 1), 1000);
-    return () => clearInterval(t);
-  }, []);
+  useEffect(() => {
+    if ((transcript || interim) && answerStartedAt === null) {
+      setAnswerStartedAt(time);
+    }
+  }, [transcript, interim, answerStartedAt, time]);
 
-  React.useEffect(() => {
-    const cycle = () => {
-      setSpeaking(true);
-      setTimeout(() => {
-        setSpeaking(false);
-        setFeedback({ text: 'Good eye contact', color: C.success });
-        setTimeout(() => setFeedback(null), 2000);
-      }, 3500);
-    };
-    cycle();
-    const id = setInterval(cycle, 8000);
-    return () => clearInterval(id);
-  }, []);
+  useEffect(() => {
+    if (sessionReady && !speaking && canUseSpeech && !micOn && !loading) {
+      micOnRef.current = true;
+      setMicOn(true);
+      startRecognition();
+    }
+  }, [sessionReady, speaking, canUseSpeech, micOn, loading, startRecognition]);
 
-  const fmt = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  const toggleMic = useCallback(() => {
+    setMicOn((prev) => {
+      const next = !prev;
+      if (next) {
+        micOnRef.current = true;
+        startRecognition();
+      } else {
+        micOnRef.current = false;
+        stopRecognition();
+      }
+      return next;
+    });
+  }, [startRecognition, stopRecognition]);
+
+  const subtitle = useMemo(() => {
+    if (loading) return 'Preparing AI interviewer...';
+    if (speaking) return 'AI is asking the question';
+    return 'Your turn: answer with STAR and concrete outcomes.';
+  }, [loading, speaking]);
+
+  const displayedScores = useMemo(() => {
+    const text = `${transcript} ${interim}`.trim();
+    if (text) {
+      const elapsed = answerStartedAt === null ? null : Math.max(time - answerStartedAt, 1);
+      return computeTranscriptScores(text, elapsed);
+    }
+    return latestScores;
+  }, [transcript, interim, time, answerStartedAt, latestScores]);
 
   return (
     <div style={{ flex: 1, position: 'relative', overflow: 'hidden', height: '100vh' }}>
-      {/* Full-screen avatar bg */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: `radial-gradient(ellipse at 60% 40%, #0f1f3d 0%, #030712 70%)`,
-      }} />
-      <div style={{
-        position: 'absolute', left: '50%', top: '50%',
-        transform: 'translate(-50%, -50%)',
-        display: 'flex', justifyContent: 'center', alignItems: 'center',
-      }}>
-        <AIAvatar size={480} speaking={speaking} />
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 60% 40%, #0f1f3d 0%, #030712 70%)' }} />
+
+      <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+        <AIAvatar size={460} speaking={speaking} />
       </div>
 
-      {/* Top bar */}
-      <div style={{
-        position: 'absolute', top: 24, left: 24, right: 24,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 20,
-      }}>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <GlassCard style={{ padding: '8px 16px' }}>
-            <span style={{ fontSize: 12, color: C.textSecondary, fontFamily: 'JetBrains Mono' }}>
-              Senior {roleName} · Ai Arena
-            </span>
-          </GlassCard>
-        </div>
+      <div style={{ position: 'absolute', top: 24, left: 24, right: 24, display: 'flex', justifyContent: 'space-between', zIndex: 20 }}>
+        <GlassCard style={{ padding: '8px 16px' }}>
+          <span style={{ fontSize: 12, color: C.textSecondary, fontFamily: 'JetBrains Mono' }}>
+            {config ? `${config.role || 'Interview'} · ${config.interviewRound || 'behavioral'}` : 'Interview · behavioral'}
+          </span>
+        </GlassCard>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <GlassCard style={{ padding: '8px 18px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.error, animation: 'pulse-ring 1s ease infinite' }} />
             <span style={{ fontSize: 13, fontFamily: 'JetBrains Mono', color: C.error }}>REC {fmt(time)}</span>
           </GlassCard>
-          <Tag color={C.warning}>Question 2 of 6</Tag>
+          <Tag color={C.warning}>Question {Math.min(currentQ + 1, Math.max(questions.length, 1))} of {Math.max(questions.length, 1)}</Tag>
         </div>
       </div>
 
-      {/* Subtitle / question */}
-      <div style={{
-        position: 'absolute', bottom: 180, left: '50%', transform: 'translateX(-50%)',
-        maxWidth: 700, textAlign: 'center', zIndex: 20,
-      }}>
-        <GlassCard style={{ padding: '20px 36px' }}>
+      <div style={{ position: 'absolute', bottom: 188, left: '50%', transform: 'translateX(-50%)', maxWidth: 860, width: '88%', zIndex: 20 }}>
+        <GlassCard style={{ padding: '20px 30px', textAlign: 'center' }}>
           <div style={{ fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, fontFamily: 'JetBrains Mono' }}>
-            {speaking ? '▶ AI Speaking' : '⏸ Waiting for your response'}
+            {subtitle}
           </div>
           <p style={{ fontSize: 18, fontWeight: 500, lineHeight: 1.6, color: C.textPrimary }}>
-            &quot;Tell me about a time you had to lead a cross-functional team through a difficult technical decision.&quot;
+            &quot;{questionText}&quot;
           </p>
+          {!!feedback && (
+            <div style={{ marginTop: 12, fontSize: 13, color: C.success }}>
+              AI tip: {feedback}
+            </div>
+          )}
+          {(transcript || interim) && (
+            <div style={{ marginTop: 14, textAlign: 'left', fontSize: 13, color: C.textSecondary, maxHeight: 84, overflow: 'auto', borderTop: `1px solid ${C.borderMid}`, paddingTop: 12 }}>
+              {(transcript || '').trim()} <span style={{ opacity: 0.8 }}>{interim}</span>
+            </div>
+          )}
+          {!!error && (
+            <div style={{ marginTop: 10, fontSize: 13, color: C.error }}>{error}</div>
+          )}
         </GlassCard>
       </div>
 
-      {/* Bottom controls */}
-      <div style={{
-        position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)',
-        display: 'flex', gap: 16, alignItems: 'center', zIndex: 20,
-      }}>
-        <GlassCard style={{ padding: '14px 24px', display: 'flex', gap: 16, alignItems: 'center' }}>
+      <div style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 12, alignItems: 'center', zIndex: 20 }}>
+        <GlassCard style={{ padding: '12px 18px', display: 'flex', gap: 14, alignItems: 'center' }}>
           <MicWave active={micOn} />
-          <button onClick={() => setMicOn(x => !x)} style={{
-            width: 48, height: 48, borderRadius: '50%', border: 'none', cursor: 'pointer',
-            background: micOn ? `linear-gradient(135deg, ${C.primary}, ${C.secondary})` : 'rgba(255,255,255,0.1)',
-            color: '#fff', fontSize: 18,
-            boxShadow: micOn ? `0 0 24px rgba(167, 139, 250, 0.2)` : 'none',
-            transition: 'all 0.3s',
-          }}>🎙</button>
-          <NeonButton size="sm" onClick={() => router.push('/report')}>End Session</NeonButton>
+          <button
+            onClick={toggleMic}
+            disabled={!canUseSpeech}
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              border: 'none',
+              cursor: canUseSpeech ? 'pointer' : 'not-allowed',
+              background: micOn ? `linear-gradient(135deg, ${C.primary}, ${C.secondary})` : 'rgba(255,255,255,0.1)',
+              color: '#fff',
+              fontSize: 18,
+              opacity: canUseSpeech ? 1 : 0.5,
+            }}
+          >
+            🎙
+          </button>
+          <NeonButton size="sm" onClick={submitCurrentAnswer} disabled={loading || !sessionId}>
+            {loading ? 'Analyzing...' : 'Submit Answer'}
+          </NeonButton>
+          <NeonButton
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              endingRef.current = true;
+              stopSessionMedia();
+              try {
+                if (sessionId) await endInterview({ sessionId });
+              } catch {}
+              router.push('/dashboard');
+            }}
+          >
+            End Session
+          </NeonButton>
         </GlassCard>
       </div>
 
-      {/* User camera pip */}
-      <CameraPreview />
+      <div style={{ position: 'absolute', bottom: 24, right: 24, width: 220, height: 160, borderRadius: 12, overflow: 'hidden', border: `1px solid ${C.borderMid}`, background: '#000', zIndex: 20 }}>
+        <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
+        <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, fontSize: 10, color: '#fff' }}>You</div>
+      </div>
 
-      {/* AI feedback indicator */}
-      {feedback && (
-        <div style={{
-          position: 'absolute', top: '50%', right: 40,
-          transform: 'translateY(-50%)',
-          animation: 'fade-up 0.3s ease', zIndex: 20,
-        }}>
-          <GlassCard style={{ padding: '10px 18px', border: `1px solid ${feedback.color}40` }}>
-            <span style={{ fontSize: 13, color: feedback.color }}>✓ {feedback.text}</span>
-          </GlassCard>
-        </div>
-      )}
-
-      {/* Left: AI metrics */}
-      <div style={{
-        position: 'absolute', left: 32, top: '50%', transform: 'translateY(-50%)',
-        display: 'flex', flexDirection: 'column', gap: 10, zIndex: 20,
-      }}>
-        {[{ l: 'Engagement', v: 87 }, { l: 'Pace', v: 72 }, { l: 'Clarity', v: 91 }].map(({ l, v }) => (
-          <GlassCard key={l} style={{ padding: '12px 16px', minWidth: 130 }}>
+      <div style={{ position: 'absolute', left: 28, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: 10, zIndex: 20 }}>
+        {[
+          { l: 'Confidence', v: displayedScores.confidence },
+          { l: 'Clarity', v: displayedScores.clarity },
+          { l: 'Pace', v: displayedScores.pace },
+          { l: 'Posture', v: posture.score },
+        ].map(({ l, v }) => (
+          <GlassCard key={l} style={{ padding: '12px 16px', minWidth: 138 }}>
             <div style={{ fontSize: 10, color: C.textMuted, textTransform: 'uppercase', marginBottom: 6 }}>{l}</div>
             <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, marginBottom: 4 }}>
-              <div style={{ height: '100%', width: `${v}%`, background: `linear-gradient(90deg, ${C.primary}, ${C.secondary})`, borderRadius: 2 }} />
+              <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, v || 0))}%`, background: `linear-gradient(90deg, ${C.primary}, ${C.secondary})`, borderRadius: 2 }} />
             </div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: C.primary, fontFamily: 'JetBrains Mono' }}>{v}%</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: C.primary, fontFamily: 'JetBrains Mono' }}>{Math.round(v || 0)}%</div>
           </GlassCard>
         ))}
+        <GlassCard style={{ padding: '10px 14px', maxWidth: 180 }}>
+          <div style={{ fontSize: 11, color: C.textSecondary }}>{posture.label}</div>
+        </GlassCard>
       </div>
     </div>
   );
-};
-
-// ─── PAGE 4: MOCK INTERVIEW ───────────────────────────────────────────────────
-
-export default SoloPage;
+}

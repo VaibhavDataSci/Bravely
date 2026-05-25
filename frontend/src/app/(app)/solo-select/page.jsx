@@ -23,6 +23,7 @@ export default function RoleSelectionPage() {
   const [experienceLevel, setExperienceLevel] = useState(null);
   const [interviewRound, setInterviewRound] = useState(null);
   const [interviewContext, setInterviewContext] = useState(null);
+  const [priorityKeywords, setPriorityKeywords] = useState('');
   const [hoveredCtx, setHoveredCtx] = useState(null);
 
   // Resume state
@@ -80,6 +81,11 @@ export default function RoleSelectionPage() {
       experienceLevel,
       interviewRound,
       interviewContext,
+      priorityKeywords: priorityKeywords
+        .split(',')
+        .map((word) => word.trim())
+        .filter(Boolean)
+        .slice(0, 8),
     };
 
     sessionStorage.setItem('aia_session_config', JSON.stringify(config));
@@ -321,6 +327,32 @@ export default function RoleSelectionPage() {
             </p>
           </GlassCard>
         )}
+
+        {/* STEP 6: PRIORITY FOCUS */}
+        <GlassCard style={{ padding: '20px 24px', marginBottom: 20, opacity: step5Done ? 1 : 0.4, pointerEvents: step5Done ? 'auto' : 'none', transition: 'opacity 0.3s' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <div style={{ width: 28, height: 28, borderRadius: '50%', background: priorityKeywords.trim() ? C.success : `${C.primary}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: priorityKeywords.trim() ? '#fff' : C.primary }}>
+              {priorityKeywords.trim() ? '✓' : '6'}
+            </div>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: C.textPrimary, margin: 0 }}>Priority Focus</h3>
+          </div>
+          <input
+            value={priorityKeywords}
+            onChange={(e) => setPriorityKeywords(e.target.value)}
+            placeholder="React, system design, leadership, metrics"
+            style={{
+              width: '100%',
+              boxSizing: 'border-box',
+              padding: '13px 16px',
+              borderRadius: 10,
+              border: `1px solid ${C.borderMid}`,
+              background: 'rgba(255,255,255,0.04)',
+              color: C.textPrimary,
+              outline: 'none',
+              fontSize: 14,
+            }}
+          />
+        </GlassCard>
       </div>
 
       {/* Bottom CTA */}
