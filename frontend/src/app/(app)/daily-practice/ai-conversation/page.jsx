@@ -1,311 +1,302 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GlassCard, NeonButton, MicWave, Tag } from '@/components/shared';
+import { GlassCard, NeonButton, MicWave } from '@/components/shared';
 import { C } from '@/constants/theme';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { analyzeDailyTranscript, sendDailyChat, startDailySession } from '@/services/dailyService';
 
-const StatCard = ({ icon, label, value }) => (
-  <GlassCard style={{ 
-    padding: '24px 20px', 
-    display: 'flex', 
-    flexDirection: 'column', 
-    alignItems: 'center', 
-    justifyContent: 'center',
-    gap: '12px',
-    transition: 'all 0.3s ease',
-    cursor: 'default',
-    background: `linear-gradient(to bottom, rgba(167, 139, 250, 0.05), transparent)`
-  }} hoverEffect>
-    <div style={{ color: C.textSecondary, fontSize: '1.2rem' }}>{icon}</div>
-    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: C.textSecondary, letterSpacing: '0.05em', textTransform: 'uppercase', textAlign: 'center' }}>
-      {label}
-    </div>
-    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: C.textPrimary, textAlign: 'center' }}>
-      {value}
-    </div>
+const StatCard = ({ label, value }) => (
+  <GlassCard style={{ padding: 22, minHeight: 112, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
+    <div style={{ color: C.textSecondary, fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+    <div style={{ color: C.textPrimary, fontSize: 26, fontWeight: 800 }}>{value}</div>
   </GlassCard>
-);
-
-const ProgressBar = ({ label, value, color }) => (
-  <div style={{ marginBottom: 16 }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-      <span style={{ fontSize: '0.85rem', color: C.textSecondary, fontWeight: 500 }}>{label}</span>
-      <span style={{ fontSize: '0.85rem', color: C.textPrimary, fontWeight: 600 }}>{value}%</span>
-    </div>
-    <div style={{ width: '100%', height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden' }}>
-      <div style={{ 
-        height: '100%', 
-        width: `${value}%`, 
-        background: color,
-        borderRadius: 4,
-        boxShadow: `0 0 10px ${color}`,
-        transition: 'width 1s ease-in-out'
-      }} />
-    </div>
-  </div>
 );
 
 export default function AIConversationPage() {
   const router = useRouter();
-  const [convState, setConvState] = useState('live'); // 'live', 'ended', 'feedback'
-  const [micMode, setMicMode] = useState('listening'); // 'listening', 'aiSpeaking'
-  
-  // Real-time conversation mock logic
-  useEffect(() => {
-    let timeout1, timeout2;
-    if (convState === 'live') {
-      // Simulate taking turns
-      const loop = () => {
-        timeout1 = setTimeout(() => {
-          setMicMode('aiSpeaking');
-          timeout2 = setTimeout(() => {
-            setMicMode('listening');
-            loop();
-          }, 4000); // AI speaks for 4s
-        }, 8000); // User speaks for 8s
-      };
-      loop();
-    }
-    return () => { clearTimeout(timeout1); clearTimeout(timeout2); };
-  }, [convState]);
+  const [convState, setConvState] = useState('live');
+  const [sessionId, setSessionId] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [aiSpeaking, setAiSpeaking] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
+  const [note, setNote] = useState('');
+  const [startedAt] = useState(() => Date.now());
+  const [hydrated, setHydrated] = useState(false);
+  const utteranceRef = useRef(null);
+  const pendingSpeechRef = useRef(null);
+  const {
+    supported,
+    listening,
+    transcript,
+    error: speechError,
+    resetTranscript,
+    startListening,
+    stopListening,
+  } = useSpeechRecognition({ continuous: false, interimResults: true });
 
-  const handleStart = () => {
-    setConvState('live');
-    setMicMode('listening');
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  const userTranscript = useMemo(
+    () => history.filter((turn) => turn.role === 'user').map((turn) => turn.text).join(' '),
+    [history]
+  );
+
+  const cancelSpeech = () => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    pendingSpeechRef.current = null;
+    utteranceRef.current = null;
+    window.speechSynthesis.cancel();
   };
 
-  const handleEnd = () => {
+  const speak = (text) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis || !text) return;
+    cancelSpeech();
+
+    const doSpeak = () => {
+      if (!text) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.95;
+      utterance.pitch = 1;
+      utterance.onstart = () => setAiSpeaking(true);
+      utterance.onend = () => {
+        if (utteranceRef.current === utterance) utteranceRef.current = null;
+        setAiSpeaking(false);
+      };
+      utterance.onerror = () => {
+        if (utteranceRef.current === utterance) utteranceRef.current = null;
+        setAiSpeaking(false);
+      };
+      utteranceRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices.length) {
+      pendingSpeechRef.current = text;
+      window.speechSynthesis.onvoiceschanged = () => {
+        if (!pendingSpeechRef.current) return;
+        const pending = pendingSpeechRef.current;
+        pendingSpeechRef.current = null;
+        doSpeak(pending);
+      };
+      return;
+    }
+
+    doSpeak(text);
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    const bootstrap = async () => {
+      try {
+        const started = await startDailySession({ mode: 'ai-conversation' });
+        if (!active) return;
+        setSessionId(started.sessionId);
+        const opener = await sendDailyChat({ sessionId: started.sessionId, message: '', history: [] });
+        if (!active) return;
+        const aiText = opener?.aiResponse || 'Hi, I am Bravely. What would you like to practice today?';
+        setHistory([{ role: 'ai', text: aiText }]);
+        if (opener?.source === 'fallback') setNote('AI service offline. Using fallback conversation coach.');
+        speak(aiText);
+      } catch {
+        if (!active) return;
+        const fallback = 'Hi, I am Bravely. What is one conversation you want to handle more confidently this week?';
+        setHistory([{ role: 'ai', text: fallback }]);
+        setNote('Backend unavailable. Conversation will use local fallback where possible.');
+      }
+    };
+
+    bootstrap();
+    return () => {
+      active = false;
+      cancelSpeech();
+    };
+  }, []);
+
+  const handleUserTurn = async () => {
+    if (listening) {
+      stopListening();
+      const message = transcript.trim();
+      if (!message) return;
+      const nextHistory = [...history, { role: 'user', text: message }];
+      setHistory(nextHistory);
+      resetTranscript();
+      try {
+        const result = await sendDailyChat({ sessionId, message, history: nextHistory });
+        const aiText = result.aiResponse;
+        setHistory([...nextHistory, { role: 'ai', text: aiText }]);
+        if (result?.source === 'fallback') setNote('AI service offline. Using fallback conversation coach.');
+        speak(aiText);
+      } catch (err) {
+        const fallback = 'Tell me one specific detail about that moment, and what you wanted the listener to understand.';
+        setHistory([...nextHistory, { role: 'ai', text: fallback }]);
+        setNote(err?.message || 'Unable to reach AI conversation. Using fallback reply.');
+        speak(fallback);
+      }
+      return;
+    }
+
+    setNote('');
+    resetTranscript();
+    startListening();
+  };
+
+  const handleEnd = async () => {
+    stopListening();
+    cancelSpeech();
     setConvState('ended');
   };
 
-  const handleGetFeedback = () => {
+  const handleGetFeedback = async () => {
     setConvState('feedback');
+    setNote('');
+    try {
+      const result = await analyzeDailyTranscript({
+        sessionId,
+        mode: 'ai-conversation',
+        transcript: userTranscript,
+        duration: Math.round((Date.now() - startedAt) / 1000),
+      });
+      setAnalysis(result);
+      if (result?.source === 'fallback') setNote('AI service offline. Showing local fallback feedback.');
+    } catch (err) {
+      setNote(err?.message || 'Unable to generate call feedback.');
+    }
   };
 
-  const isUserSpeaking = micMode === 'listening';
-  const isAiSpeaking = micMode === 'aiSpeaking';
+  const scores = analysis?.scores || {};
+  const metrics = analysis?.metrics || {};
+  const fillers = analysis?.analysis?.filler_words?.detected || [];
+  const fillerTotal = fillers.reduce((sum, item) => sum + (item.count || 0), 0);
+  const lastAi = [...history].reverse().find((turn) => turn.role === 'ai')?.text;
 
   return (
     <div style={{ padding: '32px 32px 60px', maxWidth: 1100, margin: '0 auto', color: C.textPrimary, display: 'flex', flexDirection: 'column', gap: 30 }}>
-      
       <style>{`
-        @keyframes breathe {
-          0% { box-shadow: 0 0 15px rgba(167, 139, 250, 0.15), inset 0 0 10px rgba(167, 139, 250, 0.1); transform: scale(1); }
-          50% { box-shadow: 0 0 35px rgba(167, 139, 250, 0.3), inset 0 0 20px rgba(167, 139, 250, 0.2); transform: scale(1.03); }
-          100% { box-shadow: 0 0 15px rgba(167, 139, 250, 0.15), inset 0 0 10px rgba(167, 139, 250, 0.1); transform: scale(1); }
-        }
-        @keyframes pulse-ring {
-          0% { transform: scale(0.85); opacity: 0.6; }
-          100% { transform: scale(1.5); opacity: 0; }
-        }
-        @keyframes mic-recording {
-          0% { box-shadow: 0 0 40px rgba(167, 139, 250, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
-          20% { box-shadow: 0 0 80px rgba(167, 139, 250, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.4); transform: scale(1.08); }
-          100% { box-shadow: 0 0 40px rgba(167, 139, 250, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
-        }
-        @keyframes ai-speaking {
-          0% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
-          50% { box-shadow: 0 0 60px rgba(16, 185, 129, 0.7), inset 0 0 30px rgba(255, 255, 255, 0.4); transform: scale(1.05); }
-          100% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
-        }
-        @keyframes shimmer {
-          0% { opacity: 0.4; }
-          50% { opacity: 1; }
-          100% { opacity: 0.4; }
-        }
-        @keyframes float-up {
-          0% { opacity: 0; transform: translateY(20px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        .mic-user { animation: mic-recording 2s ease-in-out infinite; }
-        .mic-ai { animation: ai-speaking 3s ease-in-out infinite; background: linear-gradient(135deg, #10B981, #059669) !important; }
-        .fade-in { animation: float-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes pulse-ring { 0% { transform: scale(.85); opacity:.6; } 100% { transform: scale(1.5); opacity:0; } }
+        @keyframes mic-recording { 0%,100% { box-shadow: 0 0 40px rgba(167,139,250,.5); transform: scale(1); } 40% { box-shadow: 0 0 85px rgba(167,139,250,.85); transform: scale(1.08); } }
+        @keyframes ai-speaking { 0%,100% { box-shadow: 0 0 35px rgba(16,185,129,.45); transform: scale(1); } 50% { box-shadow: 0 0 70px rgba(16,185,129,.75); transform: scale(1.05); } }
+        @keyframes shimmer { 0%,100% { opacity: .45; } 50% { opacity: 1; } }
+        .mic-user { animation: mic-recording 1.8s ease-in-out infinite; }
+        .mic-ai { animation: ai-speaking 2.4s ease-in-out infinite; background: linear-gradient(135deg,#10B981,#059669) !important; }
       `}</style>
 
-
       {convState === 'live' && (
-        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 30, marginTop: 20 }}>
-          
-          <div style={{ width: '100%', maxWidth: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 26 }}>
+          <div style={{ width: '100%', maxWidth: 760, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16 }}>
             <div>
-              <h2 style={{ fontSize: '2rem', fontWeight: 700, margin: 0 }}>On a Call</h2>
-              <p style={{ color: C.textSecondary, margin: '8px 0 0 0' }}>Speak naturally. Your AI companion is listening.</p>
+              <h1 style={{ fontSize: 34, margin: 0 }}>On a Call</h1>
+              <p style={{ color: C.textSecondary, margin: '8px 0 0' }}>Tap the mic to speak. Tap again to send your turn to the AI.</p>
             </div>
-            <NeonButton variant="outline" onClick={handleEnd} style={{ borderColor: C.error || '#EF4444', color: C.error || '#EF4444' }}>
-              End Call
-            </NeonButton>
+            <NeonButton variant="outline" onClick={handleEnd} style={{ borderColor: C.error || '#EF4444', color: C.error || '#EF4444' }}>End Call</NeonButton>
           </div>
 
-          <GlassCard style={{ 
-            width: '100%',
-            maxWidth: 700,
-            padding: '60px 40px', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            minHeight: 500,
-            background: `radial-gradient(circle at center, rgba(167, 139, 250, 0.05) 0%, transparent 70%)`
-          }}>
-            <div style={{ height: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: 40 }}>
-              {isUserSpeaking ? (
-                <>
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: 600, color: C.textPrimary, marginBottom: 8, animation: 'shimmer 2s infinite' }}>The AI is listening...</h3>
-                  <p style={{ color: C.textSecondary, fontSize: '0.95rem' }}>Speak without any pressure.</p>
-                </>
+          <GlassCard style={{ width: '100%', maxWidth: 760, padding: '44px 34px', display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: 500 }}>
+            <div style={{ minHeight: 92, textAlign: 'center', maxWidth: 620 }}>
+              {aiSpeaking ? (
+                <div style={{ color: C.success || '#10B981', fontWeight: 800, animation: 'shimmer 1.5s infinite' }}>AI Responding</div>
               ) : (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: C.success || '#10B981', fontWeight: 600, marginBottom: 8 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.success || '#10B981', animation: 'pulse 1s infinite' }} />
-                    AI Responding
-                  </div>
-                </>
+                <h3 style={{ margin: 0, fontSize: 22 }}>{listening ? 'The AI is listening...' : 'Ready for your next turn'}</h3>
               )}
+              <p style={{ color: C.textSecondary, lineHeight: 1.6 }}>{listening ? (transcript || 'Speak naturally...') : lastAi}</p>
             </div>
 
             <div style={{ position: 'relative', width: 260, height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{
-                position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', 
-                border: `1px solid ${isAiSpeaking ? 'rgba(16, 185, 129, 0.3)' : 'rgba(167, 139, 250, 0.3)'}`,
-                animation: 'pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite', pointerEvents: 'none'
-              }} />
-              <div style={{
-                position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', 
-                border: `1px solid ${isAiSpeaking ? 'rgba(16, 185, 129, 0.15)' : 'rgba(167, 139, 250, 0.15)'}`,
-                animation: 'pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite 1.5s', pointerEvents: 'none'
-              }} />
+              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: `1px solid ${aiSpeaking ? 'rgba(16,185,129,.3)' : 'rgba(167,139,250,.3)'}`, animation: 'pulse-ring 3s infinite', pointerEvents: 'none' }} />
+              <button
+                type="button"
+                onClick={handleUserTurn}
+                disabled={aiSpeaking}
+                className={aiSpeaking ? 'mic-ai' : listening ? 'mic-user' : ''}
+                style={{ width: 152, height: 152, borderRadius: '50%', border: 0, cursor: aiSpeaking ? 'default' : 'pointer', color: '#fff', fontSize: 48, background: `linear-gradient(135deg, ${C.primary}, ${C.secondary})`, zIndex: 2 }}
+              >
+                {aiSpeaking ? '📞' : '🎙️'}
+              </button>
+            </div>
+            <MicWave active={listening || aiSpeaking} color={aiSpeaking ? '#10B981' : undefined} />
+            {(() => {
+              const showWarning = note || (hydrated && (speechError || !supported));
+              const message = !supported
+                ? 'Speech recognition is unavailable in this browser. Use Chrome or Edge.'
+                : (speechError || note || '');
+              return (
+                <div
+                  style={{
+                    marginTop: 18,
+                    color: C.warning || '#F59E0B',
+                    fontSize: 13,
+                    minHeight: 18,
+                    visibility: showWarning ? 'visible' : 'hidden',
+                  }}
+                >
+                  {showWarning ? message : ''}
+                </div>
+              );
+            })()}
+          </GlassCard>
 
-              <div 
-                className={isAiSpeaking ? 'mic-ai' : 'mic-user'}
-                style={{ 
-                  width: 150, height: 150, borderRadius: '50%', 
-                  background: `linear-gradient(135deg, ${C.primary}, ${C.secondary})`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '3.5rem', color: '#fff', transition: 'all 0.4s ease', zIndex: 10,
-                  boxShadow: `0 0 40px ${isAiSpeaking ? 'rgba(16, 185, 129, 0.5)' : 'rgba(167, 139, 250, 0.5)'}`
-                }}>
-                {isAiSpeaking ? '📞' : '🎙️'}
+          <GlassCard style={{ width: '100%', maxWidth: 760, padding: 22, maxHeight: 230, overflow: 'auto' }}>
+            <div style={{ color: C.textSecondary, fontSize: 12, textTransform: 'uppercase', fontWeight: 800, marginBottom: 14 }}>Conversation Transcript</div>
+            {history.map((turn, index) => (
+              <div key={`${turn.role}-${index}`} style={{ color: turn.role === 'ai' ? C.primary : C.textPrimary, marginBottom: 10, lineHeight: 1.5 }}>
+                <strong>{turn.role === 'ai' ? 'AI' : 'You'}:</strong> {turn.text}
               </div>
-            </div>
-
-            <div style={{ height: 60, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 40, opacity: 1, transition: 'opacity 0.4s ease' }}>
-              <MicWave active={true} color={isAiSpeaking ? '#10B981' : undefined} />
-            </div>
+            ))}
           </GlassCard>
         </div>
       )}
 
       {convState === 'ended' && (
-         <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 40 }}>
-          <GlassCard style={{ 
-            padding: '80px 40px', 
-            position: 'relative', 
-            overflow: 'hidden',
-            width: '100%',
-            maxWidth: 600,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            textAlign: 'center',
-            background: `linear-gradient(135deg, rgba(30, 27, 75, 0.2), rgba(17, 24, 39, 0.4))`
-          }}>
-            <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', marginBottom: 20, color: C.error || '#EF4444' }}>
-              📞
-            </div>
-            
-            <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: 12, color: '#fff' }}>Call Ended</h2>
-            <p style={{ color: C.textSecondary, fontSize: '1.1rem', marginBottom: 40 }}>
-              Duration: 04:12 • Great conversation!
-            </p>
-            
-            <NeonButton variant="primary" onClick={handleGetFeedback} style={{ padding: '16px 40px', fontSize: '1.2rem', borderRadius: 40 }}>
-              Get AI Feedback
-            </NeonButton>
-          </GlassCard>
-         </div>
+        <GlassCard style={{ margin: '40px auto 0', padding: '70px 40px', maxWidth: 620, textAlign: 'center' }}>
+          <div style={{ fontSize: 46, marginBottom: 18 }}>📞</div>
+          <h2 style={{ fontSize: 32, margin: '0 0 12px' }}>Call Ended</h2>
+          <p style={{ color: C.textSecondary, fontSize: 17, marginBottom: 34 }}>{history.filter((turn) => turn.role === 'user').length} user turns captured.</p>
+          <NeonButton variant="primary" onClick={handleGetFeedback} style={{ padding: '15px 34px', fontSize: 18 }}>Generate AI Feedback</NeonButton>
+        </GlassCard>
       )}
 
       {convState === 'feedback' && (
-        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
-          
-          <div style={{ textAlign: 'center', marginBottom: 10 }}>
-            <h2 style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: 8 }}>Call Feedback</h2>
-            <p style={{ color: C.textSecondary, fontSize: '1.1rem' }}>Detailed insights from your phone call practice.</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
+          <div style={{ textAlign: 'center' }}>
+            <h2 style={{ fontSize: 34, marginBottom: 8 }}>Call Feedback</h2>
+            <p style={{ color: C.textSecondary }}>{analysis ? 'Feedback generated from your spoken turns.' : 'Generating feedback...'}</p>
+            {note && <p style={{ color: C.warning || '#F59E0B', fontSize: 13 }}>{note}</p>}
           </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
-            {/* COMMUNICATION SUMMARY - 5 Columns */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16 }}>
-              <StatCard icon="⚡" label="Confidence" value={<span>88<span style={{ fontSize: '1rem', color: C.textSecondary }}>/100</span></span>} />
-              <StatCard icon="🌊" label="Fluency" value={<span>92<span style={{ fontSize: '1rem', color: C.textSecondary }}>/100</span></span>} />
-              <StatCard icon="🎙️" label="Pace (WPM)" value="142" />
-              <StatCard icon="🧠" label="Clarity Score" value={<span>85<span style={{ fontSize: '1rem', color: C.textSecondary }}>/100</span></span>} />
-              <StatCard icon="🚫" label="Filler Words" value={
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%', alignItems: 'center' }}>
-                  <span style={{ color: C.error || '#EF4444', fontSize: '1.1rem', fontWeight: 600 }}>uh - 3</span>
-                  <span style={{ color: C.warning || '#F59E0B', fontSize: '1.1rem', fontWeight: 600 }}>like - 2</span>
-                </div>
-              } />
-            </div>
-
-            {/* ADDITIONAL METRICS - Progress bars mapped horizontally */}
-            <GlassCard style={{ padding: '30px', display: 'flex', gap: 40, alignItems: 'center' }}>
-               <div style={{ flex: 1 }}>
-                 <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: C.textPrimary, marginBottom: 20 }}>Detailed Analysis</h3>
-                 <ProgressBar label="Vocabulary Richness" value={78} color={C.primary} />
-                 <ProgressBar label="Tone Consistency" value={90} color={C.secondary} />
-                 <ProgressBar label="Listening Ratio" value={65} color="#3B82F6" />
-               </div>
-               <div style={{ flex: 1, paddingLeft: 40, borderLeft: `1px solid ${C.borderMid}` }}>
-                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                   <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(167, 139, 250, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: C.primary }}>
-                     💡
-                   </div>
-                   <div>
-                     <div style={{ fontSize: '0.85rem', color: C.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Key Takeaway</div>
-                     <div style={{ fontSize: '1.1rem', color: C.textPrimary, fontWeight: 500 }}>Expand your vocabulary.</div>
-                   </div>
-                 </div>
-                 <p style={{ color: C.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                   You rely heavily on safe, common words. Try to replace words like &quot;good&quot; or &quot;fine&quot; with more descriptive adjectives like &quot;effective&quot; or &quot;optimal&quot;.
-                 </p>
-               </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16 }}>
+            <StatCard label="Confidence" value={`${Math.round(scores.confidence_score || 0)}/100`} />
+            <StatCard label="Clarity" value={`${Math.round(scores.clarity_score || 0)}/100`} />
+            <StatCard label="Pace" value={`${Math.round(metrics.words_per_minute || 0)} WPM`} />
+            <StatCard label="Vocabulary" value={`${Math.round(scores.vocabulary_score || 0)}/100`} />
+            <StatCard label="Fillers" value={fillerTotal} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            <GlassCard style={{ padding: 28, borderTop: `4px solid ${C.success || '#10B981'}` }}>
+              <div style={{ color: C.textSecondary, fontSize: 12, textTransform: 'uppercase', fontWeight: 800, marginBottom: 12 }}>Areas of Strength</div>
+              <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.8 }}>
+                {(analysis?.feedback?.strengths || ['You completed a live AI conversation turn loop.']).map((item) => <li key={item}>{item}</li>)}
+              </ul>
             </GlassCard>
-
-            {/* CONVERSATIONAL INSIGHTS & IMPROVEMENT */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-              <GlassCard style={{ padding: '30px', borderTop: `4px solid ${C.success || '#10B981'}`, background: `linear-gradient(to bottom, rgba(16, 185, 129, 0.05), transparent)` }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: C.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>Areas of Strength</div>
-                <ul style={{ margin: 0, paddingLeft: 20, color: C.textPrimary, fontSize: '1.05rem', lineHeight: 1.7 }}>
-                  <li style={{ marginBottom: 12 }}>You maintained strong conversational energy.</li>
-                  <li style={{ marginBottom: 12 }}>Your confidence improved throughout the session.</li>
-                  <li>You naturally explained ideas clearly without rushing.</li>
-                </ul>
-              </GlassCard>
-
-              <GlassCard style={{ padding: '30px', borderTop: `4px solid ${C.warning || '#F59E0B'}`, background: `linear-gradient(to bottom, rgba(245, 158, 11, 0.05), transparent)` }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: C.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>Opportunities for Growth</div>
-                <ul style={{ margin: 0, paddingLeft: 20, color: C.textPrimary, fontSize: '1.05rem', lineHeight: 1.7 }}>
-                  <li style={{ marginBottom: 12 }}>Pause slightly before changing topics.</li>
-                  <li style={{ marginBottom: 12 }}>Reduce transitional fillers like &quot;uh&quot; when bridging thoughts.</li>
-                  <li>Expand on personal experiences with more specific, descriptive details.</li>
-                </ul>
-              </GlassCard>
-            </div>
+            <GlassCard style={{ padding: 28, borderTop: `4px solid ${C.warning || '#F59E0B'}` }}>
+              <div style={{ color: C.textSecondary, fontSize: 12, textTransform: 'uppercase', fontWeight: 800, marginBottom: 12 }}>Opportunities for Growth</div>
+              <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.8 }}>
+                {(analysis?.feedback?.improvements || ['Add longer spoken turns for richer feedback.']).map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </GlassCard>
           </div>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 20 }}>
-            <NeonButton variant="outline" onClick={() => router.push('/daily-practice')} style={{ padding: '12px 30px' }}>
-              ← Back to Daily Practice
-            </NeonButton>
-            <NeonButton variant="primary" onClick={() => { setConvState('live'); setMicMode('listening'); }} style={{ padding: '12px 30px' }}>
-              Start Another Call
-            </NeonButton>
+          <GlassCard style={{ padding: 26 }}>
+            <div style={{ color: C.primary, fontSize: 12, textTransform: 'uppercase', fontWeight: 800, marginBottom: 10 }}>Key Takeaway</div>
+            <p style={{ color: C.textPrimary, lineHeight: 1.7, margin: 0 }}>{analysis?.feedback?.actionable_tip || analysis?.analysis?.communication_quality || 'Speak for at least one complete turn to receive a specific takeaway.'}</p>
+          </GlassCard>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <NeonButton variant="outline" onClick={() => router.push('/daily-practice')}>Back to Daily Practice</NeonButton>
+            <NeonButton variant="primary" onClick={() => { setConvState('live'); setAnalysis(null); setHistory([{ role: 'ai', text: 'Hi, I am Bravely. What would you like to practice next?' }]); resetTranscript(); }}>Start Another Call</NeonButton>
           </div>
-
         </div>
       )}
-
     </div>
   );
 }

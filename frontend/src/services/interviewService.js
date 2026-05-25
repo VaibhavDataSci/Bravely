@@ -10,6 +10,7 @@ export function startInterview(payload) {
 export function submitInterviewAnswer(payload) {
   return apiFetch('/api/interview/answer', {
     method: 'POST',
+    timeoutMs: 90000,
     body: JSON.stringify(payload),
   });
 }

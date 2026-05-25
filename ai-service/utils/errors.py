@@ -4,8 +4,11 @@ All errors here produce structured JSON responses and never leak
 internal system prompts or credentials.
 """
 
+import logging
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
 
 
 # ─── Domain Exceptions ────────────────────────────────────────────────────────
@@ -127,4 +130,5 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     # Log but never expose internal details
+    logger.exception("Unhandled exception during request:")
     return _error_response(500, "INTERNAL_ERROR", "An unexpected error occurred.")

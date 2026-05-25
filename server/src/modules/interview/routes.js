@@ -6,6 +6,34 @@ const {
 } = require('../../services/runtimeStore');
 const { generateQuestionsFromResume, generateFollowUpQuestion, analyzeAnswer } = require('../../services/interviewAI');
 
+function extractKeywordsFromText(text = '', max = 8) {
+  const stopWords = new Set(['about', 'after', 'again', 'also', 'because', 'before', 'from', 'have', 'into', 'that', 'their', 'there', 'these', 'this', 'through', 'with', 'would', 'your']);
+  const counts = new Map();
+  for (const raw of String(text).toLowerCase().match(/[a-z][a-z0-9+#.-]{2,}/g) || []) {
+    if (stopWords.has(raw)) continue;
+    counts.set(raw, (counts.get(raw) || 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || b[0].length - a[0].length)
+    .map(([word]) => word)
+    .slice(0, max);
+}
+
+function getQuestionKeywords(config = {}, resume = {}, question = '') {
+  const priority = Array.isArray(config.priorityKeywords)
+    ? config.priorityKeywords
+    : String(config.priorityKeywords || '').split(',');
+  const values = [
+    config.role,
+    config.interviewRound,
+    config.interviewContext,
+    ...(priority || []),
+    ...(resume?.skills || []),
+    ...extractKeywordsFromText(question, 6),
+  ];
+  return [...new Set(values.map((v) => String(v || '').trim()).filter(Boolean))].slice(0, 10);
+}
+
 async function getOptionalUser(request) {
   try {
     await request.jwtVerify();
@@ -34,6 +62,7 @@ module.exports = async function (fastify, opts) {
         sessionId: session.id,
         firstQuestion: questions[0],
         questions,
+        questionKeywords: getQuestionKeywords(config, resume || {}, questions[0]),
       },
     };
   });
@@ -74,7 +103,10 @@ module.exports = async function (fastify, opts) {
     const currentIndex = store.answers.length - 1;
     store.answers[currentIndex].analysis = analysis;
 
-    const askedQuestions = store.answers.map(a => a.question).filter(Boolean);
+    const askedQuestions = [
+      ...store.questions,
+      ...store.answers.map(a => a.question),
+    ].filter(Boolean);
     const maxQuestions = Math.max(store.questions.length || 0, 6);
     let nextQuestion = null;
     if (store.answers.length < maxQuestions) {
@@ -96,7 +128,9 @@ module.exports = async function (fastify, opts) {
         feedback: analysis.feedback,
         scores: analysis.scores,
         metrics: analysis.metrics,
+        answerKeywords: analysis.answerKeywords || [],
         nextQuestion,
+        nextQuestionKeywords: nextQuestion ? getQuestionKeywords(store.config, store.resume || {}, nextQuestion) : [],
         done: !nextQuestion,
       },
     };

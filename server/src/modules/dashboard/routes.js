@@ -1,4 +1,5 @@
-const { getDashboardSnapshot } = require('../../services/runtimeStore');
+const { getDashboardSnapshot, markUserActivity, setUserStreak } = require('../../services/runtimeStore');
+const { updateDbStreak } = require('../../services/streakService');
 
 async function getOptionalUser(request) {
   try {

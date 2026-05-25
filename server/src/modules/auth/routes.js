@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const db = require('../../config/db');
-const { createOrGetLocalUser } = require('../../services/runtimeStore');
+const { createOrGetLocalUser, markUserActivity, setUserStreak } = require('../../services/runtimeStore');
+const { updateDbStreak } = require('../../services/streakService');
 
 module.exports = async function (fastify, opts) {
   
@@ -27,6 +28,9 @@ module.exports = async function (fastify, opts) {
       );
 
       const user = result.rows[0];
+      const streak = markUserActivity(user.id, 'signup');
+      user.streak = streak;
+      setUserStreak(user.id, streak);
       const token = fastify.jwt.sign({ id: user.id, role: user.role, email: user.email });
 
       return { token, user };
@@ -36,6 +40,7 @@ module.exports = async function (fastify, opts) {
       if (!localUser) {
         return reply.code(500).send({ error: 'Internal Server Error' });
       }
+      localUser.streak = markUserActivity(localUser.id, 'signup');
       const token = fastify.jwt.sign({ id: localUser.id, role: localUser.role, email: localUser.email });
       return { token, user: localUser };
     }
@@ -65,6 +70,9 @@ module.exports = async function (fastify, opts) {
       
       const userWithoutPassword = { ...user };
       delete userWithoutPassword.passwordHash;
+      const streak = markUserActivity(user.id, 'login');
+      userWithoutPassword.streak = streak;
+      setUserStreak(user.id, streak);
 
       return { token, user: userWithoutPassword };
     } catch (err) {
@@ -73,6 +81,7 @@ module.exports = async function (fastify, opts) {
       if (!localUser) {
         return reply.code(500).send({ error: 'Internal Server Error' });
       }
+      localUser.streak = markUserActivity(localUser.id, 'login');
       const token = fastify.jwt.sign({ id: localUser.id, role: localUser.role, email: localUser.email });
       return { token, user: localUser };
     }
@@ -80,15 +89,20 @@ module.exports = async function (fastify, opts) {
 
   fastify.get('/me', { onRequest: [fastify.authenticate] }, async (request, reply) => {
     try {
-      const result = await db.query('SELECT id, email, name, role, plan, streak, preferences, "photoURL" FROM users WHERE id = $1', [request.user.id]);
+      const result = await db.query('SELECT id, email, name, role, plan, streak, preferences, "photoURL", "createdAt" FROM users WHERE id = $1', [request.user.id]);
       if (result.rows.length === 0) {
         return reply.code(404).send({ error: 'User not found' });
       }
-      return { user: result.rows[0] };
+      const user = result.rows[0];
+      const streak = markUserActivity(user.id, 'session_active');
+      user.streak = streak;
+      setUserStreak(user.id, streak);
+      return { user };
     } catch (err) {
       request.log.error(err);
       const localUser = createOrGetLocalUser({ email: request.user.email, name: request.user.email?.split('@')[0] });
       if (localUser) {
+        localUser.streak = markUserActivity(localUser.id, 'session_active');
         return { user: localUser };
       }
       return reply.code(500).send({ error: 'Internal Server Error' });

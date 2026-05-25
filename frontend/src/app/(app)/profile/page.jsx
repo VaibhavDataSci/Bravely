@@ -1,9 +1,10 @@
 "use client";
 import { useRouter } from 'next/navigation';
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { C } from '@/constants/theme';
 import { GlassCard, Tag, NeonButton } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
+import { fetchMilestones, fetchPerformance, fetchSessions, fetchSummary } from '@/services/dashboardService';
 import { User, FileText, CheckCircle, Paperclip, CloudUpload, Flame, Zap, Trophy, Target, Gem, Star } from 'lucide-react';
 
 // ─── SIMULATED RESUME PARSER ────────────────────────────────────────────────
@@ -27,8 +28,51 @@ const ProfilePage = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [parseSuccess, setParseSuccess] = useState(false);
+  const [profileStats, setProfileStats] = useState({
+    summary: null,
+    sessions: [],
+    milestones: [],
+    points: [],
+  });
 
   const profileResume = user?.profileResume || null;
+  const displayName = user?.profileResume?.personalInfo?.name || user?.name || user?.email?.split('@')[0] || '';
+  const displayEmail = user?.email || '';
+  const plan = user?.plan ? `${String(user.plan).charAt(0).toUpperCase()}${String(user.plan).slice(1)} Plan` : 'Plan unavailable';
+  const memberSince = user?.createdAt
+    ? `Member since ${new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
+    : 'Member date unavailable';
+  const currentRole = user?.profileResume?.personalInfo?.title || user?.preferences?.targetRole || user?.role || 'Role not set';
+  const focus = user?.preferences?.focus || profileResume?.skills?.[0] || 'Focus not set';
+  const metrics = profileStats.summary?.metrics || {};
+  const streak = profileStats.summary?.streak?.current || user?.streak?.current || 0;
+  const avgScore = Math.round(metrics.overall || 0);
+  const sessions = profileStats.sessions || [];
+  const earnedCount = (profileStats.milestones || []).filter((item) => item.done).length;
+  const trendPoints = profileStats.points?.length ? profileStats.points : [];
+
+  useEffect(() => {
+    let cancelled = false;
+
+    Promise.allSettled([
+      fetchSummary(),
+      fetchSessions(5),
+      fetchMilestones(),
+      fetchPerformance(30),
+    ]).then(([summaryRes, sessionsRes, milestonesRes, performanceRes]) => {
+      if (cancelled) return;
+      setProfileStats({
+        summary: summaryRes.status === 'fulfilled' ? summaryRes.value : null,
+        sessions: sessionsRes.status === 'fulfilled' ? sessionsRes.value?.sessions || [] : [],
+        milestones: milestonesRes.status === 'fulfilled' ? milestonesRes.value?.milestones || [] : [],
+        points: performanceRes.status === 'fulfilled' ? performanceRes.value?.points || [] : [],
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleFileUpload = (source) => {
     let file;
@@ -62,14 +106,11 @@ const ProfilePage = () => {
     setParseSuccess(false);
   };
 
-  const achievements = [
-    { icon: <Flame size={28} />, label: '7-Day Streak', earned: true },
-    { icon: <Zap size={28} />, label: 'Speed Talker', earned: true },
-    { icon: <Trophy size={28} />, label: 'Top 10%', earned: true },
-    { icon: <Target size={28} />, label: '50 Interviews', earned: false },
-    { icon: <Gem size={28} />, label: 'Perfect Score', earned: false },
-    { icon: <Star size={28} />, label: 'All Roles', earned: false },
-  ];
+  const achievementIcons = useMemo(() => [Flame, Zap, Trophy, Target, Gem, Star], []);
+  const achievements = (profileStats.milestones || []).map((item, index) => {
+    const Icon = achievementIcons[index % achievementIcons.length];
+    return { icon: <Icon size={28} />, label: item.label, earned: item.done };
+  });
 
   const uploadTimestamp = profileResume?.uploadedAt
     ? new Date(profileResume.uploadedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -88,20 +129,20 @@ const ProfilePage = () => {
             animation: 'glow-pulse 3s ease infinite',
           }}><User size={48} color="#fff" /></div>
           <div style={{ flex: 1 }}>
-            <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4 }}>{user?.name || 'Alex Martinez'}</h2>
-            <p style={{ color: C.textSecondary, fontSize: 14, marginBottom: 12 }}>{user?.email || 'alex@email.com'} · Pro Plan · Member since Jan 2026</p>
+            <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4 }}>{displayName || 'Signed-in user'}</h2>
+            <p style={{ color: C.textSecondary, fontSize: 14, marginBottom: 12 }}>{[displayEmail, plan, memberSince].filter(Boolean).join(' · ')}</p>
             <div style={{ display: 'flex', gap: 8 }}>
-              <Tag>Software Engineer</Tag>
-              <Tag color={C.secondary}>Frontend Focus</Tag>
+              <Tag>{currentRole}</Tag>
+              <Tag color={C.secondary}>{focus}</Tag>
               <Tag color={C.success}>Active</Tag>
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {[
-              { n: '32', l: 'Interviews' },
-              { n: '84', l: 'Avg Score' },
-              { n: '7', l: 'Day Streak' },
-              { n: '#47', l: 'Global Rank' },
+              { n: String(sessions.length), l: 'Interviews' },
+              { n: avgScore ? String(avgScore) : '0', l: 'Avg Score' },
+              { n: String(streak), l: 'Day Streak' },
+              { n: `${earnedCount}/${Math.max(profileStats.milestones.length, 1)}`, l: 'Goals' },
             ].map(({ n, l }) => (
               <div key={l} style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 28, fontWeight: 800, color: C.primary, lineHeight: 1 }}>{n}</div>
@@ -258,7 +299,7 @@ const ProfilePage = () => {
         <GlassCard>
           <div style={{ fontSize: 13, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>Achievements</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-            {achievements.map(({ icon, label, earned }) => (
+            {(achievements.length ? achievements : [{ icon: <Star size={28} />, label: 'Complete your first session', earned: false }]).map(({ icon, label, earned }) => (
               <div key={label} style={{
                 borderRadius: 10, padding: '16px 10px', textAlign: 'center',
                 background: earned ? `rgba(167, 139, 250, 0.2)` : C.bgCard,
@@ -276,20 +317,14 @@ const ProfilePage = () => {
         <GlassCard>
           <div style={{ fontSize: 13, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>Interview History</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[
-              { role: 'Senior SWE · Google', score: 88, date: 'Apr 30', type: 'Technical' },
-              { role: 'Two Sum + System Design', score: 91, date: 'Apr 28', type: 'Coding' },
-              { role: 'PM · Stripe', score: 74, date: 'Apr 27', type: 'Behavioral' },
-              { role: 'Staff Eng · Meta', score: 91, date: 'Apr 23', type: 'System Design' },
-              { role: 'Frontend Eng · Figma', score: 79, date: 'Apr 20', type: 'Technical' },
-            ].map((s, i) => (
+            {(sessions.length ? sessions : []).map((s, i) => (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '10px 14px', background: C.bgCard, borderRadius: 8, border: `1px solid ${C.borderMid}`,
                 cursor: 'pointer', transition: 'all 0.2s',
               }} onClick={() => router.push('/report')}>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{s.role}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{s.title || s.role || 'Interview session'}</div>
                   <div style={{ fontSize: 11, color: C.textMuted }}>{s.date} · {s.type}</div>
                 </div>
                 <div style={{
@@ -298,6 +333,11 @@ const ProfilePage = () => {
                 }}>{s.score}</div>
               </div>
             ))}
+            {!sessions.length && (
+              <div style={{ padding: '14px', background: C.bgCard, borderRadius: 8, border: `1px solid ${C.borderMid}`, color: C.textMuted, fontSize: 13 }}>
+                No interview history yet.
+              </div>
+            )}
           </div>
         </GlassCard>
       </div>
@@ -306,23 +346,23 @@ const ProfilePage = () => {
       <GlassCard>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div style={{ fontSize: 13, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Score Trend</div>
-          <Tag color={C.success}>+12 pts this month</Tag>
+          <Tag color={C.success}>{trendPoints.length ? `${trendPoints.length} recent sessions` : 'No trend yet'}</Tag>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 80 }}>
-          {[55, 60, 58, 65, 72, 68, 74, 78, 79, 82, 84, 88, 91, 82, 88].map((v, i) => (
+          {(trendPoints.length ? trendPoints.map((p) => p.score || 0) : [0]).map((v, i, arr) => (
             <div key={i} style={{
               flex: 1, borderRadius: 4,
               height: `${(v / 100) * 80}px`,
-              background: i === 14
+              background: i === arr.length - 1
                 ? `linear-gradient(to top, ${C.primary}, ${C.secondary})`
-                : `${C.primary}${Math.round((i / 14) * 60 + 20).toString(16).padStart(2, '0')}`,
+                : `${C.primary}${Math.round((i / Math.max(arr.length - 1, 1)) * 60 + 20).toString(16).padStart(2, '0')}`,
               transition: 'height 1s ease',
             }} />
           ))}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-          <span style={{ fontSize: 11, color: C.textMuted }}>Jan 2026</span>
-          <span style={{ fontSize: 11, color: C.textMuted }}>Apr 2026</span>
+          <span style={{ fontSize: 11, color: C.textMuted }}>{trendPoints[0]?.label || 'Start'}</span>
+          <span style={{ fontSize: 11, color: C.textMuted }}>{trendPoints[trendPoints.length - 1]?.label || 'Now'}</span>
         </div>
       </GlassCard>
     </div>

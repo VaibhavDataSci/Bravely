@@ -98,13 +98,21 @@ export default function SoloPage() {
   const lastVideoTimeRef = useRef(-1);
   const restoreMediapipeConsoleRef = useRef(null);
   const micOnRef = useRef(false);
+  const endingRef = useRef(false);
+  const speechRetryTimersRef = useRef([]);
+  const currentUtteranceRef = useRef(null);
+  const startRecognitionRef = useRef(null);
 
-  const [config] = useState(() => readSessionConfig() || {
-    role: 'Software Engineer',
-    roleId: 'se',
-    interviewRound: 'behavioral',
-    interviewContext: 'General',
-  });
+  const [config, setConfig] = useState(null);
+
+  useEffect(() => {
+    setConfig(readSessionConfig() || {
+      role: 'Software Engineer',
+      roleId: 'se',
+      interviewRound: 'behavioral',
+      interviewContext: 'General',
+    });
+  }, []);
 
   const [sessionId, setSessionId] = useState('');
   const [questions, setQuestions] = useState([]);
@@ -124,9 +132,15 @@ export default function SoloPage() {
   const [posture, setPosture] = useState({ score: 70, label: 'Stable posture' });
   const [sessionReady, setSessionReady] = useState(false);
 
-  const canUseSpeech = typeof window !== 'undefined' && (
-    'SpeechRecognition' in window || 'webkitSpeechRecognition' in window
-  );
+  const [canUseSpeech, setCanUseSpeech] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCanUseSpeech(
+        'SpeechRecognition' in window || 'webkitSpeechRecognition' in window
+      );
+    }
+  }, []);
 
   useEffect(() => {
     micOnRef.current = micOn;
@@ -134,16 +148,22 @@ export default function SoloPage() {
 
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
+  const stopListeningNow = useCallback(() => {
+    micOnRef.current = false;
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      recognitionRef.current = null;
+    }
+    setMicOn(false);
+    setInterim('');
+  }, []);
+
   const speakQuestion = useCallback(function speakQuestion(text, attempt = 0) {
-    if (typeof window === 'undefined' || !window.speechSynthesis || !text) return;
+    if (endingRef.current || typeof window === 'undefined' || !window.speechSynthesis || !text) return;
 
     const voices = window.speechSynthesis.getVoices();
-    if (!voices.length && attempt < 3) {
-      setTimeout(() => speakQuestion(text, attempt + 1), 250);
-      return;
-    }
-
     window.speechSynthesis.cancel();
+    stopListeningNow();
     setSpeaking(true);
 
     const utterance = new SpeechSynthesisUtterance(text);
@@ -155,17 +175,55 @@ export default function SoloPage() {
       utterance.voice = voices.find((voice) => /female|samantha|allison|google us english/i.test(voice.name)) || voices[0];
     }
 
-    utterance.onstart = () => setSpeaking(true);
-    utterance.onend = () => setSpeaking(false);
-    utterance.onerror = () => {
+    currentUtteranceRef.current = utterance;
+    utterance.onstart = () => {
+      if (!endingRef.current) {
+        stopListeningNow();
+        setSpeaking(true);
+      }
+    };
+    utterance.onend = () => {
+      if (currentUtteranceRef.current === utterance) currentUtteranceRef.current = null;
       setSpeaking(false);
-      if (attempt < 2) {
-        setTimeout(() => speakQuestion(text, attempt + 1), 300);
+      if (!endingRef.current && canUseSpeech) {
+        micOnRef.current = true;
+        setMicOn(true);
+        startRecognitionRef.current?.();
+      }
+    };
+    utterance.onerror = () => {
+      if (currentUtteranceRef.current === utterance) currentUtteranceRef.current = null;
+      setSpeaking(false);
+      if (!endingRef.current && attempt < 2) {
+        const retry = setTimeout(() => speakQuestion(text, attempt + 1), 300);
+        speechRetryTimersRef.current.push(retry);
       }
     };
 
+    if (!voices.length && attempt < 1) {
+      const retry = setTimeout(() => {
+        window.speechSynthesis.speak(utterance);
+      }, 60);
+      speechRetryTimersRef.current.push(retry);
+      return;
+    }
+
     window.speechSynthesis.speak(utterance);
-  }, []);
+  }, [canUseSpeech, stopListeningNow]);
+
+  const stopSpeech = useCallback(() => {
+    endingRef.current = true;
+    speechRetryTimersRef.current.forEach((timer) => clearTimeout(timer));
+    speechRetryTimersRef.current = [];
+    currentUtteranceRef.current = null;
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.pause();
+      window.speechSynthesis.cancel();
+    }
+    stopListeningNow();
+    setSpeaking(false);
+  }, [stopListeningNow]);
 
   const enableMediapipeConsoleFilter = useCallback(() => {
     if (restoreMediapipeConsoleRef.current) return;
@@ -188,7 +246,7 @@ export default function SoloPage() {
   const computePostureFromLandmarks = useCallback((landmarks) => {
     const clamp = (value, min = 0, max = 100) => Math.max(min, Math.min(max, value));
     const distance = (a, b) => Math.hypot((a.x || 0) - (b.x || 0), (a.y || 0) - (b.y || 0));
-    const visibility = (point) => point?.visibility ?? point?.presence ?? 0;
+    const visibility = (point) => point?.visibility ?? point?.presence ?? 0.82;
 
     const leftShoulder = landmarks?.[11];
     const rightShoulder = landmarks?.[12];
@@ -204,7 +262,7 @@ export default function SoloPage() {
     const visibilityAvg = corePoints.reduce((sum, point) => sum + visibility(point), 0) / corePoints.length;
     const visibleCoreCount = corePoints.filter((point) => visibility(point) >= 0.45).length;
     if (visibilityAvg < 0.45 || visibleCoreCount < 3) {
-      const faded = postureScoreRef.current * 0.9 + 50 * 0.1;
+      const faded = postureScoreRef.current * 0.78 + 46 * 0.22;
       postureScoreRef.current = faded;
       return { score: Math.round(faded), label: 'Improve lighting or move into frame for posture tracking' };
     }
@@ -226,23 +284,23 @@ export default function SoloPage() {
     const shoulderSlopeRatio = Math.abs(leftShoulder.y - rightShoulder.y) / shoulderWidth;
     const centerOffset = Math.abs(shoulderMid.x - 0.5);
     const headOffset = nose ? Math.abs(nose.x - shoulderMid.x) / shoulderWidth : 0.25;
-    const frameSizeScore = clamp((shoulderWidth - 0.16) / 0.16, 0, 1);
-    const uprightScore = clamp(1 - (torsoTiltDeg / 18), 0, 1);
-    const shoulderLevelScore = clamp(1 - (shoulderSlopeRatio / 0.18), 0, 1);
-    const centeredScore = clamp(1 - (centerOffset / 0.24), 0, 1);
-    const headAlignedScore = clamp(1 - (headOffset / 0.65), 0, 1);
-    const torsoVisibleScore = clamp((torsoLength - 0.15) / 0.2, 0, 1);
+    const frameSizeScore = clamp((shoulderWidth - 0.13) / 0.18, 0, 1);
+    const uprightScore = clamp(1 - (torsoTiltDeg / 22), 0, 1);
+    const shoulderLevelScore = clamp(1 - (shoulderSlopeRatio / 0.22), 0, 1);
+    const centeredScore = clamp(1 - (centerOffset / 0.3), 0, 1);
+    const headAlignedScore = clamp(1 - (headOffset / 0.78), 0, 1);
+    const torsoVisibleScore = clamp((torsoLength - 0.11) / 0.24, 0, 1);
 
     const rawScore =
-      uprightScore * 30 +
-      shoulderLevelScore * 22 +
-      centeredScore * 18 +
-      headAlignedScore * 14 +
-      frameSizeScore * 8 +
-      torsoVisibleScore * 4 +
+      uprightScore * 28 +
+      shoulderLevelScore * 20 +
+      centeredScore * 20 +
+      headAlignedScore * 12 +
+      frameSizeScore * 10 +
+      torsoVisibleScore * 6 +
       clamp(visibilityAvg, 0, 1) * 4;
 
-    const smoothed = postureScoreRef.current * 0.72 + clamp(rawScore, 30, 98) * 0.28;
+    const smoothed = postureScoreRef.current * 0.52 + clamp(rawScore, 28, 98) * 0.48;
     postureScoreRef.current = smoothed;
     const score = Math.round(smoothed);
 
@@ -308,15 +366,17 @@ export default function SoloPage() {
     }
   }, [canUseSpeech]);
 
+  useEffect(() => {
+    startRecognitionRef.current = startRecognition;
+  }, [startRecognition]);
+
   const stopRecognition = useCallback(() => {
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
-    }
-    micOnRef.current = false;
-    setInterim('');
-  }, []);
+    stopListeningNow();
+  }, [stopListeningNow]);
 
   const stopSessionMedia = useCallback(() => {
+    endingRef.current = true;
+    stopSpeech();
     if (postureTimerRef.current) {
       clearInterval(postureTimerRef.current);
       postureTimerRef.current = null;
@@ -332,19 +392,39 @@ export default function SoloPage() {
     restoreMediapipeConsoleRef.current?.();
     stopRecognition();
     setMicOn(false);
-    if (window?.speechSynthesis) window.speechSynthesis.cancel();
     if (videoRef.current?.srcObject) {
       const tracks = videoRef.current.srcObject.getTracks?.() || [];
       tracks.forEach((track) => track.stop());
       videoRef.current.srcObject = null;
     }
-  }, [stopRecognition]);
+  }, [stopRecognition, stopSpeech]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        stopSessionMedia();
+      }
+    };
+    const handlePageHide = () => {
+      stopSessionMedia();
+    };
+
+    window.addEventListener('pagehide', handlePageHide);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [stopSessionMedia]);
 
   const startCameraAndPosture = useCallback(async () => {
     const startFaceFallback = () => {
       if (typeof window.FaceDetector === 'undefined') {
         postureTimerRef.current = setInterval(() => {
-          setPosture((prev) => ({ ...prev, label: 'Camera active (landmarks unavailable on this browser)' }));
+          setPosture((prev) => ({
+            score: Math.max(35, Math.round(prev.score * 0.92 + 58 * 0.08)),
+            label: 'Camera active (landmarks unavailable on this browser)',
+          }));
         }, 2000);
         return;
       }
@@ -362,7 +442,10 @@ export default function SoloPage() {
           const centerX = box.x + box.width / 2;
           const vw = videoRef.current.videoWidth || 1;
           const offset = Math.abs((centerX / vw) - 0.5);
-          const score = Math.max(45, Math.round(100 - offset * 160));
+          const size = Math.min(1, Math.max(0, box.width / Math.max(vw * 0.22, 1)));
+          const rawScore = 42 + (1 - Math.min(offset / 0.34, 1)) * 38 + size * 20;
+          const score = clampScore(postureScoreRef.current * 0.55 + rawScore * 0.45);
+          postureScoreRef.current = score;
           setPosture({
             score,
             label: score > 78 ? 'Great posture and framing' : score > 62 ? 'Good posture' : 'Sit centered for better posture score',
@@ -436,7 +519,7 @@ export default function SoloPage() {
             lastVideoTimeRef.current = videoRef.current.currentTime;
             const result = poseLandmarkerRef.current.detectForVideo(videoRef.current, performance.now());
             const landmarks = result?.landmarks?.[0];
-            if (landmarks?.length) {
+          if (landmarks?.length) {
               poseNoLandmarkRef.current = 0;
               const next = computePostureFromLandmarks(landmarks);
               setPosture(next);
@@ -444,6 +527,13 @@ export default function SoloPage() {
               poseNoLandmarkRef.current += 1;
               if (poseNoLandmarkRef.current >= 45) {
                 setPosture({ score: 52, label: 'Posture landmarks missing - switching to fallback' });
+                if (poseFrameRef.current) {
+                  cancelAnimationFrame(poseFrameRef.current);
+                  poseFrameRef.current = null;
+                }
+                if (poseLandmarkerRef.current?.close) {
+                  try { poseLandmarkerRef.current.close(); } catch {}
+                }
                 poseLandmarkerRef.current = null;
                 startFaceFallback();
                 return;
@@ -505,12 +595,14 @@ export default function SoloPage() {
         setTranscript('');
         setInterim('');
         setAnswerStartedAt(null);
+        endingRef.current = false;
       } else {
+        endingRef.current = true;
+        stopSessionMedia();
         const ended = await endInterview({ sessionId });
         if (ended?.reportId) {
           sessionStorage.setItem('aia_latest_report_id', ended.reportId);
         }
-        stopSessionMedia();
         router.push('/dashboard');
       }
     } catch (err) {
@@ -528,12 +620,14 @@ export default function SoloPage() {
   }, [config?.interviewRound, router]);
 
   useEffect(() => {
+    if (!config) return;
     let timer;
     const bootstrap = async () => {
       setLoading(true);
       setError('');
       try {
         await startCameraAndPosture();
+        endingRef.current = false;
         const resume = readSessionResume();
         const started = await startInterview({ config, resume });
         setSessionId(started.sessionId);
@@ -552,20 +646,17 @@ export default function SoloPage() {
     bootstrap();
 
     return () => {
-      const video = videoRef.current;
       if (timer) clearInterval(timer);
       stopSessionMedia();
-      if (video?.srcObject) {
-        const tracks = video.srcObject.getTracks?.() || [];
-        tracks.forEach((t) => t.stop());
-      }
     };
   }, [config, speakQuestion, startCameraAndPosture, stopSessionMedia]);
 
   useEffect(() => {
     if (sessionReady && questionText && !loading) {
-      const t = setTimeout(() => speakQuestion(questionText), 250);
-      return () => clearTimeout(t);
+      const t = window.requestAnimationFrame(() => {
+        if (!endingRef.current) speakQuestion(questionText);
+      });
+      return () => window.cancelAnimationFrame(t);
     }
     return undefined;
   }, [sessionReady, questionText, loading, speakQuestion]);
@@ -630,7 +721,7 @@ export default function SoloPage() {
       <div style={{ position: 'absolute', top: 24, left: 24, right: 24, display: 'flex', justifyContent: 'space-between', zIndex: 20 }}>
         <GlassCard style={{ padding: '8px 16px' }}>
           <span style={{ fontSize: 12, color: C.textSecondary, fontFamily: 'JetBrains Mono' }}>
-            {config?.role || 'Interview'} · {config?.interviewRound || 'behavioral'}
+            {config ? `${config.role || 'Interview'} · ${config.interviewRound || 'behavioral'}` : 'Interview · behavioral'}
           </span>
         </GlassCard>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -693,10 +784,11 @@ export default function SoloPage() {
             size="sm"
             variant="outline"
             onClick={async () => {
+              endingRef.current = true;
+              stopSessionMedia();
               try {
                 if (sessionId) await endInterview({ sessionId });
               } catch {}
-              stopSessionMedia();
               router.push('/dashboard');
             }}
           >

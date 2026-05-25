@@ -9,7 +9,7 @@
  */
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-const TIMEOUT_MS = 25000; // allow Gemini-backed analysis to complete
+const DEFAULT_TIMEOUT_MS = 25000;
 
 function getToken() {
   if (typeof window === 'undefined') return null;
@@ -43,7 +43,8 @@ export function clearToken() {
  */
 export async function apiFetch(path, options = {}) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const { timeoutMs = DEFAULT_TIMEOUT_MS, ...fetchOptions } = options;
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   const token = getToken();
   const headers = {
@@ -54,7 +55,7 @@ export async function apiFetch(path, options = {}) {
 
   try {
     const res = await fetch(`${BASE_URL}${path}`, {
-      ...options,
+      ...fetchOptions,
       headers,
       signal: controller.signal,
     });

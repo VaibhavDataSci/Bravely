@@ -4,6 +4,7 @@ const state = {
   usersByEmail: new Map(),
   sessions: new Map(),
   reports: [],
+  activityByUserId: new Map(),
 };
 
 function makeId(prefix) {
@@ -22,6 +23,80 @@ function normalizeRole(roleId) {
   return map[roleId] || 'Interview';
 }
 
+function dayKey(date = new Date()) {
+  const d = new Date(date);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function daysBetween(previousDay, nextDay) {
+  if (!previousDay || !nextDay) return null;
+  const previous = new Date(`${previousDay}T00:00:00.000Z`).getTime();
+  const next = new Date(`${nextDay}T00:00:00.000Z`).getTime();
+  if (!Number.isFinite(previous) || !Number.isFinite(next)) return null;
+  return Math.round((next - previous) / (24 * 60 * 60 * 1000));
+}
+
+function normalizeStreak(streak = {}) {
+  const current = Number(streak.current);
+  return {
+    current: Number.isFinite(current) && current > 0 ? Math.round(current) : 0,
+    lastActiveDate: streak.lastActiveDate || null,
+    lastActivityType: streak.lastActivityType || null,
+  };
+}
+
+function markUserActivity(userId, activityType = 'activity', at = new Date()) {
+  if (!userId) return { current: 0, lastActiveDate: null, lastActivityType: null };
+
+  const today = dayKey(at);
+  const existing = normalizeStreak(state.activityByUserId.get(userId));
+  const lastDay = existing.lastActiveDate ? dayKey(existing.lastActiveDate) : null;
+  const gap = daysBetween(lastDay, today);
+
+  let current = existing.current || 0;
+  if (!lastDay) {
+    current = 1;
+  } else if (gap === 0) {
+    current = Math.max(1, current);
+  } else if (gap === 1) {
+    current += 1;
+  } else if (gap > 1) {
+    current = 1;
+  }
+
+  const next = {
+    current,
+    lastActiveDate: new Date(at).toISOString(),
+    lastActivityType: activityType,
+  };
+  state.activityByUserId.set(userId, next);
+
+  for (const user of state.usersByEmail.values()) {
+    if (user.id === userId) {
+      user.streak = next;
+      break;
+    }
+  }
+
+  return next;
+}
+
+function setUserStreak(userId, streak = {}) {
+  if (!userId) return normalizeStreak(streak);
+  const normalized = normalizeStreak(streak);
+  state.activityByUserId.set(userId, normalized);
+  for (const user of state.usersByEmail.values()) {
+    if (user.id === userId) {
+      user.streak = normalized;
+      break;
+    }
+  }
+  return normalized;
+}
+
 function createOrGetLocalUser({ email, name }) {
   const key = String(email || '').trim().toLowerCase();
   if (!key) return null;
@@ -32,7 +107,7 @@ function createOrGetLocalUser({ email, name }) {
       email: key,
       name: name || key.split('@')[0],
       role: 'user',
-      streak: { current: 1, lastActiveDate: new Date().toISOString() },
+      streak: { current: 0, lastActiveDate: null, lastActivityType: null },
       preferences: { theme: 'dark' },
       createdAt: new Date().toISOString(),
     });
@@ -40,10 +115,14 @@ function createOrGetLocalUser({ email, name }) {
 
   const existing = state.usersByEmail.get(key);
   if (name && !existing.name) existing.name = name;
+  if (existing.streak?.lastActiveDate && !state.activityByUserId.has(existing.id)) {
+    state.activityByUserId.set(existing.id, existing.streak);
+  }
   return existing;
 }
 
 function createInterviewSession({ userId, config, resume, questions }) {
+  markUserActivity(userId, 'interview_started');
   const sessionId = makeId('sess');
   const session = {
     id: sessionId,
@@ -65,6 +144,7 @@ function addAnswer({ sessionId, answer }) {
   const session = state.sessions.get(sessionId);
   if (!session) return null;
   session.answers.push(answer);
+  markUserActivity(session.userId, 'interview_answered');
   return session;
 }
 
@@ -73,6 +153,7 @@ function endSession({ sessionId }) {
   if (!session) return null;
   session.status = 'completed';
   session.endedAt = new Date().toISOString();
+  markUserActivity(session.userId, 'interview_completed');
   return session;
 }
 
@@ -128,6 +209,65 @@ function createReportFromSession(session) {
   return report;
 }
 
+function createDailyReport({
+  userId,
+  mode = 'day-summary',
+  prompt = '',
+  category = '',
+  analysis = {},
+  durationSeconds,
+  sessionId,
+  createdAt = new Date().toISOString(),
+}) {
+  if (!userId) return null;
+
+  const scores = analysis?.scores || {};
+  const metricsRaw = analysis?.metrics || {};
+  const wordsPerMinute = Number(metricsRaw.words_per_minute);
+  const fluency = Number.isFinite(wordsPerMinute)
+    ? Math.max(0, 100 - Math.abs(130 - wordsPerMinute))
+    : 0;
+
+  const metrics = {
+    confidence: Math.round(Number(scores.confidence_score) || 0),
+    clarity: Math.round(Number(scores.clarity_score) || 0),
+    fluency: Math.round(fluency),
+    structure: Math.round(Number(scores.star_score) || 0),
+    vocabulary: Math.round(Number(scores.vocabulary_score) || 0),
+    posture: 0,
+  };
+
+  const overallScore = Math.round(Number(scores.overall_score) || avgArray(Object.values(metrics)));
+  const detected = analysis?.analysis?.filler_words?.detected || [];
+  const fillerWords = detected.map((item) => ({
+    word: item.word || 'um',
+    count: Number(item.count) || 1,
+  }));
+
+  const report = {
+    id: makeId('daily'),
+    sessionId: sessionId || makeId('dailysess'),
+    userId,
+    type: 'daily',
+    config: {
+      mode,
+      prompt,
+      category,
+    },
+    overallScore,
+    verdict: overallScore >= 80 ? 'Excellent' : overallScore >= 65 ? 'Good' : 'Needs Practice',
+    metrics,
+    fillerWords,
+    aiFeedback: [analysis?.feedback?.actionable_tip].filter(Boolean),
+    durationSeconds: Number.isFinite(Number(durationSeconds)) ? Math.max(1, Number(durationSeconds)) : null,
+    createdAt,
+  };
+
+  state.reports.unshift(report);
+  if (state.reports.length > 200) state.reports.length = 200;
+  return report;
+}
+
 function getLatestReport(userId) {
   return state.reports.find(r => r.userId === userId) || null;
 }
@@ -138,6 +278,7 @@ function getReportsForUser(userId, limit = 50) {
 
 function getDashboardSnapshot(userId, range = 7) {
   const reports = getReportsForUser(userId, 100);
+  const streak = normalizeStreak(state.activityByUserId.get(userId));
   const now = Date.now();
   const rangeMs = (range === 30 ? 30 : 7) * 24 * 60 * 60 * 1000;
   const recent = reports.filter(r => (now - new Date(r.createdAt).getTime()) <= rangeMs);
@@ -167,18 +308,24 @@ function getDashboardSnapshot(userId, range = 7) {
     period: r.createdAt,
   }));
 
-  const sessions = getReportsForUser(userId, 5).map((r, idx) => ({
+  const sessions = getReportsForUser(userId, 5).map((r, idx) => {
+    const durationSeconds = Number(r.durationSeconds);
+    const durationLabel = Number.isFinite(durationSeconds) && durationSeconds > 0
+      ? `${Math.max(1, Math.round(durationSeconds / 60))}m`
+      : `${Math.max(1, (idx + 1) * 3)}m`;
+    return {
     id: r.id,
     sessionId: r.sessionId,
-    title: buildSessionTitle(r.config),
+    title: buildSessionTitle(r),
     type: r.type || 'solo',
     date: timeSince(r.createdAt),
     score: Math.round(r.overallScore || 0),
     best: topMetric(r.metrics),
     area: lowMetric(r.metrics),
-    dur: `${Math.max(1, (idx + 1) * 3)}m`,
+    dur: durationLabel,
     verdict: r.verdict,
-  }));
+  };
+  });
 
   const fillerTotals = {};
   for (const r of recent) {
@@ -194,7 +341,7 @@ function getDashboardSnapshot(userId, range = 7) {
     .map(([word, count]) => ({ word, count }));
 
   return {
-    streak: { current: Math.min(30, Math.max(1, reports.length)), lastActiveDate: reports[0]?.createdAt || null },
+    streak,
     metrics,
     strengths,
     growthAreas,
@@ -202,7 +349,7 @@ function getDashboardSnapshot(userId, range = 7) {
     sessions,
     milestones: [
       { label: 'First AI Call Completed', done: reports.length >= 1 },
-      { label: '7-Day Streak', done: reports.length >= 7 },
+      { label: '7-Day Streak', done: streak.current >= 7 },
       { label: 'Reduced filler words 20%', done: fillerWords.reduce((a, w) => a + w.count, 0) <= 5 },
       { label: 'Next goal: Reach 90 confidence score', done: (metrics.confidence || 0) >= 90 },
     ],
@@ -210,8 +357,17 @@ function getDashboardSnapshot(userId, range = 7) {
   };
 }
 
-function buildSessionTitle(config) {
-  const role = config?.role || normalizeRole(config?.roleId);
+function buildSessionTitle(report = {}) {
+  if (report.type === 'daily') {
+    const mode = report.config?.mode || 'day-summary';
+    const labelMap = {
+      'day-summary': 'Day Summary',
+      'topic-practice': 'Topic Practice',
+      'ai-conversation': 'AI Conversation',
+    };
+    return `Daily - ${labelMap[mode] || 'Practice'}`;
+  }
+  const role = report.config?.role || normalizeRole(report.config?.roleId);
   return `Mock - ${role}`;
 }
 
@@ -256,10 +412,13 @@ function timeSince(date) {
 
 module.exports = {
   createOrGetLocalUser,
+  markUserActivity,
+  setUserStreak,
   createInterviewSession,
   addAnswer,
   endSession,
   createReportFromSession,
+  createDailyReport,
   getLatestReport,
   getReportsForUser,
   getDashboardSnapshot,

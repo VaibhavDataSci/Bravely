@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { loginWithPassword, signupWithPassword, logoutAuth } from '@/services/authService';
+import { fetchCurrentUser, loginWithPassword, signupWithPassword, logoutAuth } from '@/services/authService';
 
 const AuthContext = createContext(null);
 
@@ -15,6 +15,26 @@ export function AuthProvider({ children }) {
     }
   });
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!user);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+
+    fetchCurrentUser()
+      .then((result) => {
+        if (cancelled || !result?.user) return;
+        setUser((prev) => ({
+          ...(prev || {}),
+          ...result.user,
+          profileResume: prev?.profileResume ?? result.user.profileResume,
+        }));
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
 
   // Persist to localStorage whenever user changes
   useEffect(() => {

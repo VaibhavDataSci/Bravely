@@ -137,7 +137,7 @@ def unique_word_ratio(words: list[str]) -> float:
 
 # ─── Main Entry Point ─────────────────────────────────────────────────────────
 
-def process_transcript(raw_transcript: str) -> TranscriptMetrics:
+def process_transcript(raw_transcript: str, duration_seconds: float | None = None) -> TranscriptMetrics:
     """
     Full preprocessing pipeline: clean → split → tokenize → detect fillers → metrics.
     """
@@ -149,7 +149,10 @@ def process_transcript(raw_transcript: str) -> TranscriptMetrics:
     sentence_count = max(len(sentences), 1)
     avg_sentence_length = round(word_count / sentence_count, 1)
     unique_ratio = unique_word_ratio(words)
-    duration = estimate_duration(word_count)
+    if duration_seconds and duration_seconds > 0:
+        duration = float(duration_seconds)
+    else:
+        duration = estimate_duration(word_count)
     wpm = round((word_count / max(duration, 1)) * 60, 1)
 
     fillers, total_filler_count, total_filler_pct = detect_filler_words(cleaned, word_count)

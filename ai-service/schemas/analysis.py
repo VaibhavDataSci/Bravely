@@ -25,6 +25,10 @@ class AnalysisRequest(BaseModel):
         default="solo",
         description="Type of session: solo | p2p | group | daily | coding"
     )
+    duration: float | None = Field(
+        default=None,
+        description="Optional actual duration in seconds."
+    )
 
     @field_validator("transcript")
     @classmethod

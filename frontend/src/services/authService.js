@@ -26,6 +26,10 @@ export async function signupWithPassword({ email, name, password }) {
   return result;
 }
 
+export async function fetchCurrentUser() {
+  return apiFetch('/api/auth/me');
+}
+
 export function logoutAuth() {
   clearToken();
 }

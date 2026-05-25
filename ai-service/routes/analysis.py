@@ -71,7 +71,7 @@ async def analyze_transcript(body: AnalysisRequest):
         raise TranscriptTooLongError(MAX_TRANSCRIPT_CHARS)
 
     # ── Step 1: Preprocess transcript ─────────────────────────────────────────
-    tm = process_transcript(transcript)
+    tm = process_transcript(transcript, body.duration)
     logger.info(
         "Transcript preprocessed | words=%d sentences=%d fillers=%d",
         tm.word_count, tm.sentence_count, tm.total_filler_count,
