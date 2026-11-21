@@ -22,13 +22,15 @@ export const setUnauthorizedHandler = (handler) => { onUnauthorized = handler; }
 export async function api(path, { method = 'GET', body } = {}) {
   let res;
   try {
+    // FormData (file uploads) sets its own multipart content-type with a boundary.
+    const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
     res = await fetch(`${BASE_URL}${path}`, {
       method,
       headers: {
-        ...(body ? { 'content-type': 'application/json' } : {}),
+        ...(body && !isForm ? { 'content-type': 'application/json' } : {}),
         ...(token ? { authorization: `Bearer ${token}` } : {}),
       },
-      body: body ? JSON.stringify(body) : undefined,
+      body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
     });
   } catch {
     throw new ApiError("Can't reach the server. Check your connection and try again.", { code: 'network' });

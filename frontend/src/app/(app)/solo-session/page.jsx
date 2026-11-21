@@ -1,16 +1,21 @@
 "use client";
 import { useRouter } from 'next/navigation';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { C } from '@/constants/theme';
 import { NeonButton, GlassCard, Tag, AIAvatar, MicWave } from '@/components/shared';
+import { api, ApiError } from '@/lib/api';
+import { useRecorder, audioForm } from '@/lib/useRecorder';
 import styles from './SoloSession.module.css';
 
 const CameraPreview = () => {
   const videoRef = useRef(null);
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-      if (videoRef.current) videoRef.current.srcObject = stream;
-    }).catch(console.error);
+    let stream;
+    navigator.mediaDevices?.getUserMedia({ video: true }).then((s) => {
+      stream = s;
+      if (videoRef.current) videoRef.current.srcObject = s;
+    }).catch(() => { /* camera is optional: practice works with audio only */ });
+    return () => stream?.getTracks().forEach((t) => t.stop());
   }, []);
   return (
     <div className={styles.camera}>
@@ -33,7 +38,7 @@ const questionBank = {
   ],
   'da': [
     'Explain p-value to a non-technical stakeholder.',
-    'Write a SQL query to find the top 5 users by engagement.',
+    'Describe how you would find the top users by engagement and what you would check first.',
     'How do you handle missing or corrupt data in a dataset?',
   ],
   'hr': [
@@ -48,67 +53,123 @@ const questionBank = {
   ],
 };
 
-// ─── PAGE 3: SOLO INTERVIEW ───────────────────────────────────────────────────
+const DEFAULT_CONFIG = { role: 'Software Engineer', roleId: 'se', interviewRound: 'technical' };
+const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+const messageFor = (err) => (err instanceof ApiError ? err.message : 'Something went wrong. Please try again.');
+
 const SoloPage = () => {
   const router = useRouter();
   const [config] = useState(() => {
-    if (typeof window === 'undefined') {
-      return { role: 'Software Engineer', roleId: 'se', interviewRound: 'technical' };
-    }
+    if (typeof window === 'undefined') return DEFAULT_CONFIG;
     try {
       const saved = sessionStorage.getItem('aia_session_config');
-      return saved ? JSON.parse(saved) : { role: 'Software Engineer', roleId: 'se', interviewRound: 'technical' };
+      return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
     } catch {
-      return { role: 'Software Engineer', roleId: 'se', interviewRound: 'technical' };
+      return DEFAULT_CONFIG;
     }
   });
 
   useEffect(() => {
-    if (config?.interviewRound === 'coding') {
-      router.replace('/coding');
-    }
+    if (config?.interviewRound === 'coding') router.replace('/coding');
   }, [config?.interviewRound, router]);
 
-  const roleName = config.role || 'Software Engineer';
-  const roleId = config.roleId || 'se';
+  const roleName = config.role || DEFAULT_CONFIG.role;
+  const questions = questionBank[config.roleId] || questionBank.se;
 
-  const [questions, setQuestions] = useState(questionBank[roleId] || questionBank['se']);
-  const [currentQ, setCurrentQ] = useState(0);
+  const [qIndex, setQIndex] = useState(0);
+  // idle -> (recording) -> processing -> reviewed
+  const [phase, setPhase] = useState('idle');
+  const [answers, setAnswers] = useState([]);
+  const [last, setLast] = useState(null);
+  const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [time, setTime] = useState(0);
+  const processRef = useRef(null);
+  const recorder = useRecorder({ onAutoStop: (rec) => processRef.current?.(rec) });
 
   useEffect(() => {
-    setTimeout(() => {
-      setQuestions(questionBank[roleId] || questionBank['se']);
-      setCurrentQ(0);
-    }, 0);
-  }, [roleId]);
-
-  const [speaking, setSpeaking] = React.useState(true);
-  const [micOn, setMicOn] = React.useState(false);
-  const [time, setTime] = React.useState(0);
-  const [feedback, setFeedback] = React.useState(null);
-
-  React.useEffect(() => {
-    const t = setInterval(() => setTime(x => x + 1), 1000);
+    const t = setInterval(() => setTime((x) => x + 1), 1000);
     return () => clearInterval(t);
   }, []);
 
-  React.useEffect(() => {
-    const cycle = () => {
-      setSpeaking(true);
-      setTimeout(() => {
-        setSpeaking(false);
-        setFeedback({ text: 'Good eye contact', color: C.success });
-        setTimeout(() => setFeedback(null), 2000);
-      }, 3500);
-    };
-    cycle();
-    const id = setInterval(cycle, 8000);
-    return () => clearInterval(id);
+  // The interviewer reads the question aloud with the browser's built-in voice. It is optional:
+  // when speech synthesis is missing, the question is still shown as text.
+  const speak = useCallback((text) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.98;
+    u.onstart = () => setSpeaking(true);
+    u.onend = () => setSpeaking(false);
+    u.onerror = () => setSpeaking(false);
+    window.speechSynthesis.speak(u);
   }, []);
 
-  const fmt = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  useEffect(() => {
+    speak(questions[qIndex]);
+    return () => { if (typeof window !== 'undefined') window.speechSynthesis?.cancel(); };
+  }, [qIndex, questions, speak]);
 
-  // Size the avatar from the space the stage actually has, so nothing can run off screen.
+  const processRecording = useCallback(async (rec) => {
+    if (!rec) { setPhase('idle'); return; }
+    setPhase('processing');
+    setError(null);
+    try {
+      const form = audioForm(rec.blob);
+      const result = await api('/api/ai/transcribe', { method: 'POST', body: form });
+      const answer = { question: questions[qIndex], transcript: result.transcript, durationSec: rec.durationSec, metrics: result.metrics, fluency: result.fluency, notice: result.notice };
+      setLast(answer);
+      setAnswers((prev) => [...prev, answer]);
+      setPhase('reviewed');
+    } catch (err) {
+      setError(messageFor(err));
+      setPhase('idle');
+    }
+  }, [questions, qIndex]);
+
+  useEffect(() => { processRef.current = processRecording; }, [processRecording]);
+
+  const finishRecording = useCallback(async () => processRecording(await recorder.stop()), [processRecording, recorder]);
+
+  const toggleMic = async () => {
+    setError(null);
+    if (phase === 'recording') return finishRecording();
+    if (phase === 'processing') return;
+    window.speechSynthesis?.cancel();
+    setSpeaking(false);
+    const ok = await recorder.start();
+    if (ok) setPhase('recording');
+  };
+
+  const nextQuestion = () => {
+    setLast(null);
+    setPhase('idle');
+    setQIndex((i) => Math.min(i + 1, questions.length - 1));
+  };
+
+  const endSession = async () => {
+    if (phase === 'recording') await recorder.stop();
+    if (!answers.length) return router.push('/solo-select');
+    setSaving(true);
+    setError(null);
+    const transcript = answers.map((a) => a.transcript).join(' ');
+    const durationSec = Math.round(answers.reduce((s, a) => s + (a.durationSec || 0), 0));
+    try {
+      // One judgement over the whole session. If the model is unavailable the session is still
+      // saved with measured metrics only, and the report says so.
+      let feedback = null;
+      try {
+        feedback = (await api('/api/ai/evaluate', { method: 'POST', body: { transcript, mode: 'interview', durationSec } })).feedback;
+      } catch { /* degraded: save without model feedback */ }
+      await api('/api/sessions', { method: 'POST', body: { transcript, mode: 'interview', topic: roleName, durationSec, feedback } });
+      router.push('/report');
+    } catch (err) {
+      setError(`${messageFor(err)} Your answers are still on screen. Try ending the session again.`);
+      setSaving(false);
+    }
+  };
+
   const stageRef = useRef(null);
   const [avatarSize, setAvatarSize] = useState(240);
   useEffect(() => {
@@ -116,7 +177,6 @@ const SoloPage = () => {
     if (!el) return;
     const measure = () => {
       const { width, height } = el.getBoundingClientRect();
-      // 0.72 leaves room for the avatar's glow ring and data labels.
       setAvatarSize(Math.round(Math.max(140, Math.min(480, Math.min(width, height) * 0.72))));
     };
     measure();
@@ -125,87 +185,94 @@ const SoloPage = () => {
     return () => ro.disconnect();
   }, []);
 
+  const recording = phase === 'recording';
+  const processing = phase === 'processing';
+  const m = last?.metrics;
+  const f = last?.fluency;
+  const tiles = [
+    { l: 'Pace', v: m?.wpm ? `${m.wpm} wpm` : '—', note: m?.wpm ? m.pace : 'Answer to see' },
+    { l: 'Fillers', v: m ? `${m.fillers.counted}` : '—', note: m ? 'at least (often undercounted)' : 'Answer to see' },
+    { l: 'Fluency', v: f?.score != null ? `${f.score}` : '—', note: f?.score != null ? `${f.range[0]}–${f.range[1]} · ${f.band}` : (f?.reason ? 'Too short to score' : 'Answer to see') },
+  ];
+  const status = recording ? `Recording ${fmt(recorder.seconds)}` : processing ? 'Transcribing your answer…' : speaking ? 'Interviewer is speaking' : phase === 'reviewed' ? 'Review your answer' : 'Press the mic and answer';
+  const isLast = qIndex === questions.length - 1;
+
   return (
     <div className={styles.root}>
       <div className={styles.top}>
         <div className={styles.group}>
           <GlassCard style={{ padding: '8px 16px' }}>
             <span style={{ fontSize: 12, color: C.textSecondary, fontFamily: 'JetBrains Mono' }}>
-              Senior {roleName} · Ai Arena
+              {roleName} · AI interviewer
             </span>
           </GlassCard>
         </div>
         <div className={styles.group}>
           <GlassCard style={{ padding: '8px 18px', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.error, animation: 'pulse-ring 1s ease infinite' }} />
-            <span style={{ fontSize: 13, fontFamily: 'JetBrains Mono', color: C.error }}>REC {fmt(time)}</span>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: recording ? C.error : C.textMuted, animation: recording ? 'pulse-ring 1s ease infinite' : 'none' }} />
+            <span style={{ fontSize: 13, fontFamily: 'JetBrains Mono', color: recording ? C.error : C.textSecondary }}>
+              {recording ? 'REC' : 'SESSION'} {fmt(recording ? recorder.seconds : time)}
+            </span>
           </GlassCard>
-          <Tag color={C.warning}>Question 2 of 6</Tag>
+          <Tag color={C.warning}>Question {qIndex + 1} of {questions.length}</Tag>
         </div>
       </div>
 
-      {/* AI metrics */}
-      <div className={styles.metrics}>
-        {[{ l: 'Engagement', v: 87 }, { l: 'Pace', v: 72 }, { l: 'Clarity', v: 91 }].map(({ l, v }) => (
-          <GlassCard key={l} style={{ padding: '12px 16px', minWidth: 110 }}>
+      <div className={styles.metrics} aria-live="polite">
+        {tiles.map(({ l, v, note }) => (
+          <GlassCard key={l} style={{ padding: '12px 16px', minWidth: 120 }}>
             <div style={{ fontSize: 10, color: C.textMuted, textTransform: 'uppercase', marginBottom: 6 }}>{l}</div>
-            <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, marginBottom: 4 }}>
-              <div style={{ height: '100%', width: `${v}%`, background: `linear-gradient(90deg, ${C.primary}, ${C.secondary})`, borderRadius: 2 }} />
-            </div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: C.primary, fontFamily: 'JetBrains Mono' }}>{v}%</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: C.primary, fontFamily: 'JetBrains Mono' }}>{v}</div>
+            <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>{note}</div>
           </GlassCard>
         ))}
       </div>
 
-      {/* Stage: avatar, feedback chip, camera */}
       <div className={styles.stage} ref={stageRef}>
         <div className={styles.avatar}>
           <AIAvatar size={avatarSize} speaking={speaking} />
         </div>
-        {feedback && (
-          <div className={styles.feedback} style={{ animation: 'fade-up 0.3s ease' }}>
-            <GlassCard style={{ padding: '10px 18px', border: `1px solid ${feedback.color}40` }}>
-              <span style={{ fontSize: 13, color: feedback.color }}>✓ {feedback.text}</span>
-            </GlassCard>
-          </div>
-        )}
         <CameraPreview />
       </div>
 
-      {/* Question */}
       <div className={styles.caption}>
         <GlassCard style={{ padding: '16px clamp(16px, 3vw, 32px)', textAlign: 'center' }}>
-          <div className={styles.captionLabel}>
-            {speaking ? '▶ AI Speaking' : '⏸ Waiting for your response'}
-          </div>
-          <p className={styles.question}>
-            &quot;Tell me about a time you had to lead a cross-functional team through a difficult technical decision.&quot;
-          </p>
+          <div className={styles.captionLabel} role="status">{status}</div>
+          <p className={styles.question}>&quot;{questions[qIndex]}&quot;</p>
+          {last && (
+            <div className={styles.result}>
+              <p className={styles.transcript}><strong>You said:</strong> {last.transcript}</p>
+              {f?.score == null && f?.reason && <p className={styles.hint}>{f.reason}</p>}
+              <p className={styles.notice}>{last.notice}</p>
+            </div>
+          )}
+          {(error || recorder.error) && <p className={styles.error} role="alert">{error || recorder.error}</p>}
         </GlassCard>
       </div>
 
-      {/* Controls */}
       <div className={styles.controls}>
         <GlassCard className={styles.controlsInner}>
-          <MicWave active={micOn} />
+          <MicWave active={recording} />
           <button
             type="button"
-            onClick={() => setMicOn(x => !x)}
-            aria-pressed={micOn}
-            aria-label={micOn ? 'Mute microphone' : 'Unmute microphone'}
+            onClick={toggleMic}
+            disabled={processing || saving}
+            aria-pressed={recording}
+            aria-label={recording ? 'Stop recording' : 'Start recording your answer'}
             style={{
-              width: 48, height: 48, borderRadius: '50%', border: 'none', cursor: 'pointer',
-              background: micOn ? 'var(--accent)' : 'rgba(255,255,255,0.1)',
-              color: micOn ? 'var(--bv-s0)' : '#fff', fontSize: 18, transition: 'background-color .15s',
+              width: 48, height: 48, borderRadius: '50%', border: 'none', cursor: processing || saving ? 'not-allowed' : 'pointer',
+              background: recording ? C.error : 'var(--accent)',
+              color: 'var(--bv-s0)', fontSize: 18, opacity: processing || saving ? 0.5 : 1, transition: 'background-color .15s',
             }}
-          >🎙</button>
-          <NeonButton size="sm" onClick={() => router.push('/report')}>End Session</NeonButton>
+          >{recording ? '■' : '🎙'}</button>
+          {phase === 'reviewed' && !isLast && <NeonButton size="sm" onClick={nextQuestion}>Next question</NeonButton>}
+          <NeonButton size="sm" onClick={endSession} disabled={saving || processing}>
+            {saving ? 'Saving…' : answers.length ? (isLast && phase === 'reviewed' ? 'Finish & see report' : 'End & see report') : 'Leave'}
+          </NeonButton>
         </GlassCard>
       </div>
     </div>
   );
 };
-
-// ─── PAGE 4: MOCK INTERVIEW ───────────────────────────────────────────────────
 
 export default SoloPage;
