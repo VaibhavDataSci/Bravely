@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { C } from '../../constants/theme';
+import { C, alpha } from '../../constants/theme';
 import { GlassCard, NeonButton, Tag } from '../shared';
 
 const MOCK_ROOMS = [
@@ -52,7 +52,7 @@ const RoomCard = ({ room }) => {
         borderRadius: 16,
         border: `1px solid ${hover && !isFull ? C.cyan : C.border}`,
         transform: hover && !isFull ? 'scale(1.02) translateY(-2px)' : 'scale(1) translateY(0)',
-        boxShadow: hover && !isFull ? `0 8px 32px ${C.cyan}15` : 'none',
+        boxShadow: hover && !isFull ? `0 8px 32px ${alpha(C.cyan, '15')}` : 'none',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         cursor: isFull || joining ? 'default' : 'pointer',
         opacity: isFull ? 0.5 : 1,

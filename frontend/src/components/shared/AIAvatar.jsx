@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
-import { C } from '../../constants/theme';
+import { C, alpha } from '../../constants/theme';
 
 // ─── AVATAR COMPONENT ─────────────────────────────────────────────────────────
 const AIAvatar = ({ size = 280, speaking = false, style = {} }) => {
@@ -11,16 +11,16 @@ const AIAvatar = ({ size = 280, speaking = false, style = {} }) => {
       <div style={{
         position: 'absolute', inset: -20,
         borderRadius: '50%',
-        background: `radial-gradient(circle, ${C.glow} 0%, rgba(167, 139, 250, 0.4) 60%, transparent 80%)`,
+        background: `radial-gradient(circle, ${C.glow} 0%, color-mix(in srgb, var(--bv-brand) 40%, transparent) 60%, transparent 80%)`,
         animation: 'pulse-ring 3s ease-in-out infinite',
       }} />
       {/* Rotating arc */}
       <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', animation: 'rotate-slow 8s linear infinite' }} viewBox="0 0 280 280">
-        <circle cx="140" cy="140" r="130" fill="none" stroke={`${C.primary}30`} strokeWidth="1" strokeDasharray="4 8" />
+        <circle cx="140" cy="140" r="130" fill="none" stroke={`${alpha(C.primary, '30')}`} strokeWidth="1" strokeDasharray="4 8" />
         <circle cx="140" cy="140" r="130" fill="none" stroke={C.primary} strokeWidth="2" strokeDasharray="40 200" strokeLinecap="round" />
       </svg>
       <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', animation: 'rotate-slow 12s linear infinite reverse' }} viewBox="0 0 280 280">
-        <circle cx="140" cy="140" r="115" fill="none" stroke={`${C.secondary}40`} strokeWidth="1" strokeDasharray="2 12" />
+        <circle cx="140" cy="140" r="115" fill="none" stroke={`${alpha(C.secondary, '40')}`} strokeWidth="1" strokeDasharray="2 12" />
         <circle cx="140" cy="140" r="115" fill="none" stroke={C.secondary} strokeWidth="1.5" strokeDasharray="25 180" strokeLinecap="round" />
       </svg>
       {/* Avatar face */}
@@ -31,7 +31,7 @@ const AIAvatar = ({ size = 280, speaking = false, style = {} }) => {
         overflow: 'hidden',
         background: `radial-gradient(ellipse at 40% 30%, #1e3a5f 0%, #0d1528 50%, #07091a 100%)`,
         border: `2px solid ${C.border}`,
-        boxShadow: `inset 0 0 40px rgba(167, 139, 250, 0.1), 0 0 40px rgba(167, 139, 250, 0.15)`,
+        boxShadow: `inset 0 0 40px color-mix(in srgb, var(--bv-brand) 10%, transparent), 0 0 40px color-mix(in srgb, var(--bv-brand) 15%, transparent)`,
       }}>
         {/* Scan line */}
         <div style={{
@@ -49,9 +49,9 @@ const AIAvatar = ({ size = 280, speaking = false, style = {} }) => {
               <stop offset="100%" stopColor="#6b8fba" />
             </radialGradient>
             <radialGradient id="eyeGrad" cx="50%" cy="50%">
-              <stop offset="0%" stopColor="#c4b5fd" />
-              <stop offset="60%" stopColor="#a78bfa" />
-              <stop offset="100%" stopColor="#8b5cf6" />
+              <stop offset="0%" stopColor="var(--bv-brand-hover)" />
+              <stop offset="60%" stopColor="var(--bv-brand)" />
+              <stop offset="100%" stopColor="var(--bv-brand-solid)" />
             </radialGradient>
             <filter id="glow">
               <feGaussianBlur stdDeviation="3" result="blur" />
@@ -84,11 +84,11 @@ const AIAvatar = ({ size = 280, speaking = false, style = {} }) => {
           {/* Mouth */}
           <g style={{ animation: speaking ? 'lip-sync 0.15s steps(1) infinite' : 'none', transformOrigin: '120px 175px' }}>
             <path d="M100 172 Q120 180 140 172" stroke="rgba(80,120,160,0.8)" strokeWidth="2" fill="none" strokeLinecap="round" />
-            {speaking && <ellipse cx="120" cy="177" rx="12" ry="5" fill="#030c1a" stroke="rgba(167,139,250,0.3)" strokeWidth="1" />}
+            {speaking && <ellipse cx="120" cy="177" rx="12" ry="5" fill="#030c1a" stroke="color-mix(in srgb, var(--bv-brand) 30%, transparent)" strokeWidth="1" />}
           </g>
           {/* Cheek highlights */}
-          <ellipse cx="80" cy="135" rx="10" ry="6" fill="rgba(167,139,250,0.08)" />
-          <ellipse cx="160" cy="135" rx="10" ry="6" fill="rgba(167,139,250,0.08)" />
+          <ellipse cx="80" cy="135" rx="10" ry="6" fill="color-mix(in srgb, var(--bv-brand) 8%, transparent)" />
+          <ellipse cx="160" cy="135" rx="10" ry="6" fill="color-mix(in srgb, var(--bv-brand) 8%, transparent)" />
           {/* Tech overlays */}
           <line x1="62" y1="90" x2="42" y2="80" stroke={C.primary} strokeWidth="0.8" opacity="0.5" />
           <circle cx="42" cy="80" r="3" fill={C.primary} opacity="0.6" />

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { C } from '@/constants/theme';
+import { C, alpha } from '@/constants/theme';
 import { NeonButton, GlassCard, NeonInput } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -35,7 +35,7 @@ export default function SettingsPage() {
   return (
     <div style={{ 
       display: 'flex', flexDirection: 'column', height: '100vh', 
-      background: '#030712', overflow: 'hidden', animation: 'fade-in 0.4s ease'
+      background: 'var(--bv-s0)', overflow: 'hidden', animation: 'fade-in 0.4s ease'
     }}>
       {/* Top Navigation */}
       <div style={{
@@ -48,7 +48,7 @@ export default function SettingsPage() {
           onMouseLeave={e => e.currentTarget.style.color = C.textMuted}
           style={{
             background: 'none', border: 'none', color: C.textMuted, 
-            fontSize: 14, cursor: 'pointer', fontFamily: 'Space Grotesk',
+            fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
             display: 'flex', alignItems: 'center', gap: 8, transition: 'color 0.2s',
           }}
         >
@@ -73,7 +73,7 @@ export default function SettingsPage() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px',
                 borderRadius: 12, border: 'none', cursor: 'pointer',
-                background: activeTab === tab.id ? `linear-gradient(90deg, rgba(167, 139, 250, 0.2), transparent)` : 'transparent',
+                background: activeTab === tab.id ? `linear-gradient(90deg, color-mix(in srgb, var(--bv-brand) 20%, transparent), transparent)` : 'transparent',
                 color: activeTab === tab.id ? C.primary : C.textSecondary,
                 fontWeight: activeTab === tab.id ? 700 : 500,
                 fontSize: 15, transition: 'all 0.2s ease',
@@ -118,7 +118,7 @@ const ProfileTab = () => {
         <div style={{ 
           width: 80, height: 80, borderRadius: '50%', background: `linear-gradient(135deg, ${C.primary}, ${C.secondary})`,
           display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, color: '#fff',
-          boxShadow: `0 0 20px rgba(167, 139, 250, 0.2)`
+          boxShadow: `0 0 20px color-mix(in srgb, var(--bv-brand) 20%, transparent)`
         }}>
           👤
         </div>
@@ -167,7 +167,7 @@ const AccountTab = ({ user }) => {
         </div>
       </GlassCard>
 
-      <GlassCard style={{ padding: 32, border: `1px solid rgba(239,68,68,0.3)`, background: 'rgba(239,68,68,0.02)' }}>
+      <GlassCard style={{ padding: 32, border: `1px solid color-mix(in srgb, var(--bv-error) 30%, transparent)`, background: 'color-mix(in srgb, var(--bv-error) 2%, transparent)' }}>
         <h3 style={{ fontSize: 16, fontWeight: 700, color: C.error, margin: 0, marginBottom: 8 }}>Delete Account</h3>
         <p style={{ fontSize: 13, color: C.textSecondary, marginBottom: 20, lineHeight: 1.5 }}>
           Once you delete your account, there is no going back. All your mock interview data, peer scores, and settings will be permanently wiped.
@@ -175,7 +175,7 @@ const AccountTab = ({ user }) => {
         <NeonButton 
           variant="outline" 
           style={{ borderColor: C.error, color: C.error }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+          onMouseEnter={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--bv-error) 10%, transparent)'}
           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
           Delete Account
@@ -213,7 +213,7 @@ const SecurityTab = () => {
         </div>
         <div style={{ 
           width: 48, height: 24, borderRadius: 12, background: C.success, position: 'relative', cursor: 'pointer',
-          boxShadow: `0 0 10px ${C.success}40`
+          boxShadow: `0 0 10px ${alpha(C.success, '40')}`
         }}>
           <div style={{ 
             position: 'absolute', top: 2, right: 2, width: 20, height: 20, background: '#fff', borderRadius: '50%'
@@ -232,13 +232,13 @@ const PreferencesTab = () => {
       <GlassCard style={{ padding: 32 }}>
         <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Theme Appearance</h3>
         <div style={{ display: 'flex', gap: 16 }}>
-          <div style={{ flex: 1, padding: 20, borderRadius: 12, border: `2px solid ${C.primary}`, background: '#030712', cursor: 'pointer', textAlign: 'center' }}>
+          <div style={{ flex: 1, padding: 20, borderRadius: 12, border: `2px solid ${C.primary}`, background: 'var(--bv-s0)', cursor: 'pointer', textAlign: 'center' }}>
             <div style={{ width: 40, height: 40, borderRadius: '50%', background: C.primary, margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' }}>☾</div>
             <div style={{ fontSize: 13, fontWeight: 600, color: C.primary }}>Dark Mode</div>
           </div>
-          <div style={{ flex: 1, padding: 20, borderRadius: 12, border: `1px solid ${C.borderMid}`, background: '#f8fafc', cursor: 'pointer', textAlign: 'center', opacity: 0.5 }}>
+          <div style={{ flex: 1, padding: 20, borderRadius: 12, border: `1px solid ${C.borderMid}`, background: 'var(--bv-t1)', cursor: 'pointer', textAlign: 'center', opacity: 0.5 }}>
             <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#e2e8f0', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>☼</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#64748b' }}>Light Mode</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--bv-t3)' }}>Light Mode</div>
             <div style={{ fontSize: 10, color: C.textMuted, marginTop: 4 }}>(Coming soon)</div>
           </div>
         </div>
@@ -259,7 +259,7 @@ const PreferencesTab = () => {
             </div>
             <div style={{ 
               width: 48, height: 24, borderRadius: 12, background: C.primary, position: 'relative', cursor: 'pointer',
-              boxShadow: `0 0 10px ${C.primary}40`
+              boxShadow: `0 0 10px ${alpha(C.primary, '40')}`
             }}>
               <div style={{ 
                 position: 'absolute', top: 2, right: 2, width: 20, height: 20, background: '#fff', borderRadius: '50%'

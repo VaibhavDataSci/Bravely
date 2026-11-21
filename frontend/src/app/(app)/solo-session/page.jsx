@@ -14,7 +14,7 @@ const CameraPreview = () => {
   return (
     <div style={{ position: 'absolute', bottom: 24, right: 24, width: 200, height: 150, borderRadius: 12, overflow: 'hidden', border: `1px solid ${C.borderMid}`, background: '#000', boxShadow: `0 4px 20px rgba(0,0,0,0.5)` }}>
       <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
-      <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, fontSize: 10, color: '#fff', fontFamily: 'Space Grotesk' }}>You</div>
+      <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, fontSize: 10, color: '#fff', fontFamily: 'inherit'}}>You</div>
     </div>
   );
 };
@@ -112,7 +112,7 @@ const SoloPage = () => {
       {/* Full-screen avatar bg */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: `radial-gradient(ellipse at 60% 40%, #0f1f3d 0%, #030712 70%)`,
+        background: `radial-gradient(ellipse at 60% 40%, #0f1f3d 0%, var(--bv-s0) 70%)`,
       }} />
       <div style={{
         position: 'absolute', left: '50%', top: '50%',
@@ -169,7 +169,7 @@ const SoloPage = () => {
             width: 48, height: 48, borderRadius: '50%', border: 'none', cursor: 'pointer',
             background: micOn ? `linear-gradient(135deg, ${C.primary}, ${C.secondary})` : 'rgba(255,255,255,0.1)',
             color: '#fff', fontSize: 18,
-            boxShadow: micOn ? `0 0 24px rgba(167, 139, 250, 0.2)` : 'none',
+            boxShadow: micOn ? `0 0 24px color-mix(in srgb, var(--bv-brand) 20%, transparent)` : 'none',
             transition: 'all 0.3s',
           }}>🎙</button>
           <NeonButton size="sm" onClick={() => router.push('/report')}>End Session</NeonButton>

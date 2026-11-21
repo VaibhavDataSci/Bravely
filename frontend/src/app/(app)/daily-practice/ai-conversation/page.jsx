@@ -14,7 +14,7 @@ const StatCard = ({ icon, label, value }) => (
     gap: '12px',
     transition: 'all 0.3s ease',
     cursor: 'default',
-    background: `linear-gradient(to bottom, rgba(167, 139, 250, 0.05), transparent)`
+    background: `linear-gradient(to bottom, color-mix(in srgb, var(--bv-brand) 5%, transparent), transparent)`
   }} hoverEffect>
     <div style={{ color: C.textSecondary, fontSize: '1.2rem' }}>{icon}</div>
     <div style={{ fontSize: '0.75rem', fontWeight: 600, color: C.textSecondary, letterSpacing: '0.05em', textTransform: 'uppercase', textAlign: 'center' }}>
@@ -90,23 +90,23 @@ export default function AIConversationPage() {
       
       <style>{`
         @keyframes breathe {
-          0% { box-shadow: 0 0 15px rgba(167, 139, 250, 0.15), inset 0 0 10px rgba(167, 139, 250, 0.1); transform: scale(1); }
-          50% { box-shadow: 0 0 35px rgba(167, 139, 250, 0.3), inset 0 0 20px rgba(167, 139, 250, 0.2); transform: scale(1.03); }
-          100% { box-shadow: 0 0 15px rgba(167, 139, 250, 0.15), inset 0 0 10px rgba(167, 139, 250, 0.1); transform: scale(1); }
+          0% { box-shadow: 0 0 15px color-mix(in srgb, var(--bv-brand) 15%, transparent), inset 0 0 10px color-mix(in srgb, var(--bv-brand) 10%, transparent); transform: scale(1); }
+          50% { box-shadow: 0 0 35px color-mix(in srgb, var(--bv-brand) 30%, transparent), inset 0 0 20px color-mix(in srgb, var(--bv-brand) 20%, transparent); transform: scale(1.03); }
+          100% { box-shadow: 0 0 15px color-mix(in srgb, var(--bv-brand) 15%, transparent), inset 0 0 10px color-mix(in srgb, var(--bv-brand) 10%, transparent); transform: scale(1); }
         }
         @keyframes pulse-ring {
           0% { transform: scale(0.85); opacity: 0.6; }
           100% { transform: scale(1.5); opacity: 0; }
         }
         @keyframes mic-recording {
-          0% { box-shadow: 0 0 40px rgba(167, 139, 250, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
-          20% { box-shadow: 0 0 80px rgba(167, 139, 250, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.4); transform: scale(1.08); }
-          100% { box-shadow: 0 0 40px rgba(167, 139, 250, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
+          0% { box-shadow: 0 0 40px color-mix(in srgb, var(--bv-brand) 50%, transparent), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
+          20% { box-shadow: 0 0 80px color-mix(in srgb, var(--bv-brand) 80%, transparent), inset 0 0 30px rgba(255, 255, 255, 0.4); transform: scale(1.08); }
+          100% { box-shadow: 0 0 40px color-mix(in srgb, var(--bv-brand) 50%, transparent), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
         }
         @keyframes ai-speaking {
-          0% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
-          50% { box-shadow: 0 0 60px rgba(16, 185, 129, 0.7), inset 0 0 30px rgba(255, 255, 255, 0.4); transform: scale(1.05); }
-          100% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
+          0% { box-shadow: 0 0 30px color-mix(in srgb, var(--bv-success) 40%, transparent), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
+          50% { box-shadow: 0 0 60px color-mix(in srgb, var(--bv-success) 70%, transparent), inset 0 0 30px rgba(255, 255, 255, 0.4); transform: scale(1.05); }
+          100% { box-shadow: 0 0 30px color-mix(in srgb, var(--bv-success) 40%, transparent), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
         }
         @keyframes shimmer {
           0% { opacity: 0.4; }
@@ -118,7 +118,7 @@ export default function AIConversationPage() {
           100% { opacity: 1; transform: translateY(0); }
         }
         .mic-user { animation: mic-recording 2s ease-in-out infinite; }
-        .mic-ai { animation: ai-speaking 3s ease-in-out infinite; background: linear-gradient(135deg, #10B981, #059669) !important; }
+        .mic-ai { animation: ai-speaking 3s ease-in-out infinite; background: linear-gradient(135deg, var(--bv-success), #059669) !important; }
         .fade-in { animation: float-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
       `}</style>
 
@@ -131,7 +131,7 @@ export default function AIConversationPage() {
               <h2 style={{ fontSize: '2rem', fontWeight: 700, margin: 0 }}>On a Call</h2>
               <p style={{ color: C.textSecondary, margin: '8px 0 0 0' }}>Speak naturally. Your AI companion is listening.</p>
             </div>
-            <NeonButton variant="outline" onClick={handleEnd} style={{ borderColor: C.error || '#EF4444', color: C.error || '#EF4444' }}>
+            <NeonButton variant="outline" onClick={handleEnd} style={{ borderColor: C.error || 'var(--bv-error)', color: C.error || 'var(--bv-error)' }}>
               End Call
             </NeonButton>
           </div>
@@ -145,7 +145,7 @@ export default function AIConversationPage() {
             alignItems: 'center', 
             justifyContent: 'center', 
             minHeight: 500,
-            background: `radial-gradient(circle at center, rgba(167, 139, 250, 0.05) 0%, transparent 70%)`
+            background: `radial-gradient(circle at center, color-mix(in srgb, var(--bv-brand) 5%, transparent) 0%, transparent 70%)`
           }}>
             <div style={{ height: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: 40 }}>
               {isUserSpeaking ? (
@@ -155,8 +155,8 @@ export default function AIConversationPage() {
                 </>
               ) : (
                 <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: C.success || '#10B981', fontWeight: 600, marginBottom: 8 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.success || '#10B981', animation: 'pulse 1s infinite' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: C.success || 'var(--bv-success)', fontWeight: 600, marginBottom: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.success || 'var(--bv-success)', animation: 'pulse 1s infinite' }} />
                     AI Responding
                   </div>
                 </>
@@ -166,12 +166,12 @@ export default function AIConversationPage() {
             <div style={{ position: 'relative', width: 260, height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{
                 position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', 
-                border: `1px solid ${isAiSpeaking ? 'rgba(16, 185, 129, 0.3)' : 'rgba(167, 139, 250, 0.3)'}`,
+                border: `1px solid ${isAiSpeaking ? 'color-mix(in srgb, var(--bv-success) 30%, transparent)' : 'color-mix(in srgb, var(--bv-brand) 30%, transparent)'}`,
                 animation: 'pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite', pointerEvents: 'none'
               }} />
               <div style={{
                 position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', 
-                border: `1px solid ${isAiSpeaking ? 'rgba(16, 185, 129, 0.15)' : 'rgba(167, 139, 250, 0.15)'}`,
+                border: `1px solid ${isAiSpeaking ? 'color-mix(in srgb, var(--bv-success) 15%, transparent)' : 'color-mix(in srgb, var(--bv-brand) 15%, transparent)'}`,
                 animation: 'pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite 1.5s', pointerEvents: 'none'
               }} />
 
@@ -182,14 +182,14 @@ export default function AIConversationPage() {
                   background: `linear-gradient(135deg, ${C.primary}, ${C.secondary})`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '3.5rem', color: '#fff', transition: 'all 0.4s ease', zIndex: 10,
-                  boxShadow: `0 0 40px ${isAiSpeaking ? 'rgba(16, 185, 129, 0.5)' : 'rgba(167, 139, 250, 0.5)'}`
+                  boxShadow: `0 0 40px ${isAiSpeaking ? 'color-mix(in srgb, var(--bv-success) 50%, transparent)' : 'color-mix(in srgb, var(--bv-brand) 50%, transparent)'}`
                 }}>
                 {isAiSpeaking ? '📞' : '🎙️'}
               </div>
             </div>
 
             <div style={{ height: 60, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 40, opacity: 1, transition: 'opacity 0.4s ease' }}>
-              <MicWave active={true} color={isAiSpeaking ? '#10B981' : undefined} />
+              <MicWave active={true} color={isAiSpeaking ? 'var(--bv-success)' : undefined} />
             </div>
           </GlassCard>
         </div>
@@ -209,7 +209,7 @@ export default function AIConversationPage() {
             textAlign: 'center',
             background: `linear-gradient(135deg, rgba(30, 27, 75, 0.2), rgba(17, 24, 39, 0.4))`
           }}>
-            <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', marginBottom: 20, color: C.error || '#EF4444' }}>
+            <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'color-mix(in srgb, var(--bv-error) 10%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', marginBottom: 20, color: C.error || 'var(--bv-error)' }}>
               📞
             </div>
             
@@ -242,8 +242,8 @@ export default function AIConversationPage() {
               <StatCard icon="🧠" label="Clarity Score" value={<span>85<span style={{ fontSize: '1rem', color: C.textSecondary }}>/100</span></span>} />
               <StatCard icon="🚫" label="Filler Words" value={
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%', alignItems: 'center' }}>
-                  <span style={{ color: C.error || '#EF4444', fontSize: '1.1rem', fontWeight: 600 }}>uh - 3</span>
-                  <span style={{ color: C.warning || '#F59E0B', fontSize: '1.1rem', fontWeight: 600 }}>like - 2</span>
+                  <span style={{ color: C.error || 'var(--bv-error)', fontSize: '1.1rem', fontWeight: 600 }}>uh - 3</span>
+                  <span style={{ color: C.warning || 'var(--bv-warning)', fontSize: '1.1rem', fontWeight: 600 }}>like - 2</span>
                 </div>
               } />
             </div>
@@ -254,11 +254,11 @@ export default function AIConversationPage() {
                  <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: C.textPrimary, marginBottom: 20 }}>Detailed Analysis</h3>
                  <ProgressBar label="Vocabulary Richness" value={78} color={C.primary} />
                  <ProgressBar label="Tone Consistency" value={90} color={C.secondary} />
-                 <ProgressBar label="Listening Ratio" value={65} color="#3B82F6" />
+                 <ProgressBar label="Listening Ratio" value={65} color="var(--bv-coding)" />
                </div>
                <div style={{ flex: 1, paddingLeft: 40, borderLeft: `1px solid ${C.borderMid}` }}>
                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                   <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(167, 139, 250, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: C.primary }}>
+                   <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'color-mix(in srgb, var(--bv-brand) 10%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: C.primary }}>
                      💡
                    </div>
                    <div>
@@ -274,7 +274,7 @@ export default function AIConversationPage() {
 
             {/* CONVERSATIONAL INSIGHTS & IMPROVEMENT */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-              <GlassCard style={{ padding: '30px', borderTop: `4px solid ${C.success || '#10B981'}`, background: `linear-gradient(to bottom, rgba(16, 185, 129, 0.05), transparent)` }}>
+              <GlassCard style={{ padding: '30px', borderTop: `4px solid ${C.success || 'var(--bv-success)'}`, background: `linear-gradient(to bottom, color-mix(in srgb, var(--bv-success) 5%, transparent), transparent)` }}>
                 <div style={{ fontSize: '0.85rem', fontWeight: 600, color: C.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>Areas of Strength</div>
                 <ul style={{ margin: 0, paddingLeft: 20, color: C.textPrimary, fontSize: '1.05rem', lineHeight: 1.7 }}>
                   <li style={{ marginBottom: 12 }}>You maintained strong conversational energy.</li>
@@ -283,7 +283,7 @@ export default function AIConversationPage() {
                 </ul>
               </GlassCard>
 
-              <GlassCard style={{ padding: '30px', borderTop: `4px solid ${C.warning || '#F59E0B'}`, background: `linear-gradient(to bottom, rgba(245, 158, 11, 0.05), transparent)` }}>
+              <GlassCard style={{ padding: '30px', borderTop: `4px solid ${C.warning || 'var(--bv-warning)'}`, background: `linear-gradient(to bottom, color-mix(in srgb, var(--bv-warning) 5%, transparent), transparent)` }}>
                 <div style={{ fontSize: '0.85rem', fontWeight: 600, color: C.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>Opportunities for Growth</div>
                 <ul style={{ margin: 0, paddingLeft: 20, color: C.textPrimary, fontSize: '1.05rem', lineHeight: 1.7 }}>
                   <li style={{ marginBottom: 12 }}>Pause slightly before changing topics.</li>

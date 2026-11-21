@@ -1,55 +1,64 @@
-const fastify = require('fastify');
-const cors = require('@fastify/cors');
-const helmet = require('@fastify/helmet');
-const rateLimit = require('@fastify/rate-limit');
-const jwt = require('@fastify/jwt');
-const multipart = require('@fastify/multipart');
-const { JWT_SECRET } = require('./config/env');
+import fastify from 'fastify';
+import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
+import jwt from '@fastify/jwt';
+import multipart from '@fastify/multipart';
+import { JWT_SECRET, CORS_ORIGINS } from './config/env.js';
 
-async function buildApp() {
-  const app = fastify({ logger: true });
+import authRoutes from './modules/auth/routes.js';
+import profileRoutes from './modules/profile/routes.js';
+import dashboardRoutes from './modules/dashboard/routes.js';
+import interviewRoutes from './modules/interview/routes.js';
+import codingRoutes from './modules/coding/routes.js';
+import peersRoutes from './modules/peers/routes.js';
+import roomsRoutes from './modules/rooms/routes.js';
+import dailyRoutes from './modules/daily/routes.js';
+import reportsRoutes from './modules/reports/routes.js';
+import settingsRoutes from './modules/settings/routes.js';
 
-  // Core Middleware
+export default async function buildApp(options = {}) {
+  const app = fastify({ logger: options.logger ?? true });
+
   await app.register(helmet);
-  await app.register(cors, { origin: true });
-  await app.register(rateLimit, {
-    max: 100,
-    timeWindow: '1 minute',
+  await app.register(cors, {
+    origin: CORS_ORIGINS,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
-  await app.register(multipart, {
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB
-  });
+  await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
+  await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024 } });
+  await app.register(jwt, { secret: JWT_SECRET });
 
-  // Auth Middleware
-  await app.register(jwt, {
-    secret: JWT_SECRET,
-  });
-
-  // Decorate app with auth check
+  // Routes opt in with { onRequest: [fastify.authenticate] }. The frontend logs the
+  // user out on any 401 and shows a session-expired message for code "token_expired".
   app.decorate('authenticate', async (request, reply) => {
     try {
       await request.jwtVerify();
     } catch (err) {
-      reply.send(err);
+      const expired = err?.code === 'FST_JWT_AUTHORIZATION_TOKEN_EXPIRED';
+      return reply.code(401).send({
+        error: expired ? 'Your session has expired. Please sign in again.' : 'Authentication required',
+        code: expired ? 'token_expired' : 'unauthenticated',
+      });
     }
   });
 
-  // Register Routes
-  app.register(require('./modules/auth/routes'), { prefix: '/api/auth' });
-  app.register(require('./modules/profile/routes'), { prefix: '/api/profile' });
-  app.register(require('./modules/dashboard/routes'), { prefix: '/api/dashboard' });
-  app.register(require('./modules/interview/routes'), { prefix: '/api/interview' });
-  app.register(require('./modules/coding/routes'), { prefix: '/api/coding' });
-  app.register(require('./modules/peers/routes'), { prefix: '/api/peers' });
-  app.register(require('./modules/rooms/routes'), { prefix: '/api/rooms' });
-  app.register(require('./modules/daily/routes'), { prefix: '/api/daily' });
-  app.register(require('./modules/reports/routes'), { prefix: '/api/reports' });
-  app.register(require('./modules/settings/routes'), { prefix: '/api/settings' });
+  app.get('/health', async () => ({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  }));
 
-  // Basic Health Check
-  app.get('/health', async () => ({ status: 'ok' }));
+  app.register(authRoutes, { prefix: '/api/auth' });
+  app.register(profileRoutes, { prefix: '/api/profile' });
+  app.register(dashboardRoutes, { prefix: '/api/dashboard' });
+  app.register(interviewRoutes, { prefix: '/api/interview' });
+  app.register(codingRoutes, { prefix: '/api/coding' });
+  app.register(peersRoutes, { prefix: '/api/peers' });
+  app.register(roomsRoutes, { prefix: '/api/rooms' });
+  app.register(dailyRoutes, { prefix: '/api/daily' });
+  app.register(reportsRoutes, { prefix: '/api/reports' });
+  app.register(settingsRoutes, { prefix: '/api/settings' });
 
   return app;
 }
-
-module.exports = buildApp;

@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { C } from '@/constants/theme';
+import { C, alpha } from '@/constants/theme';
 import { NeonButton, ScoreRing, Tag } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -114,8 +114,8 @@ const ReportPage = () => {
       {/* ═══ SCORE HERO ═══ */}
       <div style={{
         padding: '28px 32px', borderRadius: 14, marginBottom: 24,
-        background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(6,182,212,0.04))',
-        border: '1px solid rgba(139,92,246,0.1)',
+        background: 'linear-gradient(135deg, color-mix(in srgb, var(--bv-brand-solid) 6%, transparent), rgba(6,182,212,0.04))',
+        border: '1px solid color-mix(in srgb, var(--bv-brand-solid) 10%, transparent)',
         display: 'flex', alignItems: 'center', gap: 40,
       }}>
         {/* Big Score */}
@@ -197,14 +197,14 @@ const ReportPage = () => {
             {feedback.map((f, i) => (
               <div key={i} style={{
                 padding: '12px 14px', borderRadius: 10,
-                background: f.type === 'positive' ? 'rgba(34,197,94,0.04)' : 'rgba(245,158,11,0.04)',
-                border: `1px solid ${f.type === 'positive' ? 'rgba(34,197,94,0.12)' : 'rgba(245,158,11,0.12)'}`,
+                background: f.type === 'positive' ? 'color-mix(in srgb, var(--bv-success) 4%, transparent)' : 'color-mix(in srgb, var(--bv-warning) 4%, transparent)',
+                border: `1px solid ${f.type === 'positive' ? 'color-mix(in srgb, var(--bv-success) 12%, transparent)' : 'color-mix(in srgb, var(--bv-warning) 12%, transparent)'}`,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   <span style={{
                     width: 20, height: 20, borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 10, fontWeight: 700,
-                    background: f.type === 'positive' ? 'rgba(34,197,94,0.12)' : 'rgba(245,158,11,0.12)',
+                    background: f.type === 'positive' ? 'color-mix(in srgb, var(--bv-success) 12%, transparent)' : 'color-mix(in srgb, var(--bv-warning) 12%, transparent)',
                     color: f.type === 'positive' ? C.success : C.warning,
                   }}>{f.icon}</span>
                   <span style={{ fontSize: 13, fontWeight: 600, color: f.type === 'positive' ? C.success : C.warning }}>{f.title}</span>
@@ -222,8 +222,8 @@ const ReportPage = () => {
         {/* Coding Round */}
         <div style={{
           padding: '20px', borderRadius: 12,
-          background: 'linear-gradient(135deg, rgba(245,158,11,0.03), rgba(6,182,212,0.02))',
-          border: '1px solid rgba(245,158,11,0.1)',
+          background: 'linear-gradient(135deg, color-mix(in srgb, var(--bv-warning) 3%, transparent), rgba(6,182,212,0.02))',
+          border: '1px solid color-mix(in srgb, var(--bv-warning) 10%, transparent)',
         }}>
           <div style={sectionLabel}>Coding Round — Two Sum</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
@@ -248,7 +248,7 @@ const ReportPage = () => {
             {['Hash Map', 'O(n) Time', 'Single Pass', 'Optimal'].map(t => (
               <span key={t} style={{
                 padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600,
-                background: `${C.warning}12`, color: C.warning, border: `1px solid ${C.warning}20`,
+                background: `${alpha(C.warning, '12')}`, color: C.warning, border: `1px solid ${alpha(C.warning, '20')}`,
               }}>{t}</span>
             ))}
           </div>
@@ -266,8 +266,8 @@ const ReportPage = () => {
               return (
                 <div key={q} onClick={() => setExpandedQ(isOpen ? null : q)} style={{
                   padding: '10px 14px', borderRadius: 8, cursor: 'pointer', transition: 'all 0.2s',
-                  background: isOpen ? 'rgba(139,92,246,0.04)' : 'rgba(255,255,255,0.01)',
-                  border: `1px solid ${isOpen ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.04)'}`,
+                  background: isOpen ? 'color-mix(in srgb, var(--bv-brand-solid) 4%, transparent)' : 'rgba(255,255,255,0.01)',
+                  border: `1px solid ${isOpen ? 'color-mix(in srgb, var(--bv-brand-solid) 12%, transparent)' : 'rgba(255,255,255,0.04)'}`,
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: C.textMuted, width: 22 }}>{q}</span>

@@ -22,7 +22,7 @@ const GroupPage = () => {
   ];
 
   return (
-    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 320px', height: '100vh', overflow: 'hidden', background: '#030712' }}>
+    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 320px', height: '100vh', overflow: 'hidden', background: 'var(--bv-s0)' }}>
       
       {/* Video Call main area */}
       <VideoCall roomId={roomId || 'group-default'} userId={userId} mode="group" onEndCall={() => router.push('/report')} />

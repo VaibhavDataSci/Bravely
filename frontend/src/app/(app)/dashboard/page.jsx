@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { C } from '@/constants/theme';
 import { GlassCard, NeonButton } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
+import { MOCK_STREAK_DAYS } from '@/mocks/user';
 import styles from './Dashboard.module.css';
 
 export default function DashboardPage(){
@@ -125,7 +126,7 @@ export default function DashboardPage(){
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <div>
                 <div style={{fontSize:12,color:'rgba(255,255,255,0.78)',textTransform:'uppercase',letterSpacing:'0.06em'}}>Streak</div>
-                <div className={styles.streakValue}>14 Days</div>
+                <div className={styles.streakValue}>{MOCK_STREAK_DAYS} Days</div>
                 <div className={styles.streakLabel}>Daily speaking momentum is building.</div>
               </div>
               <div className={`${styles.streakRing} ${styles.streakPulse}`} aria-hidden>
@@ -159,8 +160,8 @@ export default function DashboardPage(){
             </div>
             <svg className={styles.performanceSVG} viewBox="0 0 900 440" preserveAspectRatio="xMinYMin meet">
               <defs>
-                <linearGradient id="gconf" x1="0" x2="1"><stop offset="0%" stopColor="#B794F4"/><stop offset="100%" stopColor="#8B5CF6"/></linearGradient>
-                <linearGradient id="areaGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#B794F4" stopOpacity="0.22"/><stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.02"/></linearGradient>
+                <linearGradient id="gconf" x1="0" x2="1"><stop offset="0%" stopColor="#B794F4"/><stop offset="100%" stopColor="var(--bv-brand-solid)"/></linearGradient>
+                <linearGradient id="areaGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#B794F4" stopOpacity="0.22"/><stop offset="100%" stopColor="var(--bv-brand-solid)" stopOpacity="0.02"/></linearGradient>
               </defs>
               <path d={perfAreaPath} fill="url(#areaGrad)" className={styles.areaFill} />
               <path d={perfStrokePath} fill="none" stroke="url(#gconf)" strokeWidth="4.5" className={styles.perfLine} strokeLinecap="round" strokeLinejoin="round" />
@@ -198,7 +199,7 @@ export default function DashboardPage(){
             <div className={styles.sgGrid}>
               {/* Strengths */}
               <div className={styles.sgCard}>
-                <div className={styles.sgLabel}><span className={styles.sgDot} style={{background:'#4ADE80'}} />Your Strengths</div>
+                <div className={styles.sgLabel}><span className={styles.sgDot} style={{background:'var(--bv-success)'}} />Your Strengths</div>
                 <div className={styles.sgList}>
                   {strengths.map((s,i) => (
                     <div key={i} className={styles.sgItem}>
@@ -214,7 +215,7 @@ export default function DashboardPage(){
               </div>
               {/* Growth Areas */}
               <div className={styles.sgCard}>
-                <div className={styles.sgLabel}><span className={styles.sgDot} style={{background:'#A78BFA'}} />Areas to Improve</div>
+                <div className={styles.sgLabel}><span className={styles.sgDot} style={{background:'var(--bv-brand)'}} />Areas to Improve</div>
                 <div className={styles.sgList}>
                   {growthAreas.map((g,i) => (
                     <div key={i} className={styles.sgItem}>
@@ -246,7 +247,7 @@ export default function DashboardPage(){
                 <circle cx="200" cy="160" r="108" fill="rgba(255,255,255,0.00)" stroke="rgba(255,255,255,0.025)" />
                 <circle cx="200" cy="160" r="72" fill="none" stroke="rgba(255,255,255,0.015)" />
                 <circle cx="200" cy="160" r="36" fill="none" stroke="rgba(255,255,255,0.01)" />
-                <polygon points={radarPoints} fill="rgba(139,92,246,0.1)" stroke="rgba(167,139,250,0.35)" strokeWidth="2.5" />
+                <polygon points={radarPoints} fill="color-mix(in srgb, var(--bv-brand-solid) 10%, transparent)" stroke="color-mix(in srgb, var(--bv-brand) 35%, transparent)" strokeWidth="2.5" />
                 {radarPoints.split(' ').map((pt, i) => {
                   const [x, y] = pt.split(',');
                   return <circle key={i} cx={x} cy={y} r={5} fill="#CDBBFF" />
@@ -314,7 +315,7 @@ export default function DashboardPage(){
           {sessions.map((s,i)=> (
             <div key={i} className={styles.sessionCardPremium} onClick={() => router.push('/report')}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
-                <div style={{width:44,height:44,borderRadius:10,background:'linear-gradient(135deg,#8B5CF6,#A78BFA)',display:'grid',placeItems:'center',fontWeight:800,fontSize:14,color:'#fff'}}>{s.title.split(' ')[0][0]}</div>
+                <div style={{width:44,height:44,borderRadius:10,background:'linear-gradient(135deg,var(--bv-brand-solid),var(--bv-brand))',display:'grid',placeItems:'center',fontWeight:800,fontSize:14,color:'#fff'}}>{s.title.split(' ')[0][0]}</div>
                 <div>
                   <div style={{fontWeight:700,fontSize:13}}>{s.title}</div>
                   <div className={styles.smallMuted}>{s.date} · {s.dur}</div>

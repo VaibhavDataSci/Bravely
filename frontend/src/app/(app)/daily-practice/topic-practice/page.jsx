@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { GlassCard, NeonButton, MicWave, Tag } from '@/components/shared';
-import { C } from '@/constants/theme';
+import { C, alpha } from '@/constants/theme';
 
 const StatCard = ({ icon, label, value }) => (
   <GlassCard style={{ 
@@ -37,19 +37,19 @@ const StarPill = ({ label, status }) => {
     border = C.primary;
     icon = '⚡';
   } else if (status === 'detected') {
-    color = C.success || '#10B981';
-    border = C.success || '#10B981';
-    bg = 'rgba(16, 185, 129, 0.1)';
+    color = C.success || 'var(--bv-success)';
+    border = C.success || 'var(--bv-success)';
+    bg = 'color-mix(in srgb, var(--bv-success) 10%, transparent)';
     icon = '✓';
   } else if (status === 'partial') {
-    color = C.warning || '#F59E0B';
-    border = C.warning || '#F59E0B';
-    bg = 'rgba(245, 158, 11, 0.1)';
+    color = C.warning || 'var(--bv-warning)';
+    border = C.warning || 'var(--bv-warning)';
+    bg = 'color-mix(in srgb, var(--bv-warning) 10%, transparent)';
     icon = '◐';
   } else if (status === 'missing') {
-    color = C.error || '#EF4444';
-    border = C.error || '#EF4444';
-    bg = 'rgba(239, 68, 68, 0.1)';
+    color = C.error || 'var(--bv-error)';
+    border = C.error || 'var(--bv-error)';
+    bg = 'color-mix(in srgb, var(--bv-error) 10%, transparent)';
     icon = '✕';
   }
 
@@ -140,18 +140,18 @@ export default function TopicPracticePage() {
       
       <style>{`
         @keyframes breathe {
-          0% { box-shadow: 0 0 15px rgba(167, 139, 250, 0.15), inset 0 0 10px rgba(167, 139, 250, 0.1); transform: scale(1); }
-          50% { box-shadow: 0 0 35px rgba(167, 139, 250, 0.3), inset 0 0 20px rgba(167, 139, 250, 0.2); transform: scale(1.03); }
-          100% { box-shadow: 0 0 15px rgba(167, 139, 250, 0.15), inset 0 0 10px rgba(167, 139, 250, 0.1); transform: scale(1); }
+          0% { box-shadow: 0 0 15px color-mix(in srgb, var(--bv-brand) 15%, transparent), inset 0 0 10px color-mix(in srgb, var(--bv-brand) 10%, transparent); transform: scale(1); }
+          50% { box-shadow: 0 0 35px color-mix(in srgb, var(--bv-brand) 30%, transparent), inset 0 0 20px color-mix(in srgb, var(--bv-brand) 20%, transparent); transform: scale(1.03); }
+          100% { box-shadow: 0 0 15px color-mix(in srgb, var(--bv-brand) 15%, transparent), inset 0 0 10px color-mix(in srgb, var(--bv-brand) 10%, transparent); transform: scale(1); }
         }
         @keyframes pulse-ring {
           0% { transform: scale(0.85); opacity: 0.6; }
           100% { transform: scale(1.5); opacity: 0; }
         }
         @keyframes recording-pulse {
-          0% { box-shadow: 0 0 40px rgba(167, 139, 250, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
-          20% { box-shadow: 0 0 80px rgba(167, 139, 250, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.4); transform: scale(1.08); }
-          100% { box-shadow: 0 0 40px rgba(167, 139, 250, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
+          0% { box-shadow: 0 0 40px color-mix(in srgb, var(--bv-brand) 50%, transparent), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
+          20% { box-shadow: 0 0 80px color-mix(in srgb, var(--bv-brand) 80%, transparent), inset 0 0 30px rgba(255, 255, 255, 0.4); transform: scale(1.08); }
+          100% { box-shadow: 0 0 40px color-mix(in srgb, var(--bv-brand) 50%, transparent), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
         }
         @keyframes shimmer {
           0% { opacity: 0.4; }
@@ -181,10 +181,10 @@ export default function TopicPracticePage() {
           alignItems: 'center', 
           justifyContent: 'center', 
           minHeight: 400,
-          background: `radial-gradient(circle at center, rgba(167, 139, 250, 0.05) 0%, transparent 70%)`
+          background: `radial-gradient(circle at center, color-mix(in srgb, var(--bv-brand) 5%, transparent) 0%, transparent 70%)`
         }}>
           <div style={{ 
-             width: 100, height: 100, borderRadius: '50%', background: 'rgba(167, 139, 250, 0.1)', 
+             width: 100, height: 100, borderRadius: '50%', background: 'color-mix(in srgb, var(--bv-brand) 10%, transparent)', 
              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', marginBottom: 24,
              animation: topicState === 'generating' ? 'shimmer 1.5s infinite' : 'none'
           }}>
@@ -212,13 +212,13 @@ export default function TopicPracticePage() {
             position: 'relative', 
             overflow: 'hidden',
             background: `linear-gradient(135deg, rgba(30, 27, 75, 0.6), rgba(17, 24, 39, 0.8))`,
-            border: `1px solid ${C.primary}40`,
-            boxShadow: `0 10px 40px ${C.primary}20`
+            border: `1px solid ${alpha(C.primary, '40')}`,
+            boxShadow: `0 10px 40px ${alpha(C.primary, '20')}`
           }}>
             <div style={{ position: 'absolute', top: -100, right: -50, width: 300, height: 300, background: C.primary, opacity: 0.1, filter: 'blur(100px)', borderRadius: '50%' }} />
             
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              <div style={{ padding: '4px 12px', background: 'rgba(167, 139, 250, 0.2)', borderRadius: 20, color: C.primary, fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              <div style={{ padding: '4px 12px', background: 'color-mix(in srgb, var(--bv-brand) 20%, transparent)', borderRadius: 20, color: C.primary, fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                 Leadership & Strategy
               </div>
               <div style={{ fontSize: '0.85rem', color: C.textSecondary }}>⭐ Daily Challenge</div>
@@ -240,7 +240,7 @@ export default function TopicPracticePage() {
                 flexDirection: 'column', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
-                background: `radial-gradient(circle at center, rgba(167, 139, 250, 0.05) 0%, transparent 70%)`
+                background: `radial-gradient(circle at center, color-mix(in srgb, var(--bv-brand) 5%, transparent) 0%, transparent 70%)`
               }}>
                 <div style={{ height: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
                   {isIdle && (
@@ -251,10 +251,10 @@ export default function TopicPracticePage() {
                   )}
                   {isRecording && (
                     <div style={{ 
-                      fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em', color: C.error || '#EF4444', 
+                      fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em', color: C.error || 'var(--bv-error)', 
                       textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8, animation: 'shimmer 1.5s infinite'
                     }}>
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.error || '#EF4444' }} /> Live Recording
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.error || 'var(--bv-error)' }} /> Live Recording
                     </div>
                   )}
                   {(isProcessing || isDone) && (
@@ -268,11 +268,11 @@ export default function TopicPracticePage() {
                   {(isIdle || isRecording) && (
                     <>
                       <div style={{
-                        position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', border: `1px solid rgba(167, 139, 250, 0.3)`,
+                        position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', border: `1px solid color-mix(in srgb, var(--bv-brand) 30%, transparent)`,
                         animation: 'pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite', pointerEvents: 'none'
                       }} />
                       <div style={{
-                        position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', border: `1px solid rgba(167, 139, 250, 0.15)`,
+                        position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', border: `1px solid color-mix(in srgb, var(--bv-brand) 15%, transparent)`,
                         animation: 'pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite 1.5s', pointerEvents: 'none'
                       }} />
                     </>
@@ -282,7 +282,7 @@ export default function TopicPracticePage() {
                     className={isRecording ? 'mic-recording' : isIdle ? 'mic-idle' : 'mic-processing'}
                     style={{ 
                       width: 130, height: 130, borderRadius: '50%', 
-                      background: isIdle ? `linear-gradient(135deg, rgba(167, 139, 250, 0.7), rgba(139, 92, 246, 0.5))` : `linear-gradient(135deg, ${C.primary}, ${C.secondary})`,
+                      background: isIdle ? `linear-gradient(135deg, color-mix(in srgb, var(--bv-brand) 70%, transparent), color-mix(in srgb, var(--bv-brand-solid) 50%, transparent))` : `linear-gradient(135deg, ${C.primary}, ${C.secondary})`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (isIdle || isRecording) ? 'pointer' : 'default',
                       fontSize: '3rem', color: '#fff', transition: 'all 0.4s ease', zIndex: 10
                     }} onClick={(isIdle || isRecording) ? handleMicClick : undefined}>
@@ -339,12 +339,12 @@ export default function TopicPracticePage() {
 
               {/* IN-FLOW AI COACH MENTOR */}
               {showFeedback && (
-                <GlassCard style={{ padding: '24px 30px', display: 'flex', gap: 20, alignItems: 'flex-start', border: `1px solid ${C.primary}`, background: 'rgba(167, 139, 250, 0.05)' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(167, 139, 250, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary, flexShrink: 0 }}>⚡</div>
+                <GlassCard style={{ padding: '24px 30px', display: 'flex', gap: 20, alignItems: 'flex-start', border: `1px solid ${C.primary}`, background: 'color-mix(in srgb, var(--bv-brand) 5%, transparent)' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: 'color-mix(in srgb, var(--bv-brand) 15%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.primary, flexShrink: 0 }}>⚡</div>
                   <div>
                     <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.primary, letterSpacing: '0.05em', marginBottom: 8, textTransform: 'uppercase' }}>AI Coach Insight</div>
                     <div style={{ color: C.textPrimary, fontSize: '0.95rem', lineHeight: 1.6 }}>
-                      You explain your <strong style={{ color: C.primary }}>Action</strong> clearly, but entirely skip the measurable <strong style={{ color: C.error || '#EF4444' }}>Result</strong>. Interviewers need to hear the business impact of your pivot.
+                      You explain your <strong style={{ color: C.primary }}>Action</strong> clearly, but entirely skip the measurable <strong style={{ color: C.error || 'var(--bv-error)' }}>Result</strong>. Interviewers need to hear the business impact of your pivot.
                     </div>
                   </div>
                 </GlassCard>
@@ -360,7 +360,7 @@ export default function TopicPracticePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20 }}>
                   <StatCard icon="⭐" label={<span>STAR<br/>Score</span>} value={<span>45<span style={{ fontSize: '1rem', color: C.textSecondary }}>/100</span></span>} />
                   <StatCard icon="🧠" label="Tone" value={<span style={{ fontSize: '1.1rem', color: C.textPrimary }}>Analytical</span>} />
-                  <StatCard icon="🚫" label={<span>Filler<br/>Words</span>} value={<span style={{ color: C.success || '#10b981' }}>0</span>} />
+                  <StatCard icon="🚫" label={<span>Filler<br/>Words</span>} value={<span style={{ color: C.success || 'var(--bv-success)' }}>0</span>} />
                   <StatCard icon="⏱️" label={<span>Pace<br/>(WPM)</span>} value="130" />
                 </div>
               </div>
@@ -368,13 +368,13 @@ export default function TopicPracticePage() {
               <div>
                 <h2 style={{ fontSize: '1.4rem', fontWeight: 600, marginBottom: 20 }}>Speaking Pattern Insights</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                  <GlassCard style={{ padding: '24px', borderLeft: `4px solid ${C.success || '#10B981'}` }}>
+                  <GlassCard style={{ padding: '24px', borderLeft: `4px solid ${C.success || 'var(--bv-success)'}` }}>
                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: C.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Strongest Trait</div>
                      <h4 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: 8, color: C.textPrimary }}>Action Bias</h4>
                      <p style={{ color: C.textSecondary, fontSize: '0.95rem', lineHeight: 1.6 }}>You strongly highlighted your personal action and decision-making logic, showing ownership of the pivot.</p>
                   </GlassCard>
                   
-                  <GlassCard style={{ padding: '24px', borderLeft: `4px solid ${C.error || '#EF4444'}` }}>
+                  <GlassCard style={{ padding: '24px', borderLeft: `4px solid ${C.error || 'var(--bv-error)'}` }}>
                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: C.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Area for Growth</div>
                      <h4 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: 8, color: C.textPrimary }}>Missing Outcomes</h4>
                      <p style={{ color: C.textSecondary, fontSize: '0.95rem', lineHeight: 1.6 }}>Your story ended abruptly. Always conclude with data-driven impact. Try: &quot;As a result, we hit deadline and saved 20% budget.&quot;</p>

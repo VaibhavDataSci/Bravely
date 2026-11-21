@@ -164,13 +164,13 @@ export default function CodingSession({ config, resume }) {
     ])), 1500);
   };
 
-  if (!prob) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#080b12', color: '#64748b' }}>Loading...</div>;
+  if (!prob) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#080b12', color: 'var(--bv-t3)' }}>Loading...</div>;
 
   const stateMap = {
-    intro: { label: 'Introducing...', color: '#a78bfa' }, waiting: { label: 'Observing your code', color: '#64748b' },
-    reviewing: { label: 'Running Tests...', color: '#f59e0b' }, evaluating: { label: 'Evaluating...', color: '#60a5fa' },
-    impressed: { label: 'Excellent!', color: '#22c55e' }, hinting: { label: 'Hint Available', color: '#f59e0b' },
-    followup: { label: 'Next Ready', color: '#a78bfa' }, complete: { label: 'Complete', color: '#22c55e' },
+    intro: { label: 'Introducing...', color: 'var(--bv-brand)' }, waiting: { label: 'Observing your code', color: 'var(--bv-t3)' },
+    reviewing: { label: 'Running Tests...', color: 'var(--bv-warning)' }, evaluating: { label: 'Evaluating...', color: '#60a5fa' },
+    impressed: { label: 'Excellent!', color: 'var(--bv-success)' }, hinting: { label: 'Hint Available', color: 'var(--bv-warning)' },
+    followup: { label: 'Next Ready', color: 'var(--bv-brand)' }, complete: { label: 'Complete', color: 'var(--bv-success)' },
   };
   const ai = stateMap[aiState] || stateMap.waiting;
   const lines = (code || '').split('\n').length;
@@ -197,8 +197,8 @@ export default function CodingSession({ config, resume }) {
               <span style={{
                 width: 22, height: 22, borderRadius: 5, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 9, fontWeight: 800, letterSpacing: '-0.02em',
-                background: `${LANG_COLORS[lang] || '#a78bfa'}20`, color: LANG_COLORS[lang] || '#a78bfa',
-                border: `1px solid ${LANG_COLORS[lang] || '#a78bfa'}30`,
+                background: `${LANG_COLORS[lang] || 'var(--bv-brand)'}20`, color: LANG_COLORS[lang] || 'var(--bv-brand)',
+                border: `1px solid ${LANG_COLORS[lang] || 'var(--bv-brand)'}30`,
               }}>{currentLang.icon}</span>
               {currentLang.name}
               <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', marginLeft: 2 }}>{langOpen ? '▲' : '▼'}</span>
@@ -209,7 +209,7 @@ export default function CodingSession({ config, resume }) {
               <div style={{
                 position: 'absolute', top: 'calc(100% + 6px)', right: 0, width: 260, maxHeight: 340,
                 borderRadius: 12, overflow: 'hidden', zIndex: 100,
-                background: 'rgba(12,15,28,0.98)', border: '1px solid rgba(139,92,246,0.15)',
+                background: 'rgba(12,15,28,0.98)', border: '1px solid color-mix(in srgb, var(--bv-brand-solid) 15%, transparent)',
                 backdropFilter: 'blur(20px)', boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
               }}>
                 {/* Search */}
@@ -241,7 +241,7 @@ export default function CodingSession({ config, resume }) {
                       onClick={() => { handleLanguageChange(l.id); setLangOpen(false); }}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '8px 14px',
-                        background: lang === l.id ? 'rgba(139,92,246,0.08)' : 'transparent',
+                        background: lang === l.id ? 'color-mix(in srgb, var(--bv-brand-solid) 8%, transparent)' : 'transparent',
                         border: 'none', cursor: 'pointer', transition: 'background 0.15s',
                         fontFamily: 'inherit',
                       }}
@@ -254,10 +254,10 @@ export default function CodingSession({ config, resume }) {
                         border: `1px solid ${LANG_COLORS[l.id] || '#888'}25`,
                       }}>{l.icon}</span>
                       <div style={{ flex: 1, textAlign: 'left' }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: lang === l.id ? '#a78bfa' : '#e2e8f0' }}>{l.name}</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: lang === l.id ? 'var(--bv-brand)' : '#e2e8f0' }}>{l.name}</div>
                         <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', fontFamily: 'JetBrains Mono' }}>{l.ext}</div>
                       </div>
-                      {lang === l.id && <span style={{ fontSize: 10, color: '#a78bfa' }}>✓</span>}
+                      {lang === l.id && <span style={{ fontSize: 10, color: 'var(--bv-brand)' }}>✓</span>}
                     </button>
                   ))}
                 </div>
@@ -317,7 +317,7 @@ export default function CodingSession({ config, resume }) {
               )}
               {/* Follow-up */}
               <div style={{ marginTop: 20, padding: '12px 14px', borderRadius: 8, background: 'rgba(6,182,212,0.04)', border: '1px solid rgba(6,182,212,0.1)' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Follow-up</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--bv-daily)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Follow-up</div>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>Can you solve this in O(1) extra space? What if the input is sorted?</div>
               </div>
             </>}
@@ -345,7 +345,7 @@ export default function CodingSession({ config, resume }) {
                     </div>
                     <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
                       <div>Input: {tc.input}</div>
-                      <div>Expected: <span style={{ color: '#4ade80' }}>{tc.expected}</span></div>
+                      <div>Expected: <span style={{ color: 'var(--bv-success)' }}>{tc.expected}</span></div>
                     </div>
                   </div>
                 );
@@ -360,7 +360,7 @@ export default function CodingSession({ config, resume }) {
           <div className={s.editorFileName}>
             <div className={s.fileDot} />
             <span>solution{fileExt}</span>
-            <span style={{ color: '#f59e0b', marginLeft: 2 }}>●</span>
+            <span style={{ color: 'var(--bv-warning)', marginLeft: 2 }}>●</span>
           </div>
 
           {/* Editor */}
@@ -369,7 +369,7 @@ export default function CodingSession({ config, resume }) {
               {Array.from({ length: lines }, (_, i) => <div key={i}>{i + 1}</div>)}
             </div>
             <textarea ref={edRef} value={code} onChange={e => setCode(e.target.value)} onKeyDown={handleKey}
-              spellCheck={false} className={s.codeArea} style={{ caretColor: '#a78bfa' }} />
+              spellCheck={false} className={s.codeArea} style={{ caretColor: 'var(--bv-brand)' }} />
             <div className={s.editorGlow} />
           </div>
 
@@ -377,7 +377,7 @@ export default function CodingSession({ config, resume }) {
           <div className={s.consoleBar} onClick={() => setConOpen(x => !x)}>
             <span className={s.consoleBarLabel}>
               <span>⌘</span> Console
-              {output.length > 0 && <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 4, background: 'rgba(139,92,246,0.12)', color: '#a78bfa' }}>{output.length}</span>}
+              {output.length > 0 && <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 4, background: 'color-mix(in srgb, var(--bv-brand-solid) 12%, transparent)', color: 'var(--bv-brand)' }}>{output.length}</span>}
             </span>
             <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>{conOpen ? '▼' : '▲'}</span>
           </div>
@@ -393,7 +393,7 @@ export default function CodingSession({ config, resume }) {
                 ? <div className={s.consoleEmpty}>Run your code to see output...</div>
                 : output.map((l, i) => (
                   <div key={i} className={s.consoleLine} style={{
-                    color: l.type === 'success' ? '#4ade80' : l.type === 'error' ? '#f87171' : l.type === 'warning' ? '#fbbf24' : 'rgba(255,255,255,0.5)'
+                    color: l.type === 'success' ? 'var(--bv-success)' : l.type === 'error' ? 'var(--bv-error)' : l.type === 'warning' ? 'var(--bv-warning)' : 'rgba(255,255,255,0.5)'
                   }}>{l.text}</div>
                 ))
               }
@@ -445,7 +445,7 @@ export default function CodingSession({ config, resume }) {
               <div style={{ padding: 10 }}>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>Submit your solution first to see the review.</div>
                 {done && <>
-                  <div style={{ fontSize: 11, color: '#a78bfa', fontWeight: 700, marginBottom: 6 }}>CODE REVIEW</div>
+                  <div style={{ fontSize: 11, color: 'var(--bv-brand)', fontWeight: 700, marginBottom: 6 }}>CODE REVIEW</div>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>Your solution demonstrates understanding of the core concept. Consider edge cases and input validation for production code.</div>
                 </>}
               </div>
@@ -463,7 +463,7 @@ export default function CodingSession({ config, resume }) {
                 ))}
               </div>
               {done && idx < problems.length - 1 && (
-                <button onClick={nextProblem} style={{ marginTop: 8, width: '100%', padding: '8px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', border: 'none' }}>
+                <button onClick={nextProblem} style={{ marginTop: 8, width: '100%', padding: '8px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', background: 'linear-gradient(135deg, var(--bv-brand-solid), #6d28d9)', color: '#fff', border: 'none' }}>
                   Next Problem →
                 </button>
               )}

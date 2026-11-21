@@ -1,4 +1,4 @@
-module.exports = async function (fastify, opts) {
+export default async function (fastify, opts) {
   fastify.addHook('onRequest', fastify.authenticate);
 
   fastify.post('/create', async (request, reply) => {

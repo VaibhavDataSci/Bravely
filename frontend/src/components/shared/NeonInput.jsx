@@ -10,11 +10,11 @@ const NeonInput = ({ label, type = 'text', placeholder, value, onChange, icon })
       {label && <label style={{ fontSize: 12, color: C.textSecondary, fontWeight: 600, letterSpacing: '0.04em' }}>{label}</label>}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 10,
-        background: focused ? 'rgba(167, 139, 250, 0.06)' : C.bgCard,
+        background: focused ? 'color-mix(in srgb, var(--bv-brand) 6%, transparent)' : C.bgCard,
         border: `1px solid ${focused ? C.primary : C.borderMid}`,
         borderRadius: 10, padding: '12px 14px',
         transition: 'all 0.25s',
-        boxShadow: focused ? `0 0 20px rgba(167, 139, 250, 0.2), inset 0 0 10px rgba(167, 139, 250, 0.04)` : 'none',
+        boxShadow: focused ? `0 0 20px color-mix(in srgb, var(--bv-brand) 20%, transparent), inset 0 0 10px color-mix(in srgb, var(--bv-brand) 4%, transparent)` : 'none',
       }}>
         {icon && <span style={{ fontSize: 16, opacity: 0.6, color: focused ? C.primary : C.textSecondary }}>{icon}</span>}
         <input

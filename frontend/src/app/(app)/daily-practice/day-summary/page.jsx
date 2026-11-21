@@ -69,22 +69,22 @@ export default function DaySummaryPage() {
   const isDone = recState === 'done';
 
   return (
-    <div style={{ padding: '32px 32px 60px', maxWidth: 1100, margin: '0 auto', color: C.textPrimary, display: 'flex', flexDirection: 'column', gap: 30 }}>
+    <div style={{ padding: 'clamp(16px, 4vw, 32px) clamp(16px, 4vw, 32px) 60px', maxWidth: 1100, margin: '0 auto', color: C.textPrimary, display: 'flex', flexDirection: 'column', gap: 30 }}>
       
       <style>{`
         @keyframes breathe {
-          0% { box-shadow: 0 0 15px rgba(167, 139, 250, 0.15), inset 0 0 10px rgba(167, 139, 250, 0.1); transform: scale(1); }
-          50% { box-shadow: 0 0 35px rgba(167, 139, 250, 0.3), inset 0 0 20px rgba(167, 139, 250, 0.2); transform: scale(1.03); }
-          100% { box-shadow: 0 0 15px rgba(167, 139, 250, 0.15), inset 0 0 10px rgba(167, 139, 250, 0.1); transform: scale(1); }
+          0% { box-shadow: 0 0 15px color-mix(in srgb, var(--bv-brand) 15%, transparent), inset 0 0 10px color-mix(in srgb, var(--bv-brand) 10%, transparent); transform: scale(1); }
+          50% { box-shadow: 0 0 35px color-mix(in srgb, var(--bv-brand) 30%, transparent), inset 0 0 20px color-mix(in srgb, var(--bv-brand) 20%, transparent); transform: scale(1.03); }
+          100% { box-shadow: 0 0 15px color-mix(in srgb, var(--bv-brand) 15%, transparent), inset 0 0 10px color-mix(in srgb, var(--bv-brand) 10%, transparent); transform: scale(1); }
         }
         @keyframes pulse-ring {
           0% { transform: scale(0.85); opacity: 0.6; }
           100% { transform: scale(1.5); opacity: 0; }
         }
         @keyframes recording-pulse {
-          0% { box-shadow: 0 0 40px rgba(167, 139, 250, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
-          20% { box-shadow: 0 0 80px rgba(167, 139, 250, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.4); transform: scale(1.08); }
-          100% { box-shadow: 0 0 40px rgba(167, 139, 250, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
+          0% { box-shadow: 0 0 40px color-mix(in srgb, var(--bv-brand) 50%, transparent), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
+          20% { box-shadow: 0 0 80px color-mix(in srgb, var(--bv-brand) 80%, transparent), inset 0 0 30px rgba(255, 255, 255, 0.4); transform: scale(1.08); }
+          100% { box-shadow: 0 0 40px color-mix(in srgb, var(--bv-brand) 50%, transparent), inset 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(1); }
         }
         @keyframes shimmer {
           0% { opacity: 0.4; }
@@ -108,7 +108,7 @@ export default function DaySummaryPage() {
       </div>
 
       {/* TOP: 2 COLUMNS */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '30px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '30px' }}>
         
         {/* LEFT: RECORDING PANEL */}
         <GlassCard style={{ 
@@ -118,7 +118,7 @@ export default function DaySummaryPage() {
           alignItems: 'center', 
           justifyContent: 'flex-start', 
           minHeight: 500,
-          background: `radial-gradient(circle at center, rgba(167, 139, 250, 0.05) 0%, transparent 70%)`
+          background: `radial-gradient(circle at center, color-mix(in srgb, var(--bv-brand) 5%, transparent) 0%, transparent 70%)`
         }}>
           
           <div style={{ height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
@@ -135,7 +135,7 @@ export default function DaySummaryPage() {
                   fontSize: '0.75rem', 
                   fontWeight: 700, 
                   letterSpacing: '0.1em', 
-                  color: C.error || '#EF4444', 
+                  color: C.error || 'var(--bv-error)', 
                   textTransform: 'uppercase',
                   marginBottom: 12,
                   display: 'flex',
@@ -143,7 +143,7 @@ export default function DaySummaryPage() {
                   gap: 8,
                   animation: 'shimmer 1.5s infinite'
                 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.error || '#EF4444' }} />
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.error || 'var(--bv-error)' }} />
                   Live Recording
                 </div>
                 <div style={{ fontSize: '4rem', fontWeight: 800, fontFamily: 'monospace', color: C.textPrimary, lineHeight: 1 }}>
@@ -175,14 +175,14 @@ export default function DaySummaryPage() {
               <>
                 <div style={{
                   position: 'absolute', width: '100%', height: '100%',
-                  borderRadius: '50%', border: `1px solid rgba(167, 139, 250, 0.3)`,
+                  borderRadius: '50%', border: `1px solid color-mix(in srgb, var(--bv-brand) 30%, transparent)`,
                   animation: 'pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite',
                   pointerEvents: 'none',
                   display: isIdle ? 'block' : 'none' // only show wide rings in idle to invite click, or recording? Let's show in both
                 }} />
                 <div style={{
                   position: 'absolute', width: '100%', height: '100%',
-                  borderRadius: '50%', border: `1px solid rgba(167, 139, 250, 0.15)`,
+                  borderRadius: '50%', border: `1px solid color-mix(in srgb, var(--bv-brand) 15%, transparent)`,
                   animation: 'pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite 1.5s',
                   pointerEvents: 'none'
                 }} />
@@ -195,7 +195,7 @@ export default function DaySummaryPage() {
                 width: 150, height: 150, 
                 borderRadius: '50%', 
                 background: isIdle 
-                  ? `linear-gradient(135deg, rgba(167, 139, 250, 0.7), rgba(139, 92, 246, 0.5))` 
+                  ? `linear-gradient(135deg, color-mix(in srgb, var(--bv-brand) 70%, transparent), color-mix(in srgb, var(--bv-brand-solid) 50%, transparent))` 
                   : `linear-gradient(135deg, ${C.primary}, ${C.secondary})`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: (isIdle || isRecording) ? 'pointer' : 'default',
@@ -238,7 +238,7 @@ export default function DaySummaryPage() {
             {!isIdle && (
               <div style={{ 
                 padding: '20px', 
-                background: 'rgba(167, 139, 250, 0.05)', 
+                background: 'color-mix(in srgb, var(--bv-brand) 5%, transparent)', 
                 borderRadius: 12, 
                 borderLeft: `3px solid ${C.primary}`,
                 color: C.textPrimary,
@@ -270,7 +270,7 @@ export default function DaySummaryPage() {
             <GlassCard style={{ padding: '24px 30px', display: 'flex', gap: 20, alignItems: 'flex-start' }}>
               <div style={{ 
                 width: 36, height: 36, borderRadius: 8, 
-                background: 'rgba(167, 139, 250, 0.1)', 
+                background: 'color-mix(in srgb, var(--bv-brand) 10%, transparent)', 
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: C.primary, flexShrink: 0
               }}>⚡</div>
@@ -321,7 +321,7 @@ export default function DaySummaryPage() {
             value={showFeedback ? "145" : "-"} 
           />
           {showFeedback ? (
-            <GlassCard style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', background: 'rgba(167, 139, 250, 0.05)', border: `1px solid rgba(167, 139, 250, 0.2)` }} hoverEffect>
+            <GlassCard style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', background: 'color-mix(in srgb, var(--bv-brand) 5%, transparent)', border: `1px solid color-mix(in srgb, var(--bv-brand) 20%, transparent)` }} hoverEffect>
                <div style={{ color: C.primary, fontSize: '1.2rem' }}>💡</div>
                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: C.primary, letterSpacing: '0.05em', textTransform: 'uppercase', textAlign: 'center' }}>
                  Next Step

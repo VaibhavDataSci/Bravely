@@ -20,7 +20,7 @@ const MockPage = () => {
   ]);
 
   return (
-    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 360px', height: '100vh', overflow: 'hidden', background: '#030712' }}>
+    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 360px', height: '100vh', overflow: 'hidden', background: 'var(--bv-s0)' }}>
       {/* Main area - Video Call */}
       <VideoCall roomId={roomId || 'mock-default'} userId={userId} mode="mock" onEndCall={() => router.push('/report')} />
 

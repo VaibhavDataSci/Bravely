@@ -21,7 +21,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans overflow-hidden text-bravely-text bg-bravely-bg">
+      <body className="min-h-full flex flex-col font-sans overflow-hidden text-bravely-textPrimary bg-bravely-bgMain">
         <AuthProvider>
           {children}
         </AuthProvider>

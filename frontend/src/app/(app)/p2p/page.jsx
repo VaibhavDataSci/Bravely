@@ -1,7 +1,7 @@
 "use client";
 import { useRouter, usePathname } from 'next/navigation';
 import React, { useState, useEffect, useRef } from 'react';
-import { C } from '@/constants/theme';
+import { C, alpha } from '@/constants/theme';
 import { NeonButton, Tag, MicWave } from '@/components/shared';
 import { Toast } from '@/components/layout';
 
@@ -94,7 +94,7 @@ const P2PPage = () => {
         background: 'rgba(7, 8, 22,0.98)', flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => router.push('/peer-practice')} style={{ padding: '6px 14px', borderRadius: 7, border: `1px solid ${C.borderMid}`, background: 'transparent', color: C.textSecondary, cursor: 'pointer', fontFamily: 'Space Grotesk', fontSize: 12 }}>← Lobby</button>
+          <button onClick={() => router.push('/peer-practice')} style={{ padding: '6px 14px', borderRadius: 7, border: `1px solid ${C.borderMid}`, background: 'transparent', color: C.textSecondary, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>← Lobby</button>
           <div style={{ width: 1, height: 20, background: C.borderMid }} />
           <span style={{ fontSize: 14, fontWeight: 700 }}>Peer Interview Room</span>
           <Tag color={C.error}>● Live</Tag>
@@ -104,8 +104,8 @@ const P2PPage = () => {
           {/* Swap roles */}
           <button onClick={swapRoles} style={{
             padding: '7px 16px', borderRadius: 8, border: `1px solid ${C.borderMid}`,
-            background: swapping ? `rgba(167, 139, 250, 0.2)` : C.bgCard,
-            color: C.primary, cursor: 'pointer', fontFamily: 'Space Grotesk', fontSize: 12, fontWeight: 600,
+            background: swapping ? `color-mix(in srgb, var(--bv-brand) 20%, transparent)` : C.bgCard,
+            color: C.primary, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 600,
             display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s',
           }}>
             ⇄ {swapping ? 'Swapping…' : 'Swap Roles'}
@@ -123,13 +123,13 @@ const P2PPage = () => {
             ].map(({ icon, label, action, active }) => (
               <button key={label} onClick={action} style={{
                 width: 38, height: 38, borderRadius: 8, border: `1px solid ${active ? C.borderMid : C.borderMid}`,
-                background: active ? `rgba(167, 139, 250, 0.2)` : C.bgCard,
+                background: active ? `color-mix(in srgb, var(--bv-brand) 20%, transparent)` : C.bgCard,
                 color: active ? C.primary : C.textMuted, cursor: 'pointer', fontSize: 16,
                 transition: 'all 0.2s',
               }}>{icon}</button>
             ))}
           </div>
-          <NeonButton size="sm" variant="outline" style={{ borderColor: C.error + '60', color: C.error }} onClick={() => router.push('/report')}>End Session</NeonButton>
+          <NeonButton size="sm" variant="outline" style={{ borderColor: alpha(C.error, '60'), color: C.error }} onClick={() => router.push('/report')}>End Session</NeonButton>
         </div>
       </div>
 
@@ -182,7 +182,7 @@ const P2PPage = () => {
         {/* AI Observer Panel */}
         <div style={{ background: 'rgba(7, 8, 22,0.97)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* Header */}
-          <div style={{ padding: '14px 16px', borderBottom: `1px solid ${C.borderMid}`, background: `radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.2) 0%, transparent 80%)` }}>
+          <div style={{ padding: '14px 16px', borderBottom: `1px solid ${C.borderMid}`, background: `radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--bv-brand-solid) 20%, transparent) 0%, transparent 80%)` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
               <div style={{ width: 7, height: 7, borderRadius: '50%', background: C.secondary, animation: 'pulse-ring 2s infinite' }} />
               <span style={{ fontSize: 13, fontWeight: 700 }}>AI Observer</span>
@@ -195,9 +195,9 @@ const P2PPage = () => {
             {[['live','Live'],['notes','Notes']].map(([id, label]) => (
               <button key={id} onClick={() => setAiTab(id)} style={{
                 flex: 1, padding: '9px 0', border: 'none', cursor: 'pointer',
-                background: aiTab === id ? `rgba(139, 92, 246, 0.2)` : 'transparent',
+                background: aiTab === id ? `color-mix(in srgb, var(--bv-brand-solid) 20%, transparent)` : 'transparent',
                 color: aiTab === id ? C.secondary : C.textMuted,
-                fontFamily: 'Space Grotesk', fontSize: 11, fontWeight: 600,
+                fontFamily: 'inherit', fontSize: 11, fontWeight: 600,
                 borderBottom: aiTab === id ? `2px solid ${C.secondary}` : '2px solid transparent',
                 transition: 'all 0.2s',
               }}>{label}</button>
@@ -232,7 +232,7 @@ const P2PPage = () => {
                   <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 12 }}>Speaking Time Split</div>
                   <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                     <svg width={60} height={60} viewBox="0 0 60 60">
-                      <circle cx="30" cy="30" r="24" fill="none" stroke={`${C.secondary}30`} strokeWidth="8" />
+                      <circle cx="30" cy="30" r="24" fill="none" stroke={`${alpha(C.secondary, '30')}`} strokeWidth="8" />
                       <circle cx="30" cy="30" r="24" fill="none" stroke={C.secondary} strokeWidth="8"
                         strokeDasharray={`${0.62 * 2 * Math.PI * 24} ${2 * Math.PI * 24}`}
                         strokeDashoffset={2 * Math.PI * 24 * 0.25}
@@ -256,7 +256,7 @@ const P2PPage = () => {
                 </div>
 
                 {/* Live observation */}
-                <div style={{ background: `rgba(139, 92, 246, 0.2)`, borderRadius: 10, padding: '12px 14px', border: `1px solid ${C.secondary}30` }}>
+                <div style={{ background: `color-mix(in srgb, var(--bv-brand-solid) 20%, transparent)`, borderRadius: 10, padding: '12px 14px', border: `1px solid ${alpha(C.secondary, '30')}` }}>
                   <div style={{ fontSize: 10, color: C.secondary, marginBottom: 6, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
                     <span style={{ animation: 'ai-think 1.2s ease infinite' }}>◉</span> AI is observing
                   </div>
@@ -277,8 +277,8 @@ const P2PPage = () => {
                 ].map(({ ts, text, type }, i) => (
                   <div key={i} style={{
                     padding: '10px 12px', borderRadius: 8,
-                    background: type === 'pos' ? `${C.success}08` : `${C.warning}08`,
-                    border: `1px solid ${type === 'pos' ? C.success + '25' : C.warning + '25'}`,
+                    background: type === 'pos' ? `${alpha(C.success, '08')}` : `${alpha(C.warning, '08')}`,
+                    border: `1px solid ${type === 'pos' ? alpha(C.success, '25') : alpha(C.warning, '25')}`,
                     display: 'flex', gap: 10,
                   }}>
                     <span style={{ fontFamily: 'JetBrains Mono', fontSize: 9, color: C.textMuted, marginTop: 2, flexShrink: 0 }}>{ts}</span>

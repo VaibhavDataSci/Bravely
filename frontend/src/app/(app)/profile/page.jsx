@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from 'next/navigation';
 import React, { useState, useRef } from 'react';
-import { C } from '@/constants/theme';
+import { C, alpha } from '@/constants/theme';
 import { GlassCard, Tag, NeonButton } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
 import { User, FileText, CheckCircle, Paperclip, CloudUpload, Flame, Zap, Trophy, Target, Gem, Star } from 'lucide-react';
@@ -78,13 +78,13 @@ const ProfilePage = () => {
   return (
     <div style={{ flex: 1, height: '100vh', overflow: 'auto', padding: '32px 36px' }}>
       {/* Profile header */}
-      <GlassCard style={{ marginBottom: 24, padding: '32px', background: `linear-gradient(135deg, rgba(6,182,212,0.06), rgba(124,58,237,0.06))` }}>
+      <GlassCard style={{ marginBottom: 24, padding: '32px', background: `linear-gradient(135deg, rgba(6,182,212,0.06), color-mix(in srgb, var(--bv-brand-solid) 6%, transparent))` }}>
         <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
           <div style={{
             width: 96, height: 96, borderRadius: '50%',
             background: `linear-gradient(135deg, ${C.primary}, ${C.secondary})`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 36, boxShadow: `0 0 30px rgba(167, 139, 250, 0.2)`,
+            fontSize: 36, boxShadow: `0 0 30px color-mix(in srgb, var(--bv-brand) 20%, transparent)`,
             animation: 'glow-pulse 3s ease infinite',
           }}><User size={48} color="#fff" /></div>
           <div style={{ flex: 1 }}>
@@ -113,7 +113,7 @@ const ProfilePage = () => {
       </GlassCard>
 
       {/* ─── RESUME MANAGEMENT ─────────────────────────────────────────── */}
-      <GlassCard style={{ marginBottom: 24, padding: '28px', background: 'linear-gradient(135deg, rgba(167,139,250,0.04), rgba(139,92,246,0.02))' }}>
+      <GlassCard style={{ marginBottom: 24, padding: '28px', background: 'linear-gradient(135deg, color-mix(in srgb, var(--bv-brand) 4%, transparent), color-mix(in srgb, var(--bv-brand-solid) 2%, transparent))' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
@@ -135,7 +135,7 @@ const ProfilePage = () => {
         {parseSuccess && (
           <div style={{
             padding: '12px 16px', borderRadius: 10, marginBottom: 16,
-            background: 'rgba(34,197,94,0.08)', border: `1px solid rgba(34,197,94,0.25)`,
+            background: 'color-mix(in srgb, var(--bv-success) 8%, transparent)', border: `1px solid color-mix(in srgb, var(--bv-success) 25%, transparent)`,
             display: 'flex', alignItems: 'center', gap: 10,
             animation: 'fade-up 0.4s ease',
           }}>
@@ -155,7 +155,7 @@ const ProfilePage = () => {
               <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
                 <div style={{
                   width: 48, height: 48, borderRadius: 12,
-                  background: `linear-gradient(135deg, ${C.primary}20, ${C.secondary}20)`,
+                  background: `linear-gradient(135deg, ${alpha(C.primary, '20')}, ${alpha(C.secondary, '20')})`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 22, border: `1px solid ${C.borderMid}`,
                 }}><Paperclip size={24} color={C.primary} /></div>
@@ -217,7 +217,7 @@ const ProfilePage = () => {
             style={{
               border: `2px dashed ${isDragging ? C.primary : C.borderMid}`,
               borderRadius: 14, padding: '48px 24px', textAlign: 'center',
-              background: isDragging ? 'rgba(167,139,250,0.06)' : 'rgba(255,255,255,0.01)',
+              background: isDragging ? 'color-mix(in srgb, var(--bv-brand) 6%, transparent)' : 'rgba(255,255,255,0.01)',
               cursor: isParsing ? 'default' : 'pointer',
               transition: 'all 0.3s ease',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
@@ -238,7 +238,7 @@ const ProfilePage = () => {
               <>
                 <div style={{
                   width: 56, height: 56, borderRadius: 14,
-                  background: `linear-gradient(135deg, ${C.primary}15, ${C.secondary}15)`,
+                  background: `linear-gradient(135deg, ${alpha(C.primary, '15')}, ${alpha(C.secondary, '15')})`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 24, border: `1px solid ${C.borderMid}`,
                 }}><CloudUpload size={28} color={C.primary} /></div>
@@ -261,7 +261,7 @@ const ProfilePage = () => {
             {achievements.map(({ icon, label, earned }) => (
               <div key={label} style={{
                 borderRadius: 10, padding: '16px 10px', textAlign: 'center',
-                background: earned ? `rgba(167, 139, 250, 0.2)` : C.bgCard,
+                background: earned ? `color-mix(in srgb, var(--bv-brand) 20%, transparent)` : C.bgCard,
                 border: `1px solid ${C.borderMid}`,
                 opacity: earned ? 1 : 0.4,
               }}>

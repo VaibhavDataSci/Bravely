@@ -1,40 +1,63 @@
+// Tokens live in src/app/globals.css (:root). C only references them, so
+// theming changes happen in one place. Use alpha() for translucent variants.
 export const C = {
-  // Backgrounds
-  bgMain: '#070816',
-  bgSecondary: '#0D1023',
-  bgCard: '#111427',
-  bgElevated: '#171A31',
-  bgSidebar: '#0A0917',
+  // Surfaces
+  bgMain: 'var(--bv-s0)',
+  bgSecondary: 'var(--bv-s1)',
+  bgCard: 'var(--bv-s2)',
+  bgElevated: 'var(--bv-s3)',
+  bgPopover: 'var(--bv-s4)',
+  bgSidebar: 'var(--bv-s1)',
 
-  // Primary Brand
-  primary: '#A78BFA',
-  secondary: '#8B5CF6',
-  glow: '#C4B5FD',
+  // Brand
+  primary: 'var(--bv-brand)',
+  secondary: 'var(--bv-brand-solid)',
+  glow: 'var(--bv-brand-hover)',
 
   // Functional
-  success: '#22C55E',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  info: '#38BDF8',
+  success: 'var(--bv-success)',
+  warning: 'var(--bv-warning)',
+  error: 'var(--bv-error)',
+  info: 'var(--bv-info)',
 
   // Typography
-  textPrimary: '#F8FAFC',
-  textSecondary: '#94A3B8',
-  textMuted: '#64748B',
-  textDisabled: '#475569',
+  textPrimary: 'var(--bv-t1)',
+  textSecondary: 'var(--bv-t2)',
+  textMuted: 'var(--bv-t3)',
+  textDisabled: 'var(--bv-t4)',
 
-  // Utilities & Borders
-  border: 'rgba(255, 255, 255, 0.05)',
-  borderMid: 'rgba(255, 255, 255, 0.1)',
-  glass: 'rgba(255, 255, 255, 0.03)',
-  glassHover: 'rgba(255, 255, 255, 0.06)',
+  // Borders and glass
+  border: 'var(--bv-border-subtle)',
+  borderMid: 'var(--bv-border)',
+  borderStrong: 'var(--bv-border-strong)',
+  glass: 'var(--bv-glass)',
+  glassHover: 'var(--bv-glass-hover)',
 
-  // Page Accents
-  accentDashboard: '#A78BFA',    // Violet
-  accentDaily: '#22D3EE',        // Cyan
-  accentMock: '#D946EF',         // Purple
-  accentCoding: '#F97316',       // Orange
-  accentGroup: '#EC4899',        // Pink
-  accentAnalytics: '#3B82F6',    // Blue
-  accentSettings: '#C084FC',     // Lavender
+  // Workflow accents
+  accentDashboard: 'var(--bv-interview)',
+  accentMock: 'var(--bv-interview)',
+  accentDaily: 'var(--bv-daily)',
+  accentGroup: 'var(--bv-peer)',
+  accentCoding: 'var(--bv-coding)',
+  accentAnalytics: 'var(--bv-growth)',
+  accentSettings: 'var(--bv-brand)',
+
+  // Legacy aliases, used by existing screens. Prefer the names above in new code.
+  bgBase: 'var(--bv-s0)',
+  text: 'var(--bv-t1)',
+  textDim: 'var(--bv-t3)',
+  cyan: 'var(--bv-daily)',
+  cyanGlow: 'var(--bv-daily)',
+  red: 'var(--bv-error)',
+  amber: 'var(--bv-warning)',
+  green: 'var(--bv-success)',
+  violet: 'var(--bv-brand)',
+  violetBright: 'var(--bv-brand-hover)',
+  violetMid: 'var(--bv-brand-solid)',
+  violetGlow: 'var(--bv-brand-hover)',
 };
+
+// Translucent variant of a token. `hex` is a two-digit alpha byte (e.g. '33').
+// color-mix works for both raw colours and var() tokens.
+export const alpha = (color, hex) =>
+  `color-mix(in srgb, ${color} ${Math.round((parseInt(hex, 16) / 255) * 100)}%, transparent)`;

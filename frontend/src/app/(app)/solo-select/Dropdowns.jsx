@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { C } from '@/constants/theme';
+import { Search } from 'lucide-react';
+import { C, alpha } from '@/constants/theme';
 import { ALL_ROLES, ROLE_CATEGORIES } from './roleData';
 
 // ─── PORTAL DROPDOWN PANEL ──────────────────────────────────────────────────
@@ -46,10 +47,10 @@ function DropdownPortal({ anchorRef, open, children, maxHeight = 340 }) {
       maxHeight,
       overflowY: 'auto',
       background: '#13162b',
-      border: `1px solid rgba(167,139,250,0.25)`,
+      border: `1px solid color-mix(in srgb, var(--bv-brand) 25%, transparent)`,
       borderRadius: 14,
       padding: 6,
-      boxShadow: '0 20px 60px rgba(0,0,0,0.7), 0 0 1px rgba(167,139,250,0.3), inset 0 1px 0 rgba(255,255,255,0.06)',
+      boxShadow: '0 20px 60px rgba(0,0,0,0.7), 0 0 1px color-mix(in srgb, var(--bv-brand) 30%, transparent), inset 0 1px 0 rgba(255,255,255,0.06)',
       backdropFilter: 'blur(32px)',
       WebkitBackdropFilter: 'blur(32px)',
       animation: 'dd-enter 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -139,7 +140,7 @@ export function SearchableRoleDropdown({ value, onChange }) {
           padding: '12px 16px', borderRadius: 12, cursor: 'pointer',
           background: 'rgba(255,255,255,0.03)', border: `1px solid ${open ? C.primary : C.borderMid}`,
           display: 'flex', alignItems: 'center', gap: 10, transition: 'border-color 0.2s, box-shadow 0.2s',
-          boxShadow: open ? `0 0 0 2px ${C.primary}22, 0 0 20px ${C.primary}10` : 'none',
+          boxShadow: open ? `0 0 0 2px ${alpha(C.primary, '22')}, 0 0 20px ${alpha(C.primary, '10')}` : 'none',
         }}
       >
         {value && !open ? (
@@ -150,16 +151,17 @@ export function SearchableRoleDropdown({ value, onChange }) {
           </>
         ) : (
           <>
-            <span style={{ fontSize: 16, color: C.textMuted }}>🔍</span>
+            <Search size={16} color={C.textMuted} aria-hidden="true" style={{ flexShrink: 0 }} />
             <input
               ref={inputRef}
               value={query}
               onChange={(e) => { setQuery(e.target.value); setHighlightIdx(0); }}
               onFocus={() => setOpen(true)}
               onKeyDown={handleKeyDown}
-              placeholder="Search roles... e.g. swe, cloud, ml"
+              placeholder="Search roles, e.g. SWE, cloud, ML"
+              aria-label="Search roles"
               style={{
-                flex: 1, background: 'none', border: 'none', outline: 'none',
+                flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none',
                 color: C.textPrimary, fontSize: 14, fontFamily: 'inherit',
               }}
             />
@@ -175,7 +177,7 @@ export function SearchableRoleDropdown({ value, onChange }) {
             ) : (
               filtered.map((role, i) => (
                 <div key={role.id}
-                  style={{ ...itemBase, background: i === highlightIdx ? 'rgba(167,139,250,0.14)' : 'transparent' }}
+                  style={{ ...itemBase, background: i === highlightIdx ? 'color-mix(in srgb, var(--bv-brand) 14%, transparent)' : 'transparent' }}
                   onMouseEnter={() => setHighlightIdx(i)}
                   onClick={() => handleSelect(role)}
                 >
@@ -192,7 +194,7 @@ export function SearchableRoleDropdown({ value, onChange }) {
                   <div key={role.id}
                     style={{ ...itemBase, background: 'transparent' }}
                     onClick={() => handleSelect(role)}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(167,139,250,0.1)'}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'color-mix(in srgb, var(--bv-brand) 10%, transparent)'}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                   >
                     <span style={{ fontSize: 16 }}>{role.icon}</span>
@@ -239,7 +241,7 @@ export function SelectDropdown({ label, value, options, onChange, renderOption }
           background: 'rgba(255,255,255,0.03)', border: `1px solid ${open ? C.primary : C.borderMid}`,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           transition: 'border-color 0.2s, box-shadow 0.2s',
-          boxShadow: open ? `0 0 0 2px ${C.primary}22, 0 0 20px ${C.primary}10` : 'none',
+          boxShadow: open ? `0 0 0 2px ${alpha(C.primary, '22')}, 0 0 20px ${alpha(C.primary, '10')}` : 'none',
         }}
       >
         <span style={{ fontSize: 14, color: selected ? C.textPrimary : C.textMuted, fontWeight: selected ? 600 : 400 }}>
@@ -261,12 +263,12 @@ export function SelectDropdown({ label, value, options, onChange, renderOption }
                 onClick={() => { onChange(opt.id); setOpen(false); }}
                 style={{
                   ...itemBase,
-                  background: isActive ? 'rgba(167,139,250,0.16)' : 'transparent',
+                  background: isActive ? 'color-mix(in srgb, var(--bv-brand) 16%, transparent)' : 'transparent',
                   color: isActive ? C.primary : C.textPrimary,
                   fontWeight: isActive ? 600 : 400,
                   borderLeft: isActive ? `2px solid ${C.primary}` : '2px solid transparent',
                 }}
-                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'rgba(167,139,250,0.08)'; }}
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'color-mix(in srgb, var(--bv-brand) 8%, transparent)'; }}
                 onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
               >
                 {opt.icon && <span style={{ fontSize: 16 }}>{opt.icon}</span>}

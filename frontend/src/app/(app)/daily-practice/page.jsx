@@ -26,7 +26,7 @@ export default function DailyPracticeHub() {
         'Tone insights'
       ],
       visual: (
-        <div className={styles.cardIcon} style={{ background: 'linear-gradient(135deg, rgba(167,139,250,0.12), rgba(124,58,237,0.08))' }}>
+        <div className={styles.cardIcon} style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--bv-brand) 12%, transparent), color-mix(in srgb, var(--bv-brand-solid) 8%, transparent))' }}>
           🎤
         </div>
       ),
@@ -46,7 +46,7 @@ export default function DailyPracticeHub() {
       ],
       tags: ['Opinion', 'Storytelling', 'Argument'],
       visual: (
-        <div className={styles.cardIcon} style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(167,139,250,0.06))' }}>
+        <div className={styles.cardIcon} style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--bv-brand-solid) 12%, transparent), color-mix(in srgb, var(--bv-brand) 6%, transparent))' }}>
           ✨
         </div>
       ),
@@ -66,7 +66,7 @@ export default function DailyPracticeHub() {
         'Voice-to-voice interaction'
       ],
       visual: (
-        <div className={styles.cardIcon} style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(99,102,241,0.06))' }}>
+        <div className={styles.cardIcon} style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--bv-brand-solid) 12%, transparent), rgba(99,102,241,0.06))' }}>
           🤖
         </div>
       ),
@@ -137,7 +137,6 @@ export default function DailyPracticeHub() {
                   <div className={styles.cardDesc}>{mod.subtitle}</div>
                 </div>
               </div>
-              <div className={styles.bgFadedIcon} aria-hidden>{mod.id === 'day-summary' ? '🎙' : mod.id === 'topic-practice' ? '★' : mod.id === 'ai-conversation' ? '🤖' : '📞'}</div>
             </div>
 
             <div className={styles.features}>
@@ -147,7 +146,7 @@ export default function DailyPracticeHub() {
             </div>
 
             <div className={styles.ctaWrap}>
-              <div className={styles.labelPill} style={{ background: mod.id === 'topic-practice' ? 'linear-gradient(90deg, rgba(203,203,255,0.06), rgba(167,139,250,0.04))' : undefined }}>
+              <div className={styles.labelPill} style={{ background: mod.id === 'topic-practice' ? 'linear-gradient(90deg, rgba(203,203,255,0.06), color-mix(in srgb, var(--bv-brand) 4%, transparent))' : undefined }}>
                 {mod.id === 'day-summary' ? 'SPOKEN JOURNAL' : mod.id === 'topic-practice' ? 'AI GUIDED' : mod.id === 'ai-conversation' ? 'ENDLESS MODE' : 'LIVE CONNECTION'}
               </div>
 

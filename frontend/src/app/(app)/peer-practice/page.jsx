@@ -1,6 +1,7 @@
 "use client";
 import { useRouter, usePathname } from 'next/navigation';
 import React, { useState, useEffect, useRef } from 'react';
+import { Search } from 'lucide-react';
 import { C } from '@/constants/theme';
 import { NeonButton, GlassCard, Tag } from '@/components/shared';
 import { Toast } from '@/components/layout';
@@ -87,20 +88,20 @@ const LobbyPage = () => {
           flex: 1, display: 'flex', alignItems: 'center', gap: 10,
           background: C.bgCard, border: `1px solid ${C.borderMid}`, borderRadius: 10, padding: '10px 14px',
         }}>
-          <span style={{ color: C.textMuted }}>🔍</span>
+          <Search size={16} color={C.textMuted} aria-hidden="true" />
           <input
             value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search by name or focus area…"
-            style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: C.textPrimary, fontFamily: 'Space Grotesk', fontSize: 13 }}
+            style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: C.textPrimary, fontFamily: 'inherit', fontSize: 13 }}
           />
         </div>
         <div style={{ display: 'flex', gap: 4, background: C.bgCard, borderRadius: 10, padding: 4, border: `1px solid ${C.borderMid}` }}>
           {[['all','All'],['available','Available'],['hr','HR / Interviewer'],['candidate','Candidate']].map(([v, l]) => (
             <button key={v} onClick={() => setFilter(v)} style={{
               padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
-              background: filter === v ? `linear-gradient(135deg, rgba(167, 139, 250, 0.2), rgba(139, 92, 246, 0.2))` : 'transparent',
+              background: filter === v ? `linear-gradient(135deg, color-mix(in srgb, var(--bv-brand) 20%, transparent), color-mix(in srgb, var(--bv-brand-solid) 20%, transparent))` : 'transparent',
               color: filter === v ? C.primary : C.textMuted,
-              fontFamily: 'Space Grotesk', fontSize: 12, fontWeight: 600,
+              fontFamily: 'inherit', fontSize: 12, fontWeight: 600,
               border: filter === v ? `1px solid ${C.borderMid}` : '1px solid transparent',
               transition: 'all 0.2s',
             }}>{l}</button>
@@ -127,7 +128,7 @@ const LobbyPage = () => {
               border: `2px solid ${u.status === 'available' ? C.borderMid : C.borderMid}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 10px',
-              boxShadow: u.status === 'available' ? `0 0 16px rgba(167, 139, 250, 0.2)` : 'none',
+              boxShadow: u.status === 'available' ? `0 0 16px color-mix(in srgb, var(--bv-brand) 20%, transparent)` : 'none',
             }}>{u.avatar}</div>
             <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{u.name}</div>
             <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 10 }}>{u.country} · {u.level}</div>

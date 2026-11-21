@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { C } from '@/constants/theme';
+import { C, alpha } from '@/constants/theme';
 import { GlassCard, NeonButton } from '@/components/shared';
 import CodingSession from '../solo-session/CodingSession';
 
@@ -109,7 +109,7 @@ export default function CodingPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'radial-gradient(circle at 30% 20%, rgba(167,139,250,0.2), rgba(10,13,20,1) 45%)',
+        background: 'radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--bv-brand) 20%, transparent), rgba(10,13,20,1) 45%)',
         padding: 20,
       }}
     >
@@ -118,7 +118,7 @@ export default function CodingPage() {
           width: 'min(560px, 100%)',
           padding: 28,
           border: `1px solid ${phase === 'failed' ? C.error : C.borderMid}`,
-          boxShadow: phase === 'failed' ? `0 0 28px ${C.error}33` : `0 0 28px ${C.primary}22`,
+          boxShadow: phase === 'failed' ? `0 0 28px ${alpha(C.error, '33')}` : `0 0 28px ${alpha(C.primary, '22')}`,
         }}
       >
         {phase !== 'failed' ? (
@@ -145,7 +145,7 @@ export default function CodingPage() {
                   width: phase === 'preparing' ? '35%' : phase === 'generating' ? '70%' : '92%',
                   height: '100%',
                   background: `linear-gradient(90deg, ${C.primary}, ${C.secondary})`,
-                  boxShadow: `0 0 16px ${C.primary}66`,
+                  boxShadow: `0 0 16px ${alpha(C.primary, '66')}`,
                   transition: 'width 0.4s ease',
                 }}
               />

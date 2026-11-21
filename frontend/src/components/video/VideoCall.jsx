@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import io from 'socket.io-client';
-import { C } from '../../constants/theme';
+import { C, alpha } from '../../constants/theme';
 import { NeonButton } from '../shared';
 
 // Update with real server URL matching server/index.js default port
@@ -28,7 +28,7 @@ const VideoCard = ({ stream, isLocal, label, isActive }) => {
       position: 'relative', width: '100%', height: '100%', 
       background: '#0a0d14', borderRadius: 16, overflow: 'hidden',
       border: `1px solid ${isActive ? C.cyan : C.borderMid}`,
-      boxShadow: isActive ? `0 0 24px ${C.cyan}20` : 'none',
+      boxShadow: isActive ? `0 0 24px ${alpha(C.cyan, '20')}` : 'none',
       display: 'flex', alignItems: 'center', justifyContent: 'center'
     }}>
       <div style={{
@@ -273,7 +273,7 @@ export const VideoCall = ({ roomId, userId, mode = 'mock', onEndCall }) => {
           
           {/* Room Info */}
           <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: '8px 16px', border: `1px solid ${C.border}` }}>
-             <span style={{ color: C.text, fontFamily: 'Space Grotesk', fontWeight: 600 }}>Room: {roomId}</span>
+             <span style={{ color: C.text, fontFamily: 'inherit', fontWeight: 600 }}>Room: {roomId}</span>
              <span style={{ color: C.textMuted, marginLeft: 16, borderLeft: `1px solid ${C.border}`, paddingLeft: 16 }}>Participants: {totalUsers}</span>
           </div>
 
@@ -299,14 +299,14 @@ export const VideoCall = ({ roomId, userId, mode = 'mock', onEndCall }) => {
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, padding: '24px 32px', background: 'linear-gradient(to top, rgba(3,7,18,1) 30%, transparent)' }}>
           <button 
             onClick={toggleMic}
-            style={{ width: 56, height: 56, borderRadius: '50%', background: micMuted ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${micMuted ? C.red : C.borderMid}`, color: micMuted ? C.red : C.text, fontSize: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+            style={{ width: 56, height: 56, borderRadius: '50%', background: micMuted ? 'color-mix(in srgb, var(--bv-error) 10%, transparent)' : 'rgba(255,255,255,0.05)', border: `1px solid ${micMuted ? C.red : C.borderMid}`, color: micMuted ? C.red : C.text, fontSize: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
           >
             {micMuted ? '🔇' : '🎤'}
           </button>
           
           <button 
             onClick={toggleCam}
-            style={{ width: 56, height: 56, borderRadius: '50%', background: camOff ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${camOff ? C.red : C.borderMid}`, color: camOff ? C.red : C.text, fontSize: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+            style={{ width: 56, height: 56, borderRadius: '50%', background: camOff ? 'color-mix(in srgb, var(--bv-error) 10%, transparent)' : 'rgba(255,255,255,0.05)', border: `1px solid ${camOff ? C.red : C.borderMid}`, color: camOff ? C.red : C.text, fontSize: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
           >
             {camOff ? '🚫' : '📷'}
           </button>
@@ -314,7 +314,7 @@ export const VideoCall = ({ roomId, userId, mode = 'mock', onEndCall }) => {
           <NeonButton 
             variant="primary" 
             onClick={onEndCall}
-            style={{ background: C.red, color: '#fff', borderColor: C.red, padding: '0 32px', height: 56, borderRadius: 28, fontSize: 16, fontWeight: 700, boxShadow: `0 0 20px rgba(239,68,68,0.3)` }}
+            style={{ background: C.red, color: '#fff', borderColor: C.red, padding: '0 32px', height: 56, borderRadius: 28, fontSize: 16, fontWeight: 700, boxShadow: `0 0 20px color-mix(in srgb, var(--bv-error) 30%, transparent)` }}
           >
             End Call
           </NeonButton>

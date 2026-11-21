@@ -18,6 +18,10 @@ on:
     branches:
       - main
 
+env:
+  # CI-only value; the server refuses to start without a 32+ character JWT_SECRET.
+  JWT_SECRET: ci-only-secret-ci-only-secret-ci-only-1234
+
 jobs:
   backend-checks:
     name: Backend Checks (Node ${{ matrix.node-version }})

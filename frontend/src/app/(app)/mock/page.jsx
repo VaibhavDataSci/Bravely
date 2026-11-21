@@ -16,7 +16,7 @@ export default function MockModeSelection() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 340px) minmax(280px, 340px)', gap: 32, width: '100%', justifyContent: 'center' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 340px))', gap: 32, width: '100%', justifyContent: 'center' }}>
         {/* Option 1: AI Interview */}
         <div 
           onClick={() => router.push('/solo-select')}
@@ -26,7 +26,7 @@ export default function MockModeSelection() {
           }}
           onMouseEnter={e => {
             e.currentTarget.style.transform = 'translateY(-8px)';
-            e.currentTarget.children[0].style.boxShadow = `0 0 30px rgba(167, 139, 250, 0.2)`;
+            e.currentTarget.children[0].style.boxShadow = `0 0 30px color-mix(in srgb, var(--bv-brand) 20%, transparent)`;
             e.currentTarget.children[0].style.borderColor = C.primary;
           }}
           onMouseLeave={e => {
@@ -41,7 +41,7 @@ export default function MockModeSelection() {
             background: `linear-gradient(180deg, rgba(7, 8, 22, 0.6) 0%, rgba(3, 4, 11, 0.8) 100%)`,
             transition: 'all 0.3s ease'
           }}>
-            <div style={{ fontSize: 64, marginBottom: 24, filter: `drop-shadow(0 0 10px rgba(167, 139, 250, 0.2))` }}>🤖</div>
+            <div style={{ fontSize: 64, marginBottom: 24, filter: `drop-shadow(0 0 10px color-mix(in srgb, var(--bv-brand) 20%, transparent))` }}>🤖</div>
             <h2 style={{ fontSize: 22, fontWeight: 700, color: C.primary, marginBottom: 12 }}>AI Interviewer</h2>
             <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.5 }}>
               Practice anytime with our intelligent 3D avatar. Get instant, personalized feedback on your performance.
@@ -58,7 +58,7 @@ export default function MockModeSelection() {
           }}
           onMouseEnter={e => {
             e.currentTarget.style.transform = 'translateY(-8px)';
-            e.currentTarget.children[0].style.boxShadow = `0 0 30px rgba(139, 92, 246, 0.2)`;
+            e.currentTarget.children[0].style.boxShadow = `0 0 30px color-mix(in srgb, var(--bv-brand-solid) 20%, transparent)`;
             e.currentTarget.children[0].style.borderColor = C.secondary;
           }}
           onMouseLeave={e => {
@@ -73,7 +73,7 @@ export default function MockModeSelection() {
             background: `linear-gradient(180deg, rgba(7, 8, 22, 0.6) 0%, rgba(3, 4, 11, 0.8) 100%)`,
             transition: 'all 0.3s ease'
           }}>
-            <div style={{ fontSize: 64, marginBottom: 24, filter: `drop-shadow(0 0 10px rgba(139, 92, 246, 0.2))` }}>👥</div>
+            <div style={{ fontSize: 64, marginBottom: 24, filter: `drop-shadow(0 0 10px color-mix(in srgb, var(--bv-brand-solid) 20%, transparent))` }}>👥</div>
             <h2 style={{ fontSize: 22, fontWeight: 700, color: C.secondary, marginBottom: 12 }}>Peer Interview</h2>
             <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.5 }}>
               Connect with real users in real-time. Practice behavioral and technical interviews via live video.
