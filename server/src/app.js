@@ -19,6 +19,7 @@ import dailyRoutes from './modules/daily/routes.js';
 import reportsRoutes from './modules/reports/routes.js';
 import settingsRoutes from './modules/settings/routes.js';
 import aiRoutes from './modules/ai/routes.js';
+import sessionRoutes from './modules/sessions/routes.js';
 
 export default async function buildApp(options = {}) {
   const app = fastify({
@@ -105,6 +106,7 @@ export default async function buildApp(options = {}) {
   app.register(reportsRoutes, { prefix: '/api/reports' });
   app.register(settingsRoutes, { prefix: '/api/settings' });
   app.register(aiRoutes, { prefix: '/api/ai' });
+  app.register(sessionRoutes, { prefix: '/api/sessions' });
 
   return app;
 }
