@@ -8,7 +8,7 @@ on:
       - vaibhav
     paths:
       - 'frontend/**'
-      - '.github/workflows/frontend-ci.yml'
+      - '.github/workflows/frontendci.yml'
   pull_request:
     branches:
       - main
@@ -35,11 +35,15 @@ jobs:
           cache-dependency-path: 'frontend/package-lock.json'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
         working-directory: ./frontend
 
       - name: Run ESLint
         run: npm run lint
+        working-directory: ./frontend
+
+      - name: Run unit tests
+        run: npm test
         working-directory: ./frontend
 
       - name: Build Next.js

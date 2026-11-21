@@ -1,288 +1,202 @@
 "use client";
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
-import { Search } from 'lucide-react';
-import { C, alpha } from '@/constants/theme';
+import { ChevronDown, Search, X } from 'lucide-react';
 import { ALL_ROLES, ROLE_CATEGORIES } from './roleData';
 
-// ─── PORTAL DROPDOWN PANEL ──────────────────────────────────────────────────
-// Renders dropdown in a portal at document.body so it escapes all stacking
-// contexts created by GlassCard's backdropFilter / transform.
-function DropdownPortal({ anchorRef, open, children, maxHeight = 340 }) {
+const PANEL_MAX_HEIGHT = 340;
+
+// The list renders in a portal so the scrolling page and card borders never clip it.
+function Panel({ anchorRef, open, id, children }) {
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
 
-  const updatePos = useCallback(() => {
-    if (!anchorRef.current || !open) return;
-    const rect = anchorRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom - 16;
-    const shouldFlip = spaceBelow < maxHeight && rect.top > spaceBelow;
+  const place = useCallback(() => {
+    const anchor = anchorRef.current;
+    if (!anchor) return;
+    const rect = anchor.getBoundingClientRect();
+    const below = window.innerHeight - rect.bottom - 16;
+    const flip = below < PANEL_MAX_HEIGHT && rect.top > below;
     setPos({
-      top: shouldFlip ? rect.top - Math.min(maxHeight, rect.top - 16) - 8 : rect.bottom + 8,
+      top: flip ? rect.top - Math.min(PANEL_MAX_HEIGHT, rect.top - 16) - 6 : rect.bottom + 6,
       left: rect.left,
       width: rect.width,
-      flipped: shouldFlip,
     });
-  }, [anchorRef, open, maxHeight]);
+  }, [anchorRef]);
 
   useEffect(() => {
     if (!open) return;
-    updatePos();
-    window.addEventListener('scroll', updatePos, true);
-    window.addEventListener('resize', updatePos);
+    place();
+    window.addEventListener('scroll', place, true);
+    window.addEventListener('resize', place);
     return () => {
-      window.removeEventListener('scroll', updatePos, true);
-      window.removeEventListener('resize', updatePos);
+      window.removeEventListener('scroll', place, true);
+      window.removeEventListener('resize', place);
     };
-  }, [open, updatePos]);
+  }, [open, place]);
 
   if (!open || typeof document === 'undefined') return null;
-
   return createPortal(
-    <div style={{
-      position: 'fixed',
-      top: pos.top,
-      left: pos.left,
-      width: pos.width,
-      zIndex: 9999,
-      maxHeight,
-      overflowY: 'auto',
-      background: '#13162b',
-      border: `1px solid color-mix(in srgb, var(--bv-brand) 25%, transparent)`,
-      borderRadius: 14,
-      padding: 6,
-      boxShadow: '0 20px 60px rgba(0,0,0,0.7), 0 0 1px color-mix(in srgb, var(--bv-brand) 30%, transparent), inset 0 1px 0 rgba(255,255,255,0.06)',
-      backdropFilter: 'blur(32px)',
-      WebkitBackdropFilter: 'blur(32px)',
-      animation: 'dd-enter 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
-    }}>
+    <div
+      id={id}
+      role="listbox"
+      data-dd-portal
+      style={{
+        position: 'fixed', zIndex: 9999, top: pos.top, left: pos.left, width: pos.width,
+        maxHeight: PANEL_MAX_HEIGHT, overflowY: 'auto', padding: 6,
+        background: 'var(--bv-s3)', border: '1px solid var(--bv-border-strong)', borderRadius: 10,
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+      }}
+    >
       {children}
-      <style>{`
-        @keyframes dd-enter {
-          from { opacity: 0; transform: translateY(-6px) scale(0.98); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
     </div>,
     document.body
   );
 }
 
-// ─── SHARED ITEM STYLE ──────────────────────────────────────────────────────
-const itemBase = {
-  padding: '10px 14px',
-  cursor: 'pointer',
-  borderRadius: 10,
-  fontSize: 14,
-  display: 'flex',
-  alignItems: 'center',
-  gap: 10,
-  transition: 'background 0.15s, transform 0.12s',
-  color: C.textPrimary,
+const fieldStyle = {
+  display: 'flex', alignItems: 'center', gap: 10, minHeight: 44, padding: '0 12px', borderRadius: 8,
+  background: 'var(--bv-s1)', border: '1px solid var(--bv-border)',
 };
 
-// ─── SEARCHABLE ROLE DROPDOWN ───────────────────────────────────────────────
 export function SearchableRoleDropdown({ value, onChange }) {
+  const uid = useId();
+  const listId = `${uid}-roles`;
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
-  const [highlightIdx, setHighlightIdx] = useState(0);
-  const ref = useRef(null);
+  const [active, setActive] = useState(0);
+  const wrapRef = useRef(null);
   const anchorRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Close on outside click
   useEffect(() => {
-    const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target) && !e.target.closest('[data-dd-portal]')) {
-        setOpen(false);
-      }
+    const close = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target) && !e.target.closest('[data-dd-portal]')) setOpen(false);
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
   }, []);
 
-  const q = query.toLowerCase();
-  const filtered = q
-    ? ALL_ROLES.filter(r => r.name.toLowerCase().includes(q) || r.id.toLowerCase().includes(q))
-    : [];
+  const q = query.trim().toLowerCase();
+  const results = q ? ALL_ROLES.filter((r) => r.name.toLowerCase().includes(q) || r.id.toLowerCase().includes(q)) : ALL_ROLES;
 
-  const handleSelect = (role) => {
+  const pick = (role) => {
     onChange(role);
     setQuery('');
     setOpen(false);
   };
 
-  const handleKeyDown = (e) => {
-    if (!open) return;
-    const list = filtered.length ? filtered : ALL_ROLES;
-    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlightIdx(i => Math.min(i + 1, list.length - 1)); }
-    if (e.key === 'ArrowUp') { e.preventDefault(); setHighlightIdx(i => Math.max(i - 1, 0)); }
-    if (e.key === 'Enter' && list[highlightIdx]) { e.preventDefault(); handleSelect(list[highlightIdx]); }
-    if (e.key === 'Escape') setOpen(false);
+  const onKeyDown = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!open) setOpen(true);
+      else setActive((i) => Math.min(i + 1, results.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActive((i) => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter' && open && results[active]) {
+      e.preventDefault();
+      pick(results[active]);
+    } else if (e.key === 'Escape' && open) {
+      e.preventDefault();
+      setOpen(false);
+    }
   };
 
-  const highlightMatch = (text) => {
-    if (!q) return text;
-    const idx = text.toLowerCase().indexOf(q);
-    if (idx === -1) return text;
-    return <>{text.slice(0, idx)}<span style={{ color: C.primary, fontWeight: 700 }}>{text.slice(idx, idx + q.length)}</span>{text.slice(idx + q.length)}</>;
-  };
+  useEffect(() => {
+    if (open) document.getElementById(`${uid}-opt-${active}`)?.scrollIntoView({ block: 'nearest' });
+  }, [open, active, uid]);
+
+  const grouped = q ? [[null, results]] : Object.entries(ROLE_CATEGORIES);
+  let flatIndex = -1;
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
-      <label style={{ fontSize: 12, color: C.textMuted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8, display: 'block' }}>
-        Select Role
-      </label>
-
-      <div
-        ref={anchorRef}
-        onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 50); }}
-        style={{
-          padding: '12px 16px', borderRadius: 12, cursor: 'pointer',
-          background: 'rgba(255,255,255,0.03)', border: `1px solid ${open ? C.primary : C.borderMid}`,
-          display: 'flex', alignItems: 'center', gap: 10, transition: 'border-color 0.2s, box-shadow 0.2s',
-          boxShadow: open ? `0 0 0 2px ${alpha(C.primary, '22')}, 0 0 20px ${alpha(C.primary, '10')}` : 'none',
-        }}
-      >
-        {value && !open ? (
-          <>
-            <span style={{ fontSize: 18 }}>{value.icon}</span>
-            <span style={{ fontSize: 15, fontWeight: 600, color: C.textPrimary, flex: 1 }}>{value.name}</span>
-            <span style={{ fontSize: 12, color: C.textMuted, cursor: 'pointer', padding: '2px 6px', borderRadius: 4, background: 'rgba(255,255,255,0.05)' }} onClick={(e) => { e.stopPropagation(); onChange(null); }}>✕</span>
-          </>
-        ) : (
-          <>
-            <Search size={16} color={C.textMuted} aria-hidden="true" style={{ flexShrink: 0 }} />
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={(e) => { setQuery(e.target.value); setHighlightIdx(0); }}
-              onFocus={() => setOpen(true)}
-              onKeyDown={handleKeyDown}
-              placeholder="Search roles, e.g. SWE, cloud, ML"
-              aria-label="Search roles"
-              style={{
-                flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none',
-                color: C.textPrimary, fontSize: 14, fontFamily: 'inherit',
-              }}
-            />
-          </>
+    <div ref={wrapRef}>
+      <label htmlFor={`${uid}-input`} className="sr-only">Role</label>
+      <div ref={anchorRef} style={{ ...fieldStyle, borderColor: open ? 'var(--accent)' : undefined }}>
+        <Search size={16} aria-hidden="true" style={{ flexShrink: 0, color: 'var(--bv-t3)' }} />
+        <input
+          id={`${uid}-input`}
+          ref={inputRef}
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listId}
+          aria-autocomplete="list"
+          aria-activedescendant={open ? `${uid}-opt-${active}` : undefined}
+          autoComplete="off"
+          value={open ? query : (value?.name || '')}
+          placeholder="Search roles, e.g. SWE or ML"
+          onFocus={() => { setQuery(''); setActive(0); setOpen(true); }}
+          onChange={(e) => { setQuery(e.target.value); setActive(0); setOpen(true); }}
+          onKeyDown={onKeyDown}
+          style={{ flex: 1, minWidth: 0, height: 42, background: 'none', border: 0, outline: 0, color: 'var(--bv-t1)', fontSize: 14 }}
+        />
+        {value && (
+          <button type="button" className="bv-icon-btn" aria-label="Clear role" onClick={() => { onChange(null); inputRef.current?.focus(); }}>
+            <X size={16} aria-hidden="true" />
+          </button>
         )}
       </div>
 
-      <DropdownPortal anchorRef={anchorRef} open={open} maxHeight={360}>
-        <div data-dd-portal>
-          {q ? (
-            filtered.length === 0 ? (
-              <div style={{ padding: 20, textAlign: 'center', color: C.textMuted, fontSize: 13 }}>No roles match &ldquo;{query}&rdquo;</div>
-            ) : (
-              filtered.map((role, i) => (
-                <div key={role.id}
-                  style={{ ...itemBase, background: i === highlightIdx ? 'color-mix(in srgb, var(--bv-brand) 14%, transparent)' : 'transparent' }}
-                  onMouseEnter={() => setHighlightIdx(i)}
-                  onClick={() => handleSelect(role)}
+      <Panel anchorRef={anchorRef} open={open} id={listId}>
+        {results.length === 0 ? (
+          <p style={{ padding: 16, textAlign: 'center', fontSize: 13, color: 'var(--bv-t3)' }}>No roles match &ldquo;{query}&rdquo;</p>
+        ) : grouped.map(([category, roles]) => (
+          <div key={category || 'results'} role="group" aria-label={category || 'Results'}>
+            {category && <div style={{ padding: '10px 10px 4px', fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--bv-t3)' }}>{category}</div>}
+            {roles.map((role) => {
+              flatIndex += 1;
+              const index = flatIndex;
+              const isActive = index === active;
+              return (
+                <div
+                  key={role.id}
+                  id={`${uid}-opt-${index}`}
+                  role="option"
+                  aria-selected={value?.id === role.id}
+                  onMouseEnter={() => setActive(index)}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => pick(role)}
+                  style={{
+                    padding: '9px 10px', borderRadius: 6, fontSize: 14, cursor: 'pointer',
+                    color: 'var(--bv-t1)', fontWeight: value?.id === role.id ? 600 : 400,
+                    background: isActive ? 'var(--bv-s4)' : 'transparent',
+                  }}
                 >
-                  <span style={{ fontSize: 16 }}>{role.icon}</span>
-                  <span>{highlightMatch(role.name)}</span>
+                  {role.name}
                 </div>
-              ))
-            )
-          ) : (
-            Object.entries(ROLE_CATEGORIES).map(([cat, roles]) => (
-              <div key={cat}>
-                <div style={{ padding: '10px 14px 4px', fontSize: 10, color: C.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{cat}</div>
-                {roles.map(role => (
-                  <div key={role.id}
-                    style={{ ...itemBase, background: 'transparent' }}
-                    onClick={() => handleSelect(role)}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'color-mix(in srgb, var(--bv-brand) 10%, transparent)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <span style={{ fontSize: 16 }}>{role.icon}</span>
-                    <span style={{ fontSize: 14, color: C.textPrimary }}>{role.name}</span>
-                  </div>
-                ))}
-              </div>
-            ))
-          )}
-        </div>
-      </DropdownPortal>
+              );
+            })}
+          </div>
+        ))}
+      </Panel>
     </div>
   );
 }
 
-// ─── SELECT DROPDOWN ────────────────────────────────────────────────────────
-export function SelectDropdown({ label, value, options, onChange, renderOption }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  const anchorRef = useRef(null);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target) && !e.target.closest('[data-dd-portal]')) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  const selected = options.find(o => o.id === value);
-
+// Native select: keyboard, screen reader and mobile pickers come for free.
+export function SelectDropdown({ label, value, options, onChange }) {
+  const uid = useId();
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
-      <label style={{ fontSize: 12, color: C.textMuted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8, display: 'block' }}>
-        {label}
-      </label>
-      <div
-        ref={anchorRef}
-        onClick={() => setOpen(!open)}
-        style={{
-          padding: '12px 16px', borderRadius: 12, cursor: 'pointer',
-          background: 'rgba(255,255,255,0.03)', border: `1px solid ${open ? C.primary : C.borderMid}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          transition: 'border-color 0.2s, box-shadow 0.2s',
-          boxShadow: open ? `0 0 0 2px ${alpha(C.primary, '22')}, 0 0 20px ${alpha(C.primary, '10')}` : 'none',
-        }}
-      >
-        <span style={{ fontSize: 14, color: selected ? C.textPrimary : C.textMuted, fontWeight: selected ? 600 : 400 }}>
-          {selected ? (renderOption ? renderOption(selected) : selected.name) : `Select ${label}...`}
-        </span>
-        <span style={{
-          fontSize: 10, color: C.textMuted,
-          transform: open ? 'rotate(180deg)' : 'none',
-          transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}>▼</span>
+    <div>
+      <label htmlFor={uid} className="sr-only">{label}</label>
+      <div style={{ position: 'relative' }}>
+        <select
+          id={uid}
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value || null)}
+          style={{
+            appearance: 'none', width: '100%', minHeight: 44, padding: '0 40px 0 12px', borderRadius: 8,
+            background: 'var(--bv-s1)', border: '1px solid var(--bv-border)', color: value ? 'var(--bv-t1)' : 'var(--bv-t3)',
+            fontSize: 14, cursor: 'pointer',
+          }}
+        >
+          <option value="">Select {label}</option>
+          {options.map((o) => (
+            <option key={o.id} value={o.id}>{o.years ? `${o.name} (${o.years} years)` : o.name}</option>
+          ))}
+        </select>
+        <ChevronDown size={16} aria-hidden="true" style={{ position: 'absolute', right: 14, top: 14, pointerEvents: 'none', color: 'var(--bv-t3)' }} />
       </div>
-
-      <DropdownPortal anchorRef={anchorRef} open={open} maxHeight={320}>
-        <div data-dd-portal>
-          {options.map(opt => {
-            const isActive = opt.id === value;
-            return (
-              <div key={opt.id}
-                onClick={() => { onChange(opt.id); setOpen(false); }}
-                style={{
-                  ...itemBase,
-                  background: isActive ? 'color-mix(in srgb, var(--bv-brand) 16%, transparent)' : 'transparent',
-                  color: isActive ? C.primary : C.textPrimary,
-                  fontWeight: isActive ? 600 : 400,
-                  borderLeft: isActive ? `2px solid ${C.primary}` : '2px solid transparent',
-                }}
-                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'color-mix(in srgb, var(--bv-brand) 8%, transparent)'; }}
-                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
-              >
-                {opt.icon && <span style={{ fontSize: 16 }}>{opt.icon}</span>}
-                <div style={{ flex: 1 }}>
-                  <div>{renderOption ? renderOption(opt) : opt.name}</div>
-                  {opt.desc && <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>{opt.desc}</div>}
-                  {opt.years && <div style={{ fontSize: 11, color: C.textMuted }}>{opt.years} years</div>}
-                </div>
-                {isActive && <span style={{ color: C.primary, fontSize: 14 }}>✓</span>}
-              </div>
-            );
-          })}
-        </div>
-      </DropdownPortal>
     </div>
   );
 }

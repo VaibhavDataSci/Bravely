@@ -14,6 +14,7 @@ let token = null;
 let onUnauthorized = null;
 
 export const setToken = (value) => { token = value; };
+export const getToken = () => token;
 
 // Called when an authenticated request comes back 401 (expired or revoked token).
 export const setUnauthorizedHandler = (handler) => { onUnauthorized = handler; };

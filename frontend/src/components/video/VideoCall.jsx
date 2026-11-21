@@ -1,11 +1,11 @@
 "use client";
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import io from 'socket.io-client';
+import { getToken } from '../../lib/api';
 import { C, alpha } from '../../constants/theme';
 import { NeonButton } from '../shared';
 
-// Update with real server URL matching server/index.js default port
-const SOCKET_SERVER_URL = 'http://localhost:5000';
+const SOCKET_SERVER_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 const ICE_SERVERS = {
   iceServers: [
@@ -140,7 +140,8 @@ export const VideoCall = ({ roomId, userId, mode = 'mock', onEndCall }) => {
     }, 1000)
 
     // Init Socket
-    socketRef.current = io(SOCKET_SERVER_URL);
+    // The server rejects sockets without a valid session token.
+    socketRef.current = io(SOCKET_SERVER_URL, { auth: { token: getToken() } });
     
     // Get Local Media
     navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {

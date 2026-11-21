@@ -90,7 +90,7 @@ export default function AuthPage() {
     <div className="bv-auth">
       <aside className="bv-auth-aside">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bv-logo" src="/bravely-logo.jpeg" alt="" />
+        <img className="bv-logo" src="/brand/bravely-mark.png" alt="" />
         <h1>Practice the interview before it counts.</h1>
         <ul>
           <li>Role-specific mock interviews</li>

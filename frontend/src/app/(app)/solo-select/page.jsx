@@ -1,73 +1,86 @@
 "use client";
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { C, alpha } from '@/constants/theme';
-import { GlassCard, NeonButton, Tag } from '@/components/shared';
+import { Check, Code2, FileText, HeartHandshake, Network, Wrench, X } from 'lucide-react';
+import { NeonButton } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
-import { EXPERIENCE_LEVELS, INTERVIEW_ROUNDS, getContextsForRole, CONTEXT_TOOLTIPS, suggestContextsFromResume, suggestRolesFromResume } from './roleData';
+import {
+  EXPERIENCE_LEVELS, INTERVIEW_ROUNDS, CONTEXT_TOOLTIPS,
+  getContextsForRole, suggestContextsFromResume, suggestRolesFromResume,
+} from './roleData';
 import { SearchableRoleDropdown, SelectDropdown } from './Dropdowns';
+import styles from './SoloSelect.module.css';
 
-const SIMULATED_PARSE = {
-  skills: ['Python', 'TensorFlow', 'SQL', 'Pandas', 'Scikit-learn', 'AWS SageMaker'],
-  projects: [{ name: 'ML Recommendation Engine', tech: ['Python', 'TensorFlow'] }],
-  education: 'M.S. in Data Science', experienceYears: 2,
-};
+const ROUND_ICONS = { hr: HeartHandshake, technical: Wrench, coding: Code2, system_design: Network };
+const MAX_RESUME_BYTES = 5 * 1024 * 1024;
+const RESUME_EXTENSIONS = /\.(pdf|doc|docx)$/i;
 
-export default function RoleSelectionPage() {
+function Section({ step, title, hint, done, children }) {
+  return (
+    <section className={styles.section}>
+      <header className={styles.sectionHead}>
+        <span className={styles.step} data-done={done} aria-hidden="true">
+          {done ? <Check size={13} /> : step}
+        </span>
+        <h2>{title}</h2>
+        {hint && <span className={styles.hint}>{hint}</span>}
+      </header>
+      {children}
+    </section>
+  );
+}
+
+export default function InterviewSetupPage() {
   const router = useRouter();
   const { user } = useAuth();
   const fileInputRef = useRef(null);
 
-  // Config state
   const [selectedRole, setSelectedRole] = useState(null);
   const [experienceLevel, setExperienceLevel] = useState(null);
   const [interviewRound, setInterviewRound] = useState(null);
   const [interviewContext, setInterviewContext] = useState(null);
-  const [hoveredCtx, setHoveredCtx] = useState(null);
 
-  // Resume state
   const profileResume = user?.profileResume || null;
   const [tempResume, setTempResume] = useState(null);
-  const [isParsing, setIsParsing] = useState(false);
-  const [showTempUpload, setShowTempUpload] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [resumeError, setResumeError] = useState('');
   const activeResume = tempResume || profileResume;
 
-  // Suggested roles from resume
-  const suggestedRoles = React.useMemo(() => {
-    return activeResume ? suggestRolesFromResume(activeResume) : [];
-  }, [activeResume]);
-
-  // Dynamic contexts based on role + round
+  const suggestedRoles = useMemo(
+    () => (activeResume ? suggestRolesFromResume(activeResume) : []),
+    [activeResume]
+  );
   const availableContexts = selectedRole && interviewRound
     ? getContextsForRole(selectedRole.id, interviewRound)
     : [];
-
-  // AI-suggested contexts from resume
   const suggestedContexts = activeResume && selectedRole
-    ? suggestContextsFromResume(activeResume, selectedRole.id)
+    ? suggestContextsFromResume(activeResume, selectedRole.id).filter((ctx) => availableContexts.includes(ctx))
     : [];
 
-  // Reset context when role or round changes
-  useEffect(() => {
-    const t = setTimeout(() => setInterviewContext(null), 0);
-    return () => clearTimeout(t);
-  }, [selectedRole?.id, interviewRound]);
+  // Contexts depend on role and round, so a change to either clears the chosen context.
+  const chooseRole = (role) => { setSelectedRole(role); setInterviewContext(null); };
+  const chooseRound = (round) => { setInterviewRound(round); setInterviewContext(null); };
 
-  const handleTempUpload = (source) => {
-    let file;
-    if (source?.dataTransfer) file = source.dataTransfer.files?.[0];
-    else if (source?.target) file = source.target.files?.[0];
+  const attachResume = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
     if (!file) return;
-    setIsParsing(true);
-    setTimeout(() => {
-      setIsParsing(false);
-      setTempResume({ filename: file.name, fileSize: (file.size / 1024).toFixed(1) + ' KB', uploadedAt: new Date().toISOString(), isTemporary: true, ...SIMULATED_PARSE });
-      setShowTempUpload(false);
-    }, 2000);
+    if (!RESUME_EXTENSIONS.test(file.name)) {
+      setResumeError('Use a PDF, DOC or DOCX file.');
+      return;
+    }
+    if (file.size > MAX_RESUME_BYTES) {
+      setResumeError('That file is over 5 MB.');
+      return;
+    }
+    setResumeError('');
+    // TODO(api): POST /api/profile/resume to parse skills. Until then only the filename is kept.
+    setTempResume({ filename: file.name, fileSize: `${(file.size / 1024).toFixed(0)} KB`, isTemporary: true, skills: [] });
   };
 
-  const canStart = selectedRole && experienceLevel && interviewRound && interviewContext;
+  const level = EXPERIENCE_LEVELS.find((l) => l.id === experienceLevel);
+  const round = INTERVIEW_ROUNDS.find((r) => r.id === interviewRound);
+  const completed = [selectedRole, experienceLevel, interviewRound, interviewContext].filter(Boolean).length;
+  const canStart = completed === 4;
 
   const handleStart = () => {
     if (!canStart) return;
@@ -81,255 +94,138 @@ export default function RoleSelectionPage() {
       interviewRound,
       interviewContext,
     };
-
     sessionStorage.setItem('aia_session_config', JSON.stringify(config));
-
-    if (config.interviewRound === 'coding') {
-      router.push('/coding');
-      return;
-    }
-
-    router.push('/solo-session');
+    router.push(config.interviewRound === 'coding' ? '/coding' : '/solo-session');
   };
 
-  const step1Done = !!selectedRole;
-  const step2Done = !!experienceLevel;
-  const step3Done = !!interviewRound;
-  const step5Done = !!interviewContext;
-
   return (
-    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}>
-    <div style={{ flex: 1, minHeight: 0, padding: 'clamp(16px, 4vw, 40px) clamp(16px, 4vw, 48px) 24px', overflowY: 'auto' }}>
-
-      {/* Title */}
-      <div style={{ marginBottom: 36, textAlign: 'center' }}>
-        <h1 style={{ fontSize: 32, fontWeight: 800, color: C.textPrimary, marginBottom: 10, letterSpacing: '-0.02em' }}>
-          Configure Your Mock Interview
-        </h1>
-        <p style={{ color: C.textSecondary, fontSize: 16, maxWidth: 640, margin: '0 auto', lineHeight: 1.5 }}>
-          Set up your session like a real interview - choose role, level, round, and context.
-        </p>
-      </div>
-
-      <div style={{ maxWidth: 820, margin: '0 auto' }}>
-
-        {/* STEP 1: ROLE */}
-        <GlassCard style={{ padding: '24px 28px', marginBottom: 20, background: 'linear-gradient(135deg, color-mix(in srgb, var(--bv-brand) 4%, transparent), color-mix(in srgb, var(--bv-brand-solid) 2%, transparent))' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <div style={{ width: 28, height: 28, borderRadius: '50%', background: step1Done ? C.success : `${alpha(C.primary, '30')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: step1Done ? '#fff' : C.primary }}>
-              {step1Done ? '✓' : '1'}
-            </div>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: C.textPrimary, margin: 0 }}>Select Role</h3>
+    <div className={styles.page}>
+      <div className={styles.scroll}>
+        <div className={styles.inner}>
+          <div className={styles.head}>
+            <h1>Set up your interview</h1>
+            <p>Pick the role, level and round you are preparing for. Four steps are required.</p>
           </div>
-          <SearchableRoleDropdown value={selectedRole} onChange={setSelectedRole} />
-          {suggestedRoles.length > 0 && !selectedRole && (
-            <div style={{ marginTop: 14 }}>
-              <div style={{ fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span>AI</span> Suggested Roles (based on your resume)
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {suggestedRoles.map(r => (
-                  <button key={r.id} onClick={() => setSelectedRole(r)} style={{
-                    padding: '8px 14px', borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: 'pointer',
-                    background: 'color-mix(in srgb, var(--bv-brand) 8%, transparent)', border: `1px solid ${alpha(C.primary, '40')}`, color: C.primary,
-                    display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s',
-                  }}>
-                    <span>{r.icon}</span> {r.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </GlassCard>
 
-        {/* STEP 2: EXPERIENCE LEVEL */}
-        <GlassCard style={{ padding: '24px 28px', marginBottom: 20, opacity: step1Done ? 1 : 0.4, pointerEvents: step1Done ? 'auto' : 'none', transition: 'opacity 0.3s' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <div style={{ width: 28, height: 28, borderRadius: '50%', background: step2Done ? C.success : `${alpha(C.primary, '30')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: step2Done ? '#fff' : C.primary }}>
-              {step2Done ? '✓' : '2'}
-            </div>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: C.textPrimary, margin: 0 }}>Experience Level</h3>
-          </div>
-          <SelectDropdown label="Experience Level" value={experienceLevel} options={EXPERIENCE_LEVELS} onChange={setExperienceLevel} />
-        </GlassCard>
-
-        {/* STEP 3: INTERVIEW ROUND */}
-        <GlassCard style={{ padding: '24px 28px', marginBottom: 20, opacity: step2Done ? 1 : 0.4, pointerEvents: step2Done ? 'auto' : 'none', transition: 'opacity 0.3s' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <div style={{ width: 28, height: 28, borderRadius: '50%', background: step3Done ? C.success : `${alpha(C.primary, '30')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: step3Done ? '#fff' : C.primary }}>
-              {step3Done ? '✓' : '3'}
-            </div>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: C.textPrimary, margin: 0 }}>Interview Round</h3>
-          </div>
-          <SelectDropdown label="Interview Round" value={interviewRound} options={INTERVIEW_ROUNDS} onChange={setInterviewRound} />
-        </GlassCard>
-
-        {/* STEP 4: RESUME */}
-        <GlassCard style={{ padding: '24px 28px', marginBottom: 20, background: 'linear-gradient(135deg, color-mix(in srgb, var(--bv-brand) 4%, transparent), color-mix(in srgb, var(--bv-brand-solid) 2%, transparent))', border: `1px solid ${activeResume ? 'color-mix(in srgb, var(--bv-success) 20%, transparent)' : C.borderMid}` }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <span style={{ fontSize: 18 }}>📄</span>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: C.textPrimary, margin: 0 }}>Resume <span style={{ fontSize: 12, color: C.textMuted, fontWeight: 400 }}>(optional)</span></h3>
-          </div>
-          {profileResume && !tempResume && !showTempUpload && (
-            <div>
-              <div style={{ padding: '16px 20px', background: 'color-mix(in srgb, var(--bv-success) 6%, transparent)', border: `1px solid color-mix(in srgb, var(--bv-success) 15%, transparent)`, borderRadius: 12, marginBottom: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: `${alpha(C.success, '20')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>✅</div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C.textPrimary }}>This is your already uploaded resume</div>
-                    <div style={{ fontSize: 12, color: C.textMuted }}>{profileResume.filename}</div>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingLeft: 48 }}>
-                  {profileResume.skills?.slice(0, 5).map(s => <Tag key={s} color={C.primary}>{s}</Tag>)}
-                  {profileResume.skills?.length > 5 && <Tag color={C.textMuted}>+{profileResume.skills.length - 5}</Tag>}
-                </div>
-              </div>
-              <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.borderMid}`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontSize: 13, color: C.textSecondary }}>Do you have a new one to upload as temporary?</div>
-                <NeonButton size="sm" variant="outline" onClick={() => setShowTempUpload(true)}>Upload Temporary</NeonButton>
-              </div>
-            </div>
-          )}
-          {tempResume && !showTempUpload && (
-            <div>
-              <div style={{ padding: '14px 18px', background: 'color-mix(in srgb, var(--bv-warning) 6%, transparent)', border: `1px solid color-mix(in srgb, var(--bv-warning) 20%, transparent)`, borderRadius: 12, marginBottom: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 16 }}>⚡</span>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C.textPrimary }}>Temporary Resume - {tempResume.filename}</div>
-                    <div style={{ fontSize: 12, color: C.warning, fontStyle: 'italic' }}>Session only — won&apos;t replace your profile resume</div>
-                  </div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {profileResume && <NeonButton size="sm" variant="outline" onClick={() => setTempResume(null)}>↩ Profile Resume</NeonButton>}
-                <NeonButton size="sm" variant="ghost" onClick={() => { setTempResume(null); setShowTempUpload(true); }}>Upload Different</NeonButton>
-              </div>
-            </div>
-          )}
-          {((!profileResume && !tempResume && !showTempUpload) || showTempUpload) && (
-            <div>
-              {showTempUpload && <button onClick={() => setShowTempUpload(false)} style={{ background: 'none', border: 'none', color: C.textMuted, fontSize: 13, cursor: 'pointer', marginBottom: 10 }}>← Back</button>}
-              <div
-                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleTempUpload(e); }}
-                onClick={() => !isParsing && fileInputRef.current?.click()}
-                style={{ border: `2px dashed ${isDragging ? C.primary : C.borderMid}`, borderRadius: 14, padding: '32px 20px', textAlign: 'center', background: isDragging ? 'color-mix(in srgb, var(--bv-brand) 6%, transparent)' : 'rgba(255,255,255,0.01)', cursor: isParsing ? 'default' : 'pointer', transition: 'all 0.3s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}
-              >
-                <input type="file" accept=".pdf,.doc,.docx" hidden ref={fileInputRef} onChange={handleTempUpload} />
-                {isParsing ? (
-                  <><div style={{ width: 40, height: 40, borderRadius: '50%', border: `3px solid ${C.borderMid}`, borderTopColor: C.primary, animation: 'spin 1s linear infinite' }} /><div style={{ fontSize: 14, color: C.primary, fontWeight: 600 }}>Parsing Resume...</div></>
-                ) : (
-                  <><div style={{ fontSize: 28 }}>📄</div><div style={{ fontSize: 14, color: C.textPrimary }}><span style={{ color: C.primary, fontWeight: 600 }}>{showTempUpload ? 'Upload Temporary Resume' : 'Please upload your resume'}</span> or drag & drop</div><div style={{ fontSize: 12, color: C.textMuted }}>PDF, DOC, DOCX - up to 5MB</div></>
-                )}
-              </div>
-            </div>
-          )}
-        </GlassCard>
-
-        {/* STEP 5: INTERVIEW CONTEXT (dynamic) */}
-        <GlassCard style={{ padding: '24px 28px', marginBottom: 20, opacity: step3Done ? 1 : 0.4, pointerEvents: step3Done ? 'auto' : 'none', transition: 'opacity 0.3s' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <div style={{ width: 28, height: 28, borderRadius: '50%', background: step5Done ? C.success : `${alpha(C.primary, '30')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: step5Done ? '#fff' : C.primary }}>
-              {step5Done ? '✓' : '5'}
-            </div>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: C.textPrimary, margin: 0 }}>Interview Context</h3>
-          </div>
-          <p style={{ fontSize: 12, color: C.textMuted, marginBottom: 14, paddingLeft: 38 }}>
-            {step3Done
-              ? `Contexts tailored for ${selectedRole?.name} - ${INTERVIEW_ROUNDS.find(r => r.id === interviewRound)?.name}`
-              : 'Complete the steps above to see context options.'}
-          </p>
-
-          {/* AI suggested contexts from resume */}
-          {suggestedContexts.length > 0 && !interviewContext && (
-            <div style={{ marginBottom: 14, paddingLeft: 38 }}>
-              <div style={{ fontSize: 11, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span>AI</span> Recommended
-              </div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {suggestedContexts.map(ctx => (
-                  <button key={ctx} onClick={() => setInterviewContext(ctx)} style={{
-                    padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                    background: `linear-gradient(135deg, ${alpha(C.primary, '18')}, ${alpha(C.secondary, '12')})`,
-                    border: `1px solid ${alpha(C.primary, '50')}`, color: C.primary,
-                    transition: 'all 0.2s', animation: 'fade-up 0.3s ease',
-                  }}>
-                    ✨ {ctx}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Context pills */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingLeft: 38, position: 'relative' }}>
-            {availableContexts.map(ctx => {
-              const isSelected = interviewContext === ctx;
-              const isHovered = hoveredCtx === ctx;
-              return (
-                <div key={ctx} style={{ position: 'relative' }}
-                  onMouseEnter={() => setHoveredCtx(ctx)}
-                  onMouseLeave={() => setHoveredCtx(null)}
-                >
-                  <button onClick={() => setInterviewContext(ctx)} style={{
-                    padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    background: isSelected
-                      ? `linear-gradient(135deg, ${alpha(C.primary, '25')}, ${alpha(C.secondary, '18')})`
-                      : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${isSelected ? C.primary : C.borderMid}`,
-                    color: isSelected ? C.primary : C.textSecondary,
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                    transform: isSelected ? 'scale(1.05)' : 'scale(1)',
-                    boxShadow: isSelected ? `0 0 16px ${alpha(C.primary, '20')}` : 'none',
-                  }}>
-                    {ctx}
-                  </button>
-
-                  {/* Tooltip */}
-                  {isHovered && CONTEXT_TOOLTIPS[ctx] && !isSelected && (
-                    <div style={{
-                      position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
-                      padding: '6px 12px', borderRadius: 8, fontSize: 11, color: C.textPrimary,
-                      background: C.bgElevated, border: `1px solid ${C.borderMid}`,
-                      whiteSpace: 'nowrap', marginBottom: 6, zIndex: 60,
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.4)', animation: 'fade-up 0.15s ease',
-                    }}>
-                      {CONTEXT_TOOLTIPS[ctx]}
+          <div className={styles.layout}>
+            <form id="interview-config" className={styles.form} onSubmit={(e) => { e.preventDefault(); handleStart(); }}>
+              <Section step={1} title="Role" done={Boolean(selectedRole)}>
+                <SearchableRoleDropdown value={selectedRole} onChange={chooseRole} />
+                {suggestedRoles.length > 0 && !selectedRole && (
+                  <div className={styles.suggest}>
+                    <p className={styles.suggestLabel}>Suggested from your resume</p>
+                    <div className={styles.chips}>
+                      {suggestedRoles.map((r) => (
+                        <button key={r.id} type="button" className={styles.chip} onClick={() => chooseRole(r)}>{r.name}</button>
+                      ))}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </GlassCard>
+                  </div>
+                )}
+              </Section>
 
-        {/* SESSION SUMMARY */}
-        {canStart && (
-          <GlassCard style={{ padding: '20px 24px', marginBottom: 20, border: `1px solid ${alpha(C.primary, '30')}`, animation: 'fade-up 0.3s ease' }}>
-            <div style={{ fontSize: 12, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>Session Summary</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              <Tag color={C.primary}>{selectedRole?.icon} {selectedRole?.name}</Tag>
-              <Tag color={C.secondary}>{EXPERIENCE_LEVELS.find(e => e.id === experienceLevel)?.name}</Tag>
-              <Tag color={C.info}>{INTERVIEW_ROUNDS.find(r => r.id === interviewRound)?.icon} {INTERVIEW_ROUNDS.find(r => r.id === interviewRound)?.name}</Tag>
-              <Tag color={C.warning}>{interviewContext}</Tag>
-              {activeResume && <Tag color={C.success}>?? Resume Active</Tag>}
-            </div>
-            <p style={{ fontSize: 12, color: C.textMuted, marginTop: 10, fontStyle: 'italic' }}>
-              Difficulty will be adapted automatically by AI based on your performance.
-            </p>
-          </GlassCard>
-        )}
+              <Section step={2} title="Experience level" done={Boolean(experienceLevel)}>
+                <SelectDropdown label="experience level" value={experienceLevel} options={EXPERIENCE_LEVELS} onChange={setExperienceLevel} />
+              </Section>
+
+              <Section step={3} title="Interview round" done={Boolean(interviewRound)}>
+                <fieldset className={styles.choices}>
+                  <legend className="sr-only">Interview round</legend>
+                  {INTERVIEW_ROUNDS.map((r) => {
+                    const Icon = ROUND_ICONS[r.id];
+                    return (
+                      <label key={r.id} className={styles.choice}>
+                        <input type="radio" name="round" className="sr-only" checked={interviewRound === r.id} onChange={() => chooseRound(r.id)} />
+                        {Icon && <Icon size={18} aria-hidden="true" />}
+                        <span>
+                          <span className={styles.choiceTitle}>{r.name}</span>
+                          <span className={styles.choiceDesc} style={{ display: 'block' }}>{r.desc}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </fieldset>
+              </Section>
+
+              <Section step={4} title="Interview context" done={Boolean(interviewContext)} hint={round && selectedRole ? `${selectedRole.name}, ${round.name}` : undefined}>
+                {availableContexts.length === 0 ? (
+                  <p className={styles.empty}>Choose a role and an interview round to see matching contexts.</p>
+                ) : (
+                  <>
+                    {suggestedContexts.length > 0 && !interviewContext && (
+                      <div className={styles.suggest} style={{ marginTop: 0, marginBottom: 12 }}>
+                        <p className={styles.suggestLabel}>Suggested from your resume</p>
+                        <div className={styles.chips}>
+                          {suggestedContexts.map((ctx) => (
+                            <button key={ctx} type="button" className={styles.chip} onClick={() => setInterviewContext(ctx)}>{ctx}</button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <fieldset className={styles.chips}>
+                      <legend className="sr-only">Interview context</legend>
+                      {availableContexts.map((ctx) => (
+                        <label key={ctx} className={styles.chip}>
+                          <input type="radio" name="context" className="sr-only" checked={interviewContext === ctx} onChange={() => setInterviewContext(ctx)} />
+                          {ctx}
+                        </label>
+                      ))}
+                    </fieldset>
+                    {interviewContext && CONTEXT_TOOLTIPS[interviewContext] && (
+                      <p className={styles.note}>{CONTEXT_TOOLTIPS[interviewContext]}</p>
+                    )}
+                  </>
+                )}
+              </Section>
+
+              <Section step={5} title="Resume" hint="Optional">
+                {activeResume ? (
+                  <div className={styles.file}>
+                    <FileText size={20} aria-hidden="true" />
+                    <div className={styles.fileMeta}>
+                      <div className={styles.fileName}>{activeResume.filename}</div>
+                      <div className={styles.fileSub}>{tempResume ? 'This session only' : 'Your profile resume'}</div>
+                    </div>
+                    {tempResume && (
+                      <button type="button" className="bv-icon-btn" aria-label="Remove attached resume" onClick={() => setTempResume(null)}>
+                        <X size={16} aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <NeonButton variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
+                    <FileText size={16} aria-hidden="true" /> Attach resume
+                  </NeonButton>
+                )}
+                {activeResume && !tempResume && (
+                  <div style={{ marginTop: 10 }}>
+                    <NeonButton variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()}>Use a different file for this session</NeonButton>
+                  </div>
+                )}
+                <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" hidden onChange={attachResume} />
+                {resumeError && <p className={styles.error} role="alert">{resumeError}</p>}
+                <p className={styles.note}>PDF, DOC or DOCX up to 5 MB. Resume parsing is not connected yet, so an attached file does not change your questions.</p>
+              </Section>
+            </form>
+
+            <aside className={styles.summary} aria-label="Session summary">
+              <h2>Session summary</h2>
+              <p className={styles.progress}>{completed} of 4 required steps done</p>
+              <dl>
+                <div><dt>Role</dt><dd data-empty={!selectedRole}>{selectedRole?.name || 'Not selected'}</dd></div>
+                <div><dt>Level</dt><dd data-empty={!level}>{level?.name || 'Not selected'}</dd></div>
+                <div><dt>Round</dt><dd data-empty={!round}>{round?.name || 'Not selected'}</dd></div>
+                <div><dt>Context</dt><dd data-empty={!interviewContext}>{interviewContext || 'Not selected'}</dd></div>
+                <div><dt>Resume</dt><dd data-empty={!activeResume}>{activeResume?.filename || 'None attached'}</dd></div>
+              </dl>
+              <p className={styles.fine}>Difficulty adapts to your answers during the session.</p>
+            </aside>
+          </div>
+        </div>
       </div>
 
-    </div>
-
-      {/* Bottom CTA */}
-      <div style={{ flexShrink: 0, padding: '12px clamp(16px, 4vw, 48px)', display: 'flex', justifyContent: 'center', background: C.bgMain, borderTop: `1px solid ${C.border}` }}>
-        <NeonButton onClick={handleStart} disabled={!canStart} size="lg" style={{ width: '100%', maxWidth: 420 }}>
-          {canStart ? `Start ${selectedRole?.name} interview` : 'Complete setup above'}
+      <div className={styles.footer}>
+        <NeonButton type="submit" form="interview-config" size="lg" disabled={!canStart}>
+          {canStart ? `Start ${selectedRole.name} interview` : `Complete ${4 - completed} more ${4 - completed === 1 ? 'step' : 'steps'}`}
         </NeonButton>
       </div>
     </div>

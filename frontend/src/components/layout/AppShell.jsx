@@ -63,7 +63,7 @@ function Sidebar({ pathname }) {
       >
         <div className="bv-sidebar-head">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="bv-logo" src="/bravely-logo.jpeg" alt="" />
+          <img className="bv-logo" src="/brand/bravely-mark.png" alt="" />
           <span className="bv-wordmark bv-nav-label">Bravely</span>
           <button
             type="button"

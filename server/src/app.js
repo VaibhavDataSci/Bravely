@@ -4,7 +4,9 @@ import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import jwt from '@fastify/jwt';
 import multipart from '@fastify/multipart';
-import { JWT_SECRET, CORS_ORIGINS } from './config/env.js';
+import { randomUUID } from 'node:crypto';
+import { JWT_SECRET, CORS_ORIGINS, LOG_LEVEL, TRUST_PROXY, NODE_ENV, POSTGRES_URL } from './config/env.js';
+import { query } from './config/db.js';
 
 import authRoutes from './modules/auth/routes.js';
 import profileRoutes from './modules/profile/routes.js';
@@ -16,9 +18,39 @@ import roomsRoutes from './modules/rooms/routes.js';
 import dailyRoutes from './modules/daily/routes.js';
 import reportsRoutes from './modules/reports/routes.js';
 import settingsRoutes from './modules/settings/routes.js';
+import aiRoutes from './modules/ai/routes.js';
 
 export default async function buildApp(options = {}) {
-  const app = fastify({ logger: options.logger ?? true });
+  const app = fastify({
+    // Secrets never reach the logs.
+    logger: options.logger ?? {
+      level: LOG_LEVEL,
+      redact: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
+    },
+    trustProxy: TRUST_PROXY,
+    requestIdHeader: 'x-request-id',
+    genReqId: () => randomUUID(),
+    bodyLimit: 1024 * 1024,
+  });
+
+  // Every response carries the request id so a user report can be matched to a log line.
+  app.addHook('onSend', async (request, reply) => { reply.header('x-request-id', request.id); });
+
+  // One error shape for the whole API. Server errors are logged in full but never leak details.
+  app.setErrorHandler((err, request, reply) => {
+    const status = err.statusCode && err.statusCode >= 400 ? err.statusCode : 500;
+    if (status >= 500) {
+      request.log.error({ err }, 'request failed');
+      return reply.code(500).send({
+        error: 'Something went wrong on our side. Please try again.',
+        code: 'internal_error',
+        requestId: request.id,
+      });
+    }
+    const code = err.validation ? 'validation_error' : status === 429 ? 'rate_limited' : err.code || 'bad_request';
+    return reply.code(status).send({ error: err.message, code });
+  });
+  app.setNotFoundHandler((request, reply) => reply.code(404).send({ error: 'Not found', code: 'not_found' }));
 
   await app.register(helmet);
   await app.register(cors, {
@@ -49,6 +81,19 @@ export default async function buildApp(options = {}) {
     uptime: process.uptime(),
   }));
 
+  // Readiness is stricter than liveness: it fails when the database is configured but unreachable,
+  // so a load balancer stops sending traffic to an instance that cannot serve it.
+  app.get('/ready', async (request, reply) => {
+    if (!POSTGRES_URL) return { status: 'ok', database: 'not_configured', env: NODE_ENV };
+    try {
+      await query('select 1');
+      return { status: 'ok', database: 'up' };
+    } catch (err) {
+      request.log.error({ err }, 'readiness check failed');
+      return reply.code(503).send({ status: 'unavailable', database: 'down' });
+    }
+  });
+
   app.register(authRoutes, { prefix: '/api/auth' });
   app.register(profileRoutes, { prefix: '/api/profile' });
   app.register(dashboardRoutes, { prefix: '/api/dashboard' });
@@ -59,6 +104,7 @@ export default async function buildApp(options = {}) {
   app.register(dailyRoutes, { prefix: '/api/daily' });
   app.register(reportsRoutes, { prefix: '/api/reports' });
   app.register(settingsRoutes, { prefix: '/api/settings' });
+  app.register(aiRoutes, { prefix: '/api/ai' });
 
   return app;
 }
