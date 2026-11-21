@@ -1,0 +1,23 @@
+# Local development database. Start: npm run db:up (from server/) or `docker compose up -d`.
+# Host port 5433 avoids clashing with a Postgres already installed on 5432.
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: bravely-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bravely
+      POSTGRES_PASSWORD: bravely_dev # development only
+      POSTGRES_DB: bravely
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - bravely-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bravely -d bravely"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  bravely-pgdata:

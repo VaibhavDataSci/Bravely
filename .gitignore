@@ -25,3 +25,8 @@ dist-ssr
 
 # agent artifacts
 .playwright-mcp/
+
+# local environment files (keep the examples)
+.env
+.env.*
+!.env.example

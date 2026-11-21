@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "db:up": "docker compose -f ../docker-compose.yml up -d --wait postgres",
+    "db:down": "docker compose -f ../docker-compose.yml down",
     "migrate": "node src/migrate.js",
     "test": "node --test"
   },
